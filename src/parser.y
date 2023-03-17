@@ -17,6 +17,7 @@
 %%
 
 /* This is an example of defining productions with error handling */
+/* TODO: Define productions */
 
 E: E '+' T { std::cerr << "Use production: E -> E + T" << std::endl; }
     | E '-' T { std::cerr << "Use production: E -> E - T" << std::endl; }
@@ -42,7 +43,7 @@ F: '(' E ')' { std::cerr << "Use production: F -> (E)" << std::endl; }
 
 %%
 
-// Error log, should not be modified at present
+/* Error log, should not be modified at present */
 void yyerror(char *s) {
     stack::push_error();
     if (strlen(yytext) == 0) {
