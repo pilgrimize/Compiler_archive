@@ -31,7 +31,7 @@ enum ComplexType {
 };
 
 // variable, array, record, function
-struct Type {
+struct SymbolTableEntry {
     struct RecordEntry {
         std::string name;
         BasicType type;
@@ -64,23 +64,6 @@ struct Type {
             std::vector<Param> params;
         } function;
     } extra_info;
-};
-
-// literal
-struct Literal {
-    BasicType type;
-    BasicValue value;
-};
-
-struct SymbolTableEntry {
-    enum {
-        ENTRY_VAR,
-        ENTRY_LITERAL,
-    } id_type;
-    union {
-        Type type;
-        Literal literal;
-    } type_info;
 };
 
 class SymbolTableNode {
