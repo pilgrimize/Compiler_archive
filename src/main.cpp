@@ -58,15 +58,19 @@ void parse_args(int argc, char *argv[]) {
                 std::cerr << "  -i, --input <file>\t\tSpecify input file" << std::endl;
                 std::cerr << "  -o, --output <file>\t\tSpecify output file" << std::endl;
                 std::cerr << "  -l, --log <file>\t\tSpecify log file" << std::endl;
-                break;
+                exit(0);
             case 'i':
                 input_file = optarg;
                 break;
             case 'o':
                 output_file = optarg;
+                break;
+            case 'l':
+                log_file = optarg;
+                break;
             default:
                 std::cout << "Usage: " << argv[0] << " [-h] [-i <file>] [-o <file>] [-l <file>]" << std::endl;
-                break;
+                exit(0);
         }
 
         if (!input_file.empty()) {
