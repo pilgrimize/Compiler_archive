@@ -15,6 +15,12 @@ enum Token {
     T_ID,
     T_NUM,
     T_RELOP,
+	T_SEPERATOR,
+	T_ADDOP,
+	T_NOTES,
+	T_MULOP,
+	T_ASSIGNOP,
+	T_RESVERVE_WORD
 };
 
 class TreeNode {

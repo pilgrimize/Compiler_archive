@@ -12,6 +12,14 @@
 
 %start E
 %token num
+%token id
+%token addop
+%token mulop
+%token assignop
+%token notes
+%token relop
+%token seperator
+%token reserve_word    
 %type E T F
 
 %%
