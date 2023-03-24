@@ -59,7 +59,10 @@ comment \{[^}]*\}
 
 %%
 
-{num}           {std::cerr << "num:" << yytext << std::endl; stack::push_token(tree::T_NUM, yytext); return num;}
+{num}           {std::cerr << "num:" << yytext << std::endl; 
+                yylval.ival = atoi(yytext);
+                return num;
+                }
 {seperator}     {std::cerr << "seperator:" << yytext << std::endl; stack::push_token(tree::T_SEPERATOR); return yytext[0];}
 {equalop}       {std::cerr << "equalop:" << yytext << std::endl; stack::push_token(tree::T_EQUALOP); return yytext[0];}
 {notop}         {std::cerr << "notop:" << yytext << std::endl; stack::push_token(tree::T_NOTOP); return notop;}
@@ -104,7 +107,10 @@ comment \{[^}]*\}
 
 
 {comment}         {std::cerr << "comment:" << yytext << std::endl; /* do nothing */}
-{id}            {std::cerr << "id:" << yytext << std::endl; stack::push_token(tree::T_ID, yytext); return id;}
+{id}            {std::cerr << "id:" << yytext << std::endl; 
+                yylval.sval = (char*)malloc(strlen(yytext)+1);
+                strcpy(yylval.sval,yytext); 
+                }
 
 %%
 // {literal}       {std::cerr << "literal:" << yytext << std::endl; stack::push_token(tree::T_LITERAL, yytext); return literal;}

@@ -2,8 +2,9 @@
     #include <iostream>
     #include <string.h>
     
-    #include "stack.h"
+    // #include "stack.h"
     #include "tools.h"
+    #include "tree.h"
 
     int yylex();
     extern int yylineno;
@@ -11,9 +12,15 @@
     void yyerror(char *s);
 %}
 
+%union {
+    char* str;
+    int num;
+    tree::Tree *Tree;
+}
+
 %start programstruct
-%token num
-%token id
+%token <num> num
+%token <str>id
 %token keyword
 %token addop mulop relop
 %token seperator
@@ -50,20 +57,20 @@
 %token or_op
 %token notop
 
-%type programstruct program_head program_body
-%type const_declarations const_declaration
-%type var_declarations var_declaration
-%type idlist const_value
-%type type basic_type period formal_parameter value_parameter var_parameter
-%type subprogram_declarations subprogram subprogram_head subprogram_body
-%type parameter parameter_list
-%type compound_statement
-%type optional_statements statement_list statement
-%type procedure_call
-%type else_part
-%type variable
-%type id_varpart expression_list
-%type expression simple_expression term factor case_expression_list
+%type <Tree> programstruct program_head program_body
+%type <Tree> const_declarations const_declaration
+%type <Tree> var_declarations var_declaration
+%type <Tree> idlist const_value
+%type <Tree> type basic_type period formal_parameter value_parameter var_parameter
+%type <Tree> subprogram_declarations subprogram subprogram_head subprogram_body
+%type <Tree> parameter parameter_list
+%type <Tree> compound_statement
+%type <Tree> optional_statements statement_list statement
+%type <Tree> procedure_call
+%type <Tree> else_part
+%type <Tree> variable
+%type <Tree> id_varpart expression_list
+%type <Tree> expression simple_expression term factor case_expression_list
 
 
 /* %type E T F */
@@ -133,57 +140,128 @@ factor -> num | variable
 */
 
 //I need to define the productions above :
-programstruct : program_head ';' program_body '.' { std::cerr << "Use production: programstruct -> program_head ; program_body ." << std::endl; stack::reduce(4,tree::T_PROGRAM_STRUCT);}
+programstruct : program_head ';' program_body '.' { // pid = 1
+        std::cerr << "Use production: programstruct -> program_head ; program_body ." << std::endl; 
+        vector<tree::TreeNode> children; 
+        children.push_back($1->get_root());
+        children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_STRUCT, "", children), 1);
+    }
     | error program_head ';' program_body{ 
         // we fix the lack of '.' at the end of the program'
         std::cerr << "error on programstruct fixed" << std::endl; yyerrok; 
-        stack::push_temp(3);
-        stack::clear_error();
-        stack::push_tree(stack::temp_stack[2]);
-        stack::push_token(tree::T_SEPERATOR);
-        stack::push_tree(stack::temp_stack[0]);
-        stack::push_token(tree::T_SEPERATOR);
-        stack::reduce(3, tree::T_PROGRAM_STRUCT);
+        vector<tree::TreeNode> children; 
+        // children.push_back($1->get_root());
+        // children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_STRUCT, "", children), 1);
         }
     ;
-program_head : t_program id '(' idlist ')' { std::cerr << "Use production: program_head -> program id ( idlist )" << std::endl; stack::reduce(5,tree::T_PROGRAM_HEAD);}
-    | t_program id { std::cerr << "Use production: program_head -> program id" << std::endl; stack::reduce(2,tree::T_PROGRAM_HEAD);}
-    | error id '(' idlist ')' { 
+program_head : t_program id '(' idlist ')' { // pid = 2
+        std::cerr << "Use production: program_head -> program id ( idlist )" << std::endl; 
+        vector<tree::TreeNode> children; 
+        children.push_back($1->get_root());
+        children.push_back($2->get_root());
+        children.push_back($4->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_HEAD, "", children), 2);
+        }
+    | t_program id { // pid = 3
+        std::cerr << "Use production: program_head -> program id" << std::endl; 
+        vector<tree::TreeNode> children; 
+        vector<std::string> vid;
+        vid.push_back($2);
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_HEAD, "", children, vid, vnum), 3);
+        }
+    | error id '(' idlist ')' { // pid =4
         // we fix the lack of 'program' at the beginning of the program_head'
         std::cerr << "error on program_head fixed" << std::endl; yyerrok; 
-        stack::push_temp(4);
-        stack::clear_error();
-        stack::push_token(tree::T_KEYWORD);
-        stack::push_tree(stack::temp_stack[3]);
-        stack::push_token(tree::T_SEPERATOR);
-        stack::push_tree(stack::temp_stack[1]);
-        stack::push_token(tree::T_SEPERATOR);
-        stack::reduce(5, tree::T_PROGRAM_HEAD);
+        vector<tree::TreeNode> children; 
+        children.push_back();
+        children.push_back($2->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_HEAD, "", children), 4);
         }
     | error id { 
         // we fix the lack of 'program' at the beginning of the program_head'
         std::cerr << "error on program_head fixed" << std::endl; yyerrok; 
-        stack::push_temp(1);
-        stack::clear_error();
-        stack::push_token(tree::T_KEYWORD);
-        stack::push_tree(stack::temp_stack[0]);
-        stack::reduce(2, tree::T_PROGRAM_HEAD);
+        vector<tree::TreeNode> children;
+        children.push_back($1->get_root());
+        children.push_back($2->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_HEAD, "", children), 4);
         }
     ;
 
 
-program_body : const_declarations var_declarations subprogram_declarations compound_statement { std::cerr << "Use production: program_body -> const_declarations var_declarations subprogram_declarations compound_statement" << std::endl; stack::reduce(4,tree::T_PROGRAM_BODY);}
-    | const_declarations var_declarations compound_statement { std::cerr << "Use production: program_body -> const_declarations var_declarations compound_statement" << std::endl; stack::reduce(3,tree::T_PROGRAM_BODY);}
-    | const_declarations subprogram_declarations compound_statement { std::cerr << "Use production: program_body -> const_declarations subprogram_declarations compound_statement" << std::endl; stack::reduce(3,tree::T_PROGRAM_BODY);}
-    | var_declarations subprogram_declarations compound_statement { std::cerr << "Use production: program_body -> var_declarations subprogram_declarations compound_statement" << std::endl; stack::reduce(3,tree::T_PROGRAM_BODY);}
-    | const_declarations compound_statement { std::cerr << "Use production: program_body -> const_declarations compound_statement" << std::endl; stack::reduce(2,tree::T_PROGRAM_BODY);}
-    | var_declarations compound_statement { std::cerr << "Use production: program_body -> var_declarations compound_statement" << std::endl; stack::reduce(2,tree::T_PROGRAM_BODY);}
-    | subprogram_declarations compound_statement { std::cerr << "Use production: program_body -> subprogram_declarations compound_statement" << std::endl; stack::reduce(2,tree::T_PROGRAM_BODY);}
-    | compound_statement { std::cerr << "Use production: program_body -> compound_statement" << std::endl; stack::reduce(1,tree::T_PROGRAM_BODY);}
+program_body : const_declarations var_declarations subprogram_declarations compound_statement { // pid = 5
+        std::cerr << "Use production: program_body -> const_declarations var_declarations subprogram_declarations compound_statement" << std::endl; 
+        vector<tree::TreeNode> children;
+        children.push_back($1->get_root());
+        children.push_back($2->get_root());
+        children.push_back($3->get_root());
+        children.push_back($4->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_BODY, "", children), 5);
+        }
+    | const_declarations var_declarations compound_statement { // pid=6
+        std::cerr << "Use production: program_body -> const_declarations var_declarations compound_statement" << std::endl; 
+        vector<tree::TreeNode> children;
+        children.push_back($1->get_root());
+        children.push_back($2->get_root());
+        children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_BODY, "", children), 6);
+        }
+    | const_declarations subprogram_declarations compound_statement { // pid=7
+        std::cerr << "Use production: program_body -> const_declarations subprogram_declarations compound_statement" << std::endl; 
+        vector<tree::TreeNode> children;
+        children.push_back($1->get_root());
+        children.push_back($2->get_root());
+        children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_BODY, "", children), 7);
+        }
+    | var_declarations subprogram_declarations compound_statement { // pid=8
+        std::cerr << "Use production: program_body -> var_declarations subprogram_declarations compound_statement" << std::endl; 
+        vector<tree::TreeNode> children;
+        children.push_back($1->get_root());
+        children.push_back($2->get_root());
+        children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_BODY, "", children), 8);
+        }
+    | const_declarations compound_statement { 
+        std::cerr << "Use production: program_body -> const_declarations compound_statement" << std::endl; 
+        children.push_back($1->get_root());
+        children.push_back($2->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_BODY, "", children), 9);
+        }
+
+    | var_declarations compound_statement { 
+        std::cerr << "Use production: program_body -> var_declarations compound_statement" << std::endl; 
+        children.push_back($1->get_root());
+        children.push_back($2->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_BODY, "", children), 10);
+    }
+    | subprogram_declarations compound_statement { 
+        std::cerr << "Use production: program_body -> subprogram_declarations compound_statement" << std::endl; 
+        children.push_back($1->get_root());
+        children.push_back($2->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_BODY, "", children), 11);
+        }
+    | compound_statement { 
+        std::cerr << "Use production: program_body -> compound_statement" << std::endl; 
+        children.push_back($1->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_BODY, "", children), 12);
+        }
     ;
 
-idlist : id { std::cerr << "Use production: idlist -> id" << std::endl; stack::reduce(1,tree::T_IDLIST);}
-    | idlist ',' id { std::cerr << "Use production: idlist -> idlist , id" << std::endl; stack::reduce(3,tree::T_IDLIST);}
+idlist : id { 
+        std::cerr << "Use production: idlist -> id" << std::endl; 
+        vector<tree::TreeNode> children;
+        children.push_back($1->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_IDLIST, "", children), 1);
+        }
+    | idlist ',' id { 
+        std::cerr << "Use production: idlist -> idlist , id" << std::endl; 
+        vector<tree::TreeNode> children;
+        children.push_back($1->get_root());
+        children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_IDLIST, "", children), 2);
+        }
     | error idlist id { 
         // we fix the lack of ',' at the end of the idlist'
         std::cerr << "error on idlist fixed" << std::endl; yyerrok; 
@@ -528,6 +606,8 @@ term : factor { std::cerr << "Use production: term -> factor " << std::endl; sta
     | '-' factor { std::cerr << "Use production: factor -> - factor" << std::endl; stack::reduce(2,tree::T_FACTOR);}
     ;
     
+
+
 
 %%
 
