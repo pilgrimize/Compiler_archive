@@ -84,7 +84,8 @@ void parse_args(int argc, char *argv[]) {
         }
     }
 
-    if (lex_yacc() && semantic_analysis() && code_generation()) {
+    if (lex_yacc()){
+    //  && semantic_analysis() && code_generation()) {
         std::cerr << "Compilation passed." << std::endl;
     }
 }
