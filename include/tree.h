@@ -111,11 +111,14 @@ private:
     std::shared_ptr<TreeNode> root;
     int pid; // production id 
     std::vector<std::string> vid;
-    std::vector<int> vnum;
+    std::vector<std::string> vnum;
 public:
     Tree() = default;
-    explicit Tree(std::shared_ptr<TreeNode> root, int pid) : root(std::move(root)), pid(pid) {}
+    explicit Tree(std::shared_ptr<TreeNode> root, int pid, std::vector<std::string> vid, std::vector<std::string> vnum) :
+         root(std::move(root)), pid(pid), vid(std::move(vid)), vnum(std::move(vnum)) {}
     int get_pid () const { return pid; }
+    std::vector<std::string> get_vid() const { return vid; }
+    std::vector<std::string> get_vnum() const { return vnum; }
 
     std::shared_ptr<TreeNode> get_root() const { return root; }
 };

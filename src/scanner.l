@@ -60,7 +60,8 @@ comment \{[^}]*\}
 %%
 
 {num}           {std::cerr << "num:" << yytext << std::endl; 
-                yylval.ival = atoi(yytext);
+                yylval.sval = (char*)malloc(strlen(yytext)+1);
+                strcpy(yylval.sval,yytext); 
                 return num;
                 }
 {seperator}     {std::cerr << "seperator:" << yytext << std::endl; stack::push_token(tree::T_SEPERATOR); return yytext[0];}

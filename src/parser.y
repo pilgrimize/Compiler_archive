@@ -19,8 +19,8 @@
 }
 
 %start programstruct
-%token <num> num
-%token <str>id
+%token <str> num
+%token <str> id
 %token keyword
 %token addop mulop relop
 %token seperator
@@ -68,7 +68,7 @@
 %type <Tree> optional_statements statement_list statement
 %type <Tree> procedure_call
 %type <Tree> else_part
-%type <Tree> variable
+%type <Tree> variable variable_list
 %type <Tree> id_varpart expression_list
 %type <Tree> expression simple_expression term factor case_expression_list
 
@@ -143,470 +143,881 @@ factor -> num | variable
 programstruct : program_head ';' program_body '.' { // pid = 1
         std::cerr << "Use production: programstruct -> program_head ; program_body ." << std::endl; 
         vector<tree::TreeNode> children; 
+        vector<std::string> vid;
+        vector<std::string> vnum;
         children.push_back($1->get_root());
         children.push_back($3->get_root());
-        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_STRUCT, "", children), 1);
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_STRUCT, "", children), 1, vid, vnum);
     }
-    | error program_head ';' program_body{ 
-        // we fix the lack of '.' at the end of the program'
-        std::cerr << "error on programstruct fixed" << std::endl; yyerrok; 
-        vector<tree::TreeNode> children; 
-        // children.push_back($1->get_root());
-        // children.push_back($3->get_root());
-        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_STRUCT, "", children), 1);
-        }
     ;
 program_head : t_program id '(' idlist ')' { // pid = 2
         std::cerr << "Use production: program_head -> program id ( idlist )" << std::endl; 
         vector<tree::TreeNode> children; 
-        children.push_back($1->get_root());
-        children.push_back($2->get_root());
+        vector<std::string> vid;
+        vector<std::string> vnum;
+
         children.push_back($4->get_root());
-        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_HEAD, "", children), 2);
+        vid.push_back($2);
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_HEAD, "", children), 2, vid, vnum);
         }
     | t_program id { // pid = 3
         std::cerr << "Use production: program_head -> program id" << std::endl; 
         vector<tree::TreeNode> children; 
         vector<std::string> vid;
+        vector<std::string> vnum;
+
         vid.push_back($2);
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_HEAD, "", children, vid, vnum), 3);
         }
-    | error id '(' idlist ')' { // pid =4
+    | error id '(' idlist ')' { 
         // we fix the lack of 'program' at the beginning of the program_head'
         std::cerr << "error on program_head fixed" << std::endl; yyerrok; 
         vector<tree::TreeNode> children; 
-        children.push_back();
-        children.push_back($2->get_root());
-        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_HEAD, "", children), 4);
+        vector<std::string> vid;
+        vector<std::string> vnum;
+
+        children.push_back($3->get_root());
+        vid.push_back($1);
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_HEAD, "", children), 2);
         }
     | error id { 
         // we fix the lack of 'program' at the beginning of the program_head'
         std::cerr << "error on program_head fixed" << std::endl; yyerrok; 
         vector<tree::TreeNode> children;
-        children.push_back($1->get_root());
-        children.push_back($2->get_root());
-        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_HEAD, "", children), 4);
+        vector<std::string> vid;
+        vector<std::string> vnum;
+
+        vid.push_back($1);
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_HEAD, "", children), 3);
         }
     ;
 
 
-program_body : const_declarations var_declarations subprogram_declarations compound_statement { // pid = 5
+program_body : const_declarations var_declarations subprogram_declarations compound_statement { // pid = 4
         std::cerr << "Use production: program_body -> const_declarations var_declarations subprogram_declarations compound_statement" << std::endl; 
         vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
         children.push_back($1->get_root());
         children.push_back($2->get_root());
         children.push_back($3->get_root());
         children.push_back($4->get_root());
-        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_BODY, "", children), 5);
+
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_BODY, "", children), 4, vid, vnum);
+
         }
-    | const_declarations var_declarations compound_statement { // pid=6
-        std::cerr << "Use production: program_body -> const_declarations var_declarations compound_statement" << std::endl; 
+    | const_declarations var_declarations compound_statement { // pid=5
+        std::cerr << "Use production: program_body -> const_declarations var_declarations compound_statement" << std::endl;
         vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
         children.push_back($1->get_root());
         children.push_back($2->get_root());
         children.push_back($3->get_root());
-        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_BODY, "", children), 6);
+
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_BODY, "", children), 5, vid, vnum);
         }
-    | const_declarations subprogram_declarations compound_statement { // pid=7
+    | const_declarations subprogram_declarations compound_statement { // pid=6
         std::cerr << "Use production: program_body -> const_declarations subprogram_declarations compound_statement" << std::endl; 
         vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
         children.push_back($1->get_root());
         children.push_back($2->get_root());
         children.push_back($3->get_root());
-        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_BODY, "", children), 7);
+
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_BODY, "", children), 6, vid, vnum);
         }
-    | var_declarations subprogram_declarations compound_statement { // pid=8
+    | var_declarations subprogram_declarations compound_statement { // pid=7
         std::cerr << "Use production: program_body -> var_declarations subprogram_declarations compound_statement" << std::endl; 
         vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
         children.push_back($1->get_root());
         children.push_back($2->get_root());
         children.push_back($3->get_root());
-        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_BODY, "", children), 8);
+        
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_BODY, "", children), 7, vid, vnum);
         }
-    | const_declarations compound_statement { 
+    | const_declarations compound_statement {  // pid=8
         std::cerr << "Use production: program_body -> const_declarations compound_statement" << std::endl; 
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
         children.push_back($1->get_root());
         children.push_back($2->get_root());
-        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_BODY, "", children), 9);
+        
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_BODY, "", children), 8, vid, vnum);
         }
 
-    | var_declarations compound_statement { 
+    | var_declarations compound_statement {  // pid=9
         std::cerr << "Use production: program_body -> var_declarations compound_statement" << std::endl; 
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
         children.push_back($1->get_root());
         children.push_back($2->get_root());
-        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_BODY, "", children), 10);
+        
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_BODY, "", children), 9, vid, vnum);
     }
-    | subprogram_declarations compound_statement { 
+    | subprogram_declarations compound_statement {  // pid=10
         std::cerr << "Use production: program_body -> subprogram_declarations compound_statement" << std::endl; 
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
         children.push_back($1->get_root());
         children.push_back($2->get_root());
-        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_BODY, "", children), 11);
+        
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_BODY, "", children), 10, vid, vnum);
         }
-    | compound_statement { 
+    | compound_statement {  // pid=11
         std::cerr << "Use production: program_body -> compound_statement" << std::endl; 
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
         children.push_back($1->get_root());
-        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_BODY, "", children), 12);
+        
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_BODY, "", children), 11, vid, vnum);
         }
     ;
 
-idlist : id { 
+idlist : id {  // pid=12
         std::cerr << "Use production: idlist -> id" << std::endl; 
         vector<tree::TreeNode> children;
-        children.push_back($1->get_root());
-        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_IDLIST, "", children), 1);
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        vid.push_back($1);
+
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_IDLIST, "", children), 12, vid, vnum);
         }
-    | idlist ',' id { 
+    | idlist ',' id {  // pid=13
         std::cerr << "Use production: idlist -> idlist , id" << std::endl; 
         vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
         children.push_back($1->get_root());
-        children.push_back($3->get_root());
-        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_IDLIST, "", children), 2);
-        }
-    | error idlist id { 
-        // we fix the lack of ',' at the end of the idlist'
-        std::cerr << "error on idlist fixed" << std::endl; yyerrok; 
-        stack::push_temp(2);
-        stack::clear_error();
-        stack::push_tree(stack::temp_stack[1]);
-        stack::push_token(tree::T_SEPERATOR);
-        stack::push_tree(stack::temp_stack[0]);
-        stack::reduce(3, tree::T_IDLIST);
+        vid.push_back($3);
+        
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_IDLIST, "", children), 13, vid, vnum);
         }
     ;
 
 const_declarations :
-    t_const const_declaration ';' { std::cerr << "Use production: const_declarations -> const const_declaration ;" << std::endl; stack::reduce(3,tree::T_CONST_DECLARATIONS);}
-    | error const_declaration ';' { 
-        // we fix the lack of 'const' at the beginning of the const_declarations'
-        std::cerr << "error on const_declarations fixed" << std::endl; yyerrok; 
-        stack::push_temp(2);
-        stack::clear_error();
-        stack::push_token(tree::T_KEYWORD);
-        stack::push_tree(stack::temp_stack[1]);
-        stack::push_token(tree::T_SEPERATOR);
-        stack::reduce(3, tree::T_CONST_DECLARATIONS);
+    t_const const_declaration ';' {  // pid=14
+        std::cerr << "Use production: const_declarations -> const const_declaration ;" << std::endl; 
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($2->get_root());
+        
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_CONST_DECLARATIONS, "", children), 14, vid, vnum);
         }
 
-const_declaration : id '=' const_value { std::cerr << "Use production: const_declaration -> id = constant" << std::endl; stack::reduce(3,tree::T_CONST_DECLARATION);}
-    | const_declaration ';' id '=' const_value { std::cerr << "Use production: const_declaration -> const_declaration , id = constant" << std::endl; stack::reduce(5,tree::T_CONST_DECLARATION);}
-    | error const_declaration id '=' const_value { 
-        // we fix the lack of ';' at the end of the const_declaration'
-        std::cerr << "error on const_declaration fixed" << std::endl; yyerrok; 
-        stack::push_temp(4);
-        stack::clear_error();
-        stack::push_tree(stack::temp_stack[3]);
-        stack::push_token(tree::T_SEPERATOR);
-        stack::push_tree(stack::temp_stack[2]);
-        stack::push_token(tree::T_SEPERATOR);
-        stack::push_token(tree::T_CONST_DECLARATION);
-        stack::reduce(5, tree::T_CONST_DECLARATION);
+const_declaration : id '=' const_value {  // pid=15
+        std::cerr << "Use production: const_declaration -> id = constant" << std::endl; 
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($3->get_root());
+        vid.push_back($1);
+
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_CONST_DECLARATION, "", children), 15, vid, vnum);
+    }
+    | const_declaration ';' id '=' const_value {  // pid=16
+        std::cerr << "Use production: const_declaration -> const_declaration , id = constant" << std::endl; 
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($5->get_root());
+        vid.push_back($3);
+
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_CONST_DECLARATION, "", children), 16, vid, vnum);
         }
     ;
 
-const_value : num { std::cerr << "Use production: const_value -> num" << std::endl; stack::reduce(1,tree::T_CONST);}
-    | '+' num { std::cerr << "Use production: const_value -> + num" << std::endl; stack::reduce(2,tree::T_CONST);}
-    | '-' num { std::cerr << "Use production: const_value -> - num" << std::endl; stack::reduce(2,tree::T_CONST);}
-    | literal { std::cerr << "Use production: const_value -> literal" << std::endl; stack::reduce(1,tree::T_CONST);}
+const_value : num {  // pid=17
+        std::cerr << "Use production: const_value -> num" << std::endl; 
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        vnum.push_back($1);
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_CONST, "", children), 17, vid, vnum);
+        }
+    | '+' num {  // pid=18
+        std::cerr << "Use production: const_value -> + num" << std::endl; 
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        vnum.push_back($2);
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_CONST, "", children), 18, vid, vnum);
+        }
+    | '-' num {  // pid=19
+        std::cerr << "Use production: const_value -> - num" << std::endl; 
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        vnum.push_back($2);
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_CONST, "", children), 19, vid, vnum);
+        }
+    | literal {  // pid=20
+        std::cerr << "Use production: const_value -> literal" << std::endl; 
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        vnum.push_back($1);
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_CONST, "", children), 20, vid, vnum);
+        }
     ;
     // to do 
 
 var_declarations :
-    t_var var_declaration ';' { std::cerr << "Use production: var_declarations -> var var_declaration ;" << std::endl;
-    stack::print_ast_stack();
-    stack::reduce(3,tree::T_VAR_DECLARATIONS);
-    stack::print_ast_stack();
+    t_var var_declaration ';' {  // pid=21
+        std::cerr << "Use production: var_declarations -> var var_declaration ;" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($2->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_VAR_DECLARATIONS, "", children), 21, vid, vnum);
     }
-    | error var_declaration ';' { 
-        // we fix the lack of 'var' at the beginning of the var_declarations'
-        std::cerr << "error on var_declarations fixed" << std::endl; yyerrok; 
-        stack::push_temp(2);
-        stack::clear_error();
-        stack::push_token(tree::T_KEYWORD);
-        stack::push_tree(stack::temp_stack[1]);
-        stack::push_token(tree::T_SEPERATOR);
-        stack::reduce(3, tree::T_VAR_DECLARATIONS);
-        }
     ;
 
-var_declaration : idlist ':' type { std::cerr << "Use production: var_declaration -> idlist : type" << std::endl; stack::reduce(3,tree::T_VAR_DECLARATION);}
-    | var_declaration ';' idlist ':' type { std::cerr << "Use production: var_declaration -> var_declaration ; idlist : type" << std::endl; stack::reduce(5,tree::T_VAR_DECLARATION);}
-    | error idlist type { 
-        // we fix the lack of ':'
-        std::cerr << "error on var_declaration fixed" << std::endl; yyerrok; 
-        stack::push_temp(2);
-        stack::clear_error();
-        stack::push_tree(stack::temp_stack[1]);
-        stack::push_token(tree::T_SEPERATOR);
-        stack::push_tree(stack::temp_stack[0]);
-        stack::reduce(3, tree::T_VAR_DECLARATION);
-        }
+var_declaration : idlist ':' type {  // pid=22
+        std::cerr << "Use production: var_declaration -> id_list : type" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_VAR_DECLARATION, "", children), 22, vid, vnum);
+    }
+    | var_declaration ';' idlist ':' type {  // pid=23
+        std::cerr << "Use production: var_declaration -> var_declaration ; id_list : type" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($4->get_root());
+        children.push_back($5->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_VAR_DECLARATION, "", children), 23, vid, vnum);
+    }
     ;
 
-type : basic_type { std::cerr << "Use production: type -> basic_type" << std::endl; stack::reduce(1,tree::T_TYPE);}
-    | t_array '[' period ']' t_of basic_type { std::cerr << "Use production: type -> array [ period ] of basic_type" << std::endl; stack::reduce(6,tree::T_TYPE);}
-    | error t_array '[' period ']' basic_type { 
-        // we fix the lack of 'of' 
-        std::cerr << "error on type fixed" << std::endl; yyerrok; 
-        stack::push_temp(5);
-        stack::clear_error();
-        stack::push_token(tree::T_ARRAY);   // ?
-        stack::push_token(tree::T_SEPERATOR);
-        stack::push_tree(stack::temp_stack[4]);
-        stack::push_token(tree::T_SEPERATOR);
-        stack::push_token(tree::T_BASIC_TYPE);
-        stack::reduce(5, tree::T_TYPE);
-        }
-    ;
-
-basic_type : t_integer { std::cerr << "Use production: basic_type -> integer" << std::endl; stack::reduce(1,tree::T_BASIC_TYPE);}
-    | t_char { std::cerr << "Use production: basic_type -> char" << std::endl; stack::reduce(1,tree::T_BASIC_TYPE);}
-    | t_boolean { std::cerr << "Use production: basic_type -> boolean" << std::endl; stack::reduce(1,tree::T_BASIC_TYPE);}
-    | t_real { std::cerr << "Use production: basic_type -> real" << std::endl; stack::reduce(1,tree::T_BASIC_TYPE);}
-    ;
-
-period : num t_dot num { std::cerr << "Use production: period -> num .. num" << std::endl; stack::reduce(3,tree::T_PERIOD);}
-    | period ',' num t_dot num { std::cerr << "Use production: period -> period , num .. num" << std::endl; stack::reduce(5,tree::T_PERIOD);}
-    | error num t_dot { 
-        // we fix the lack of num at the end of the period
-        std::cerr << "error on period fixed" << std::endl; yyerrok; 
-        stack::push_temp(2);
-        stack::clear_error();
-        int num = tools::convertStringToNumber(stack::temp_stack.back().get_root()->get_text());
-        stack::push_token(tree::T_NUM, tools::intToString(num));
-        stack::push_token(tree::T_PERIOD);
-        stack::push_token(tree::T_NUM, tools::intToString(num+10));
-        stack::reduce(3, tree::T_PERIOD);
-        }
-    ;
-
-subprogram_declarations :
-      subprogram ';' { std::cerr << "Use production: subprogram_declarations -> subprogram_declaration ;" << std::endl; stack::reduce(2,tree::T_SUBPROGRAM_DECLARATIONS);}
-    | subprogram_declarations subprogram ';' { std::cerr << "Use production: subprogram_declarations -> subprogram_declarations subprogram_declaration ;" << std::endl; stack::reduce(3,tree::T_SUBPROGRAM_DECLARATIONS);}
-    | error subprogram{
-        // we fix the lack of ';' at the end of the subprogram_declaration
-        std::cerr << "error on subprogram_declarations fixed" << std::endl; yyerrok; 
-        stack::push_temp(1);
-        stack::clear_error();
-        stack::push_tree(stack::temp_stack[0]);
-        stack::push_token(tree::T_SEPERATOR);
-        stack::reduce(2, tree::T_SUBPROGRAM_DECLARATIONS);
-        }
-    ;
-
-subprogram : subprogram_head ';' subprogram_body { std::cerr << "Use production: subprogram -> subprogram_head ; subprogram_body" << std::endl; stack::reduce(3,tree::T_SUBPROGRAM);}
-    | error subprogram_head subprogram_body { 
-        // we fix the lack of ';' at the end of the subprogram_head
-        std::cerr << "error on subprogram fixed" << std::endl; yyerrok; 
-        stack::push_temp(2);
-        stack::clear_error();
-        stack::push_tree(stack::temp_stack[1]);
-        stack::push_token(tree::T_SEPERATOR);
-        stack::push_tree(stack::temp_stack[0]);
-        stack::reduce(3, tree::T_SUBPROGRAM);
-        }
-    ;
-
-subprogram_head : subprogram_head ';' subprogram_body { std::cerr << "Use production: subprogram_head -> subprogram_head ; subprogram_body" << std::endl; stack::reduce(3,tree::T_SUBPROGRAM_HEAD);}
-    | t_function id formal_parameter ':' basic_type { std::cerr << "Use production: subprogram_head -> function id formal_parameter : basic_type" << std::endl; stack::reduce(5,tree::T_SUBPROGRAM_HEAD);}
-    | t_procedure id formal_parameter { std::cerr << "Use production: subprogram_head -> procedure id ( parameters )" << std::endl; stack::reduce(3,tree::T_SUBPROGRAM_HEAD);}
-    | t_function id ':' basic_type { std::cerr << "Use production: subprogram_head -> function id : basic_type" << std::endl; stack::reduce(4,tree::T_SUBPROGRAM_HEAD);}
-    | t_procedure id { std::cerr << "Use production: subprogram_head -> procedure id" << std::endl; stack::reduce(2,tree::T_SUBPROGRAM_HEAD);}
-    | error id formal_parameter ':' basic_type { 
-        // we fix the lack of 'function' at the beginning of the subprogram_head
-        std::cerr << "error on subprogram_head fixed" << std::endl; yyerrok; 
-        stack::push_temp(4);
-        stack::clear_error();
-        stack::push_token(tree::T_FUNCTION);
-        stack::push_tree(stack::temp_stack[3]);
-        stack::push_tree(stack::temp_stack[2]);
-        stack::push_token(tree::T_SEPERATOR);
-        stack::push_tree(stack::temp_stack[0]);
-        stack::reduce(5, tree::T_SUBPROGRAM_HEAD);
-        }
-
-    | error id formal_parameter {
-        // we fix the lack of 'procedure' at the beginning of the subprogram_head
-        std::cerr << "error on subprogram_head fixed" << std::endl; yyerrok; 
-        stack::push_temp(2);
-        stack::clear_error();
-        stack::push_token(tree::T_PROCEDURE);
-        stack::push_tree(stack::temp_stack[1]);
-        stack::push_tree(stack::temp_stack[0]);
-        stack::reduce(3, tree::T_SUBPROGRAM_HEAD);
-        }
-    ;
-
-formal_parameter : 
-    '(' parameter_list ')' { std::cerr << "Use production: formal_parameter -> ( parameter_list )" << std::endl; stack::reduce(3,tree::T_FORMAL_PARAMETER);}
-    | error parameter_list ')' { 
-        // we fix the lack of '(' at the end of the formal_parameter
-        std::cerr << "error on formal_parameter fixed" << std::endl; yyerrok; 
-        stack::push_temp(2);
-        stack::clear_error();
-        stack::push_token(tree::T_SEPERATOR);
-        stack::push_tree(stack::temp_stack[1]);
-        stack::push_token(tree::T_SEPERATOR);
-        stack::reduce(3, tree::T_FORMAL_PARAMETER);
-        }
+type : basic_type {  // pid=24
+        std::cerr << "Use production: type -> basic_type" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_TYPE, "", children), 24, vid, vnum);
+    }
+    | t_array '[' num ']' t_of basic_type {  // pid=25
+        std::cerr << "Use production: type -> array [ num ] of basic_type" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($3->get_root());
+        children.push_back($6->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_TYPE, "", children), 25, vid, vnum);
+    }
     ;
     
-parameter_list : parameter { std::cerr << "Use production: parameter_list -> parameter" << std::endl; stack::reduce(1,tree::T_PARAMETER_LIST);}
-    | parameter_list ';' parameter { std::cerr << "Use production: parameter_list -> parameter_list ; parameter" << std::endl; stack::reduce(3,tree::T_PARAMETER_LIST);}
-    | error parameter_list parameter { 
-        // we fix the lack of ';' at the end of the parameter_list
-        std::cerr << "error on parameter_list fixed" << std::endl; yyerrok; 
-        stack::push_temp(2);
-        stack::clear_error();
-        stack::push_tree(stack::temp_stack[1]);
-        stack::push_token(tree::T_SEPERATOR);
-        stack::push_tree(stack::temp_stack[0]);
-        stack::reduce(3, tree::T_PARAMETER_LIST);
-        }
-    ;
-
-parameter : var_parameter { std::cerr << "Use production: parameter -> var_parameter" << std::endl; stack::reduce(1,tree::T_PARAMETER);}
-    | value_parameter { std::cerr << "Use production: parameter -> value_parameter" << std::endl; stack::reduce(1,tree::T_PARAMETER);}
-    ;
-
-var_parameter : t_var value_parameter { std::cerr << "Use production: var_parameter -> var value_parameter" << std::endl; stack::reduce(2,tree::T_VAR_PARAMETER);}
-    ;
-
-value_parameter : idlist ':' basic_type { std::cerr << "Use production: value_parameter -> id_list : basic_type" << std::endl; stack::reduce(3,tree::T_VALUE_PARAMETER);}
-    | error idlist basic_type { 
-        // we fix the lack of ':' at the end of the value_parameter
-        std::cerr << "error on value_parameter fixed" << std::endl; yyerrok; 
-        stack::push_temp(2);
-        stack::clear_error();
-        stack::push_tree(stack::temp_stack[1]);
-        stack::push_token(tree::T_SEPERATOR);
-        stack::push_tree(stack::temp_stack[0]);
-        stack::reduce(3, tree::T_VALUE_PARAMETER);
-        } 
-    ;
-
-subprogram_body : compound_statement { std::cerr << "Use production: subprogram_body -> compound_statement" << std::endl; stack::reduce(1,tree::T_SUBPROGRAM_BODY);}
-    | const_declarations { std::cerr << "Use production: subprogram_body -> const_declarations" << std::endl; stack::reduce(1,tree::T_SUBPROGRAM_BODY);}
-    | var_declarations { std::cerr << "Use production: subprogram_body -> var_declarations" << std::endl; stack::reduce(1,tree::T_SUBPROGRAM_BODY);}
-
-compound_statement : t_begin statement_list t_end { std::cerr << "Use production: compound_statement -> begin statement_list end" << std::endl; stack::reduce(3,tree::T_COMPOUND_STATEMENT);}
-    | t_begin t_end { std::cerr << "Use production: compound_statement -> begin end" << std::endl; stack::reduce(2,tree::T_COMPOUND_STATEMENT);}
-    | error statement_list t_end { 
-        // we fix the lack of 'begin' at the beginning of the compound_statement
-        std::cerr << "error on compound_statement fixed" << std::endl; yyerrok; 
-        stack::push_temp(2);
-        stack::clear_error();
-        stack::push_token(tree::T_BEGIN);
-        stack::push_tree(stack::temp_stack[1]);
-        stack::push_token(tree::T_END);
-        stack::reduce(3, tree::T_COMPOUND_STATEMENT);
-        }
-    ;
-
-statement_list : statement { std::cerr << "Use production: statement_list -> statement" << std::endl; stack::reduce(1,tree::T_STATEMENT_LIST);}
-    | statement_list ';' statement{ std::cerr << "Use production: statement_list -> statement_list ; statement" << std::endl; stack::reduce(3,tree::T_STATEMENT_LIST);}
-    | error statement_list statement { 
-        // we fix the lack of ';' at the end of the statement_list
-        std::cerr << "error on statement_list fixed" << std::endl; yyerrok; 
-        stack::push_temp(2);
-        stack::clear_error();
-        stack::push_tree(stack::temp_stack[1]);
-        stack::push_token(tree::T_SEPERATOR);
-        stack::push_tree(stack::temp_stack[0]);
-        stack::reduce(3, tree::T_STATEMENT_LIST);
-        }
-    ;
-
-statement : variable assignop expression { std::cerr << "Use production: statement -> variable := expression" << std::endl; stack::reduce(3,tree::T_STATEMENT);}
-    | id assignop expression { std::cerr << "Use production: statement -> id := expression" << std::endl; stack::reduce(3,tree::T_STATEMENT);}
-    | procedure_call
-    | compound_statement { std::cerr << "Use production: statement -> compound_statement" << std::endl; stack::reduce(1,tree::T_STATEMENT);}
-    | t_if expression t_then statement else_part { std::cerr << "Use production: statement -> if expression then statement else_part" << std::endl; stack::reduce(5,tree::T_STATEMENT);}
-    | t_if expression t_then statement { std::cerr << "Use production: statement -> if expression then statement" << std::endl; stack::reduce(4,tree::T_STATEMENT);}
-    // to do 
-    | t_while expression t_do statement { std::cerr << "Use production: statement -> while expression do statement" << std::endl; stack::reduce(4,tree::T_STATEMENT);}
-    | t_for id assignop expression t_to expression t_do statement { std::cerr << "Use production: statement -> for id := expression to expression do statement" << std::endl; stack::reduce(8,tree::T_STATEMENT);}
-    | t_for id assignop expression t_downto expression t_to statement { std::cerr << "Use production: statement -> for id := expression downto expression do statement" << std::endl; stack::reduce(8,tree::T_STATEMENT);}
-    /* | "repeat" statement_list "until" expression { std::cerr << "Use production: statement -> repeat statement_list until expression" << std::endl; stack::reduce(4,tree::T_STATEMENT);} */
-    // to do
-    /* | "case" expression "of" case_expression_list "end" { std::cerr << "Use production: statement -> case expression of case_expression_list end" << std::endl; stack::reduce(5,tree::T_STATEMENT);} */
-    | t_read '(' idlist ')' { std::cerr << "Use production: statement -> read ( idlist )" << std::endl; stack::reduce(4,tree::T_STATEMENT);}
-    | t_write '(' expression_list ')' { std:: cerr << "Use production: statement -> write ( expression_list )" << std::endl; stack::reduce(4,tree::T_STATEMENT);}
-    /* | "writeln" '(' expression_list ')' { std:: cerr << "Use production: statement -> writeln ( expression_list )" << std::endl; stack::reduce(4,tree::T_STATEMENT);} */
-    | error expression { 
-        // we fix the lack of ';' at the end of the statement
-        std::cerr << "error on statement fixed" << std::endl; yyerrok; 
-        stack::push_temp(1);
-        stack::clear_error();
-        stack::push_tree(stack::temp_stack[0]);
-        stack::push_token(tree::T_SEPERATOR);
-        stack::reduce(2, tree::T_STATEMENT);
-        }
-        ;
-
-variable_list : variable { std::cerr << "Use production: variable_list -> variable" << std::endl; stack::reduce(1,tree::T_VARIABLE_LIST);}
-    | variable_list ',' variable { std::cerr << "Use production: variable_list -> variable_list , variable" << std::endl; stack::reduce(3,tree::T_VARIABLE_LIST);}
-    | error variable_list variable { 
-        // we fix the lack of ',' at the end of the variable_list
-        std::cerr << "error on variable_list fixed" << std::endl; yyerrok; 
-        stack::push_temp(2);
-        stack::clear_error();
-        stack::push_tree(stack::temp_stack[1]);
-        stack::push_token(tree::T_SEPERATOR); // comma or seperator?
-        stack::push_tree(stack::temp_stack[0]);
-        stack::reduce(3, tree::T_VARIABLE_LIST);
-        }
-        ;
-
-variable : id id_varpart { std::cerr << "Use production: variable -> id id_varpart" << std::endl; stack::reduce(2,tree::T_VARIABLE);}
-         | id { std::cerr << "Use production: variable -> id" << std::endl; stack::reduce(1,tree::T_VARIABLE);}
-
-id_varpart : 
-      '[' expression_list ']' { std::cerr << "Use production: id_varpart -> [ expression_list ]" << std::endl; stack::reduce(3,tree::T_ID_VARPART);}
-
-procedure_call : id '(' expression_list ')' { std::cerr << "Use production: procedure_call -> id ( expression_list )" << std::endl; stack::reduce(4,tree::T_PROCEDURE_CALL);}
-    | id { std::cerr << "Use production: procedure_call -> id" << std::endl; stack::reduce(1,tree::T_PROCEDURE_CALL);}
-
-else_part :
-      t_else statement { std::cerr << "Use production: else_part -> else statement" << std::endl; stack::reduce(2,tree::T_ELSE_PART);}
-    | t_else  { std::cerr << "Use production: else_part -> else" << std::endl; stack::reduce(1,tree::T_ELSE_PART);}
-
-expression_list : expression { std::cerr << "Use production: expression_list -> expression" << std::endl; stack::reduce(1,tree::T_EXPRESSION_LIST);}
-    | expression_list ',' expression { std::cerr << "Use production: expression_list -> expression_list , expression" << std::endl; stack::reduce(3,tree::T_EXPRESSION_LIST);}
-    | error expression_list expression { 
-        // we fix the lack of ',' at the end of the expression_list
-        std::cerr << "error on expression_list fixed" << std::endl; yyerrok; 
-        stack::push_temp(2);
-        stack::clear_error();
-        stack::push_tree(stack::temp_stack[1]);
-        stack::push_token(tree::T_SEPERATOR); // comma or seperator?
-        stack::push_tree(stack::temp_stack[0]);
-        stack::reduce(3, tree::T_EXPRESSION_LIST);
-        }
-        ;
-
-expression : simple_expression { std::cerr << "Use production: expression -> simple_expression " << std::endl; stack::reduce(1,tree::T_EXPRESSION);}
-    | simple_expression relop simple_expression { std::cerr << "Use production: expression -> simple_expression relop simple_expression" << std::endl; stack::reduce(3,tree::T_EXPRESSION);}
-    | simple_expression '=' simple_expression { std::cerr << "Use production: expression -> simple_expression = simple_expression" << std::endl; stack::reduce(3,tree::T_EXPRESSION);}
-
-simple_expression : term { std::cerr << "Use production: simple_expression -> term " << std::endl; stack::reduce(1,tree::T_SIMPLE_EXPRESSION);}
-    | term '+' term { std::cerr << "Use production: simple_expression -> term addop term" << std::endl; stack::reduce(3,tree::T_SIMPLE_EXPRESSION);}
-    | term '-' term { std::cerr << "Use production: simple_expression -> term addop term" << std::endl; stack::reduce(3,tree::T_SIMPLE_EXPRESSION);}
-    | term or_op term { std::cerr << "Use production: simple_expression -> term addop term" << std::endl; stack::reduce(3,tree::T_SIMPLE_EXPRESSION);}
-    ;
-
-term : factor { std::cerr << "Use production: term -> factor " << std::endl; stack::reduce(1,tree::T_TERM);}
-    | term mulop factor { std::cerr << "Use production: term -> factor mulop factor" << std::endl; stack::reduce(3,tree::T_TERM);}
-    ;
-
-    factor : variable { std::cerr << "Use production: factor -> variable" << std::endl; stack::reduce(1,tree::T_FACTOR);}
-    | id '(' expression_list ')' { std::cerr << "Use production: factor -> id ( expression_list )" << std::endl; stack::reduce(4,tree::T_FACTOR);}
-    | num { std::cerr << "Use production: factor -> number" << std::endl; stack::reduce(1,tree::T_FACTOR);}
-    | '(' expression ')' { std::cerr << "Use production: factor -> ( expression )" << std::endl; stack::reduce(3,tree::T_FACTOR);}
-    | notop factor { std::cerr << "Use production: factor -> not factor" << std::endl; stack::reduce(2,tree::T_FACTOR);}
-    | '-' factor { std::cerr << "Use production: factor -> - factor" << std::endl; stack::reduce(2,tree::T_FACTOR);}
+basic_type : t_integer {  // pid=26
+        std::cerr << "Use production: basic_type -> integer" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_BASIC_TYPE, "", children), 26, vid, vnum);
+    }
+    | t_real {  // pid=27
+        std::cerr << "Use production: basic_type -> real" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_BASIC_TYPE, "", children), 27, vid, vnum);
+    }
+    | t_boolean {  // pid=28
+        std::cerr << "Use production: basic_type -> boolean" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_BASIC_TYPE, "", children), 28, vid, vnum);
+    }
     ;
     
+period : num t_dot num {  // pid=29
+        std::cerr << "Use production: period -> num . num" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PERIOD, "", children), 29, vid, vnum);
+    }
+    |period ',' num t_dot num {  // pid=30
+        std::cerr << "Use production: period -> period , num . num" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($3->get_root());
+        children.push_back($5->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PERIOD, "", children), 30, vid, vnum);
+    }
+    ;
 
+subprogram_declarations : subprogram ';' {  // pid=31
+        std::cerr << "Use production: subprogram_declarations -> subprogram_declarations subprogram_declaration ;" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($2->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_SUBPROGRAM_DECLARATIONS, "", children), 31, vid, vnum);
+    } 
+    | subprogram_declarations subprogram ';' {  // pid=32
+        std::cerr << "Use production: subprogram_declarations -> subprogram_declaration ;" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_SUBPROGRAM_DECLARATIONS, "", children), 32, vid, vnum);
+    }
+    ;
+
+subprogram : subprogram_head ';' subprogram_body {  // pid=33
+        std::cerr << "Use production: subprogram -> subprogram_head ; subprogram_declarations compound_statement" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_SUBPROGRAM, "", children), 33, vid, vnum);
+    }
+    ;
+
+subprogram_head : subprogram_head ';' subprogram_body {  // pid=34
+        std::cerr << "Use production: subprogram_head -> subprogram_head ; subprogram_declarations compound_statement" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_SUBPROGRAM_HEAD, "", children), 34, vid, vnum);
+    }
+    | t_function id formal_parameter ':' basic_type {  // pid=35
+        std::cerr << "Use production: subprogram_head -> function id formal_parameter : basic_type" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($2->get_root());
+        children.push_back($3->get_root());
+        children.push_back($5->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_SUBPROGRAM_HEAD, "", children), 35, vid, vnum);
+    }
+    | t_procedure id formal_parameter {  // pid=36
+        std::cerr << "Use production: subprogram_head -> procedure id formal_parameter" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($2->get_root());
+        children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_SUBPROGRAM_HEAD, "", children), 36, vid, vnum);
+    }
+    | t_function id ':' basic_type {  // pid=37
+        std::cerr << "Use production: subprogram_head -> function id : basic_type" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($2->get_root());
+        children.push_back($4->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_SUBPROGRAM_HEAD, "", children), 37, vid, vnum);
+    }
+    | t_procedure id {  // pid=38
+        std::cerr << "Use production: subprogram_head -> procedure id" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($2->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_SUBPROGRAM_HEAD, "", children), 38, vid, vnum);
+    }
+
+    formal_parameter : '(' parameter_list ')' {  // pid=39
+        std::cerr << "Use production: formal_parameter -> ( parameter_list )" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($2->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_FORMAL_PARAMETER, "", children), 39, vid, vnum);
+    }
+    ;
+
+parameter_list : parameter {  // pid=40
+        std::cerr << "Use production: parameter_list -> parameter" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PARAMETER_LIST, "", children), 40, vid, vnum);
+    }
+    | parameter_list ';' parameter {  // pid=41
+        std::cerr << "Use production: parameter_list -> parameter_list ; parameter" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PARAMETER_LIST, "", children), 41, vid, vnum);
+    }
+    ;
+
+parameter :  var_parameter {  // pid=42
+        std::cerr << "Use production: parameter -> var_parameter" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PARAMETER, "", children), 42, vid, vnum);
+    }
+    | value_parameter {  // pid=43
+        std::cerr << "Use production: parameter -> value_parameter" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PARAMETER, "", children), 43, vid, vnum);
+    };
+
+var_parameter : t_var value_parameter {  // pid=44
+        std::cerr << "Use production: var_parameter -> var value_parameter" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($2->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_VAR_PARAMETER, "", children), 44, vid, vnum);
+    };
+    
+value_parameter : idlist ':' basic_type {  // pid=45
+        std::cerr << "Use production: value_parameter -> idlist : basic_type" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_VALUE_PARAMETER, "", children), 45, vid, vnum);
+    };
+
+subprogram_body : compound_statement {  // pid=46
+        std::cerr << "Use production: subprogram_body -> compound_statement" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_SUBPROGRAM_BODY, "", children), 46, vid, vnum);
+    }
+    | const_declarations {
+        std::cerr << "Use production: subprogram_body -> const_declarations" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_SUBPROGRAM_BODY, "", children), 46, vid, vnum);
+    }
+    | var_declarations {
+        std::cerr << "Use production: subprogram_body -> var_declarations" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_SUBPROGRAM_BODY, "", children), 46, vid, vnum);
+    }
+    ;
+
+compound_statement : t_begin statement_list t_end {  // pid=47
+        std::cerr << "Use production: compound_statement -> begin statement_list end" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($2->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_COMPOUND_STATEMENT, "", children), 47, vid, vnum);
+    }
+    | t_begin t_end{
+        std::cerr << "Use production: compound_statement -> begin end" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_COMPOUND_STATEMENT, "", children), 47, vid, vnum);
+    }
+
+statement_list : statement {  // pid=48
+        std::cerr << "Use production: statement_list -> statement" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_STATEMENT_LIST, "", children), 48, vid, vnum);
+    }| statement_list ';' statement {  // pid=49
+        std::cerr << "Use production: statement_list -> statement_list ; statement" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_STATEMENT_LIST, "", children), 49, vid, vnum);
+    };
+
+statement : variable assignop expression {  // pid=50
+        std::cerr << "Use production: statement -> variable assignop expression" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_STATEMENT, "", children), 50, vid, vnum);
+    }
+    | id assignop expression {  // pid=51
+        std::cerr << "Use production: statement -> id assignop expression" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_STATEMENT, "", children), 51, vid, vnum);
+    }
+    | procedure_call {  // pid=52
+        std::cerr << "Use production: statement -> procedure_call" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_STATEMENT, "", children), 52, vid, vnum);
+    }
+    | compound_statement {  // pid=53
+        std::cerr << "Use production: statement -> compound_statement" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_STATEMENT, "", children), 53, vid, vnum);
+    }  
+    | t_if expression t_then statement {  // pid=54
+        std::cerr << "Use production: statement -> if expression then statement" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($2->get_root());
+        children.push_back($4->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_STATEMENT, "", children), 54, vid, vnum);
+    }
+    | t_if expression t_then statement t_else statement {  // pid=55
+        std::cerr << "Use production: statement -> if expression then statement else statement" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($2->get_root());
+        children.push_back($4->get_root());
+        children.push_back($6->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_STATEMENT, "", children), 55, vid, vnum);
+    }
+    | t_while expression t_do statement {  // pid=56
+        std::cerr << "Use production: statement -> while expression do statement" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($2->get_root());
+        children.push_back($4->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_STATEMENT, "", children), 56, vid, vnum);
+    }
+    | t_repeat statement_list t_until expression {  // pid=57
+        std::cerr << "Use production: statement -> repeat statement_list until expression" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($2->get_root());
+        children.push_back($4->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_STATEMENT, "", children), 57, vid, vnum);
+    }
+    | t_for id assignop expression t_to expression t_do statement {  // pid=58
+        std::cerr << "Use production: statement -> for id assignop expression to expression do statement" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($2->get_root());
+        children.push_back($4->get_root());
+        children.push_back($6->get_root());
+        children.push_back($8->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_STATEMENT, "", children), 58, vid, vnum);
+    }
+    | t_for id assignop expression t_downto expression t_do statement {  // pid=59
+        std::cerr << "Use production: statement -> for id assignop expression downto expression do statement" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($2->get_root());
+        children.push_back($4->get_root());
+        children.push_back($6->get_root());
+        children.push_back($8->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_STATEMENT, "", children), 59, vid, vnum);
+    }
+    | t_read '(' variable_list ')' {  // pid=60
+        std::cerr << "Use production: statement -> read ( idlist )" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_STATEMENT, "", children), 60, vid, vnum);
+    }
+    | t_write '(' expression_list ')' {  // pid=61
+        std::cerr << "Use production: statement -> write ( expression_list )" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_STATEMENT, "", children), 61, vid, vnum);
+    }
+    ;
+
+variable_list : variable {  // pid=62
+        std::cerr << "Use production: variable_list -> variable" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_VARIABLE_LIST, "", children), 62, vid, vnum);
+    }
+    | variable_list ',' variable {  // pid=63
+        std::cerr << "Use production: variable_list -> variable_list , variable" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_VARIABLE_LIST, "", children), 63, vid, vnum);
+    }
+    ;
+
+variable : id {  // pid=64
+        std::cerr << "Use production: variable -> id" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_VARIABLE, "", children), 64, vid, vnum);
+    }
+    | id id_varpart {  // pid=65
+        std::cerr << "Use production: variable -> id id_varpart" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($2->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_VARIABLE, "", children), 65, vid, vnum);
+    };
+
+id_varpart : '[' expression ']' {  // pid=66
+        std::cerr << "Use production: id_varpart -> [ expression ]" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($2->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_ID_VARPART, "", children), 66, vid, vnum);
+    }
+
+procedure_call : id '(' expression_list ')' {  // pid=67
+        std::cerr << "Use production: procedure_call -> id ( expression_list )" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROCEDURE_CALL, "", children), 67, vid, vnum);
+    }
+    | id { // pid=68
+        std::cerr << "Use production: procedure_call -> id" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROCEDURE_CALL, "", children), 68, vid, vnum);
+    };
+
+else_part : t_else statement {  // pid=69
+        std::cerr << "Use production: else_part -> else statement" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($2->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_ELSE_PART, "", children), 69, vid, vnum);
+    }
+    | t_else  {  // pid = 70
+        std::cerr << "Use production: else_part -> else" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_ELSE_PART, "", children), 70, vid, vnum);
+    };
+
+expression_list : expression_list ',' expression {  // pid=71
+        std::cerr << "Use production: expression_list -> expression_list , expression" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_EXPRESSION_LIST, "", children), 71, vid, vnum);
+    }
+    expression {
+        std::cerr << "Use production: expression_list -> expression" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_EXPRESSION_LIST, "", children), 72, vid, vnum);
+    };
+
+expression : simple_expression {  // pid=73
+        std::cerr << "Use production: expression -> simple_expression" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_EXPRESSION, "", children), 73, vid, vnum);
+    }
+    | simple_expression relop simple_expression {  // pid=74
+        std::cerr << "Use production: expression -> simple_expression relop simple_expression" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($2->get_root());
+        children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_EXPRESSION, "", children), 74, vid, vnum);
+    }
+    | simple_expression '=' simple_expression {  // pid=75
+        std::cerr << "Use production: expression -> simple_expression = simple_expression" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($2->get_root());
+        children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_EXPRESSION, "", children), 75, vid, vnum);
+    };
+
+simple_expression : term {  // pid=76
+        std::cerr << "Use production: simple_expression -> term" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_SIMPLE_EXPRESSION, "", children), 76, vid, vnum);
+    }
+    | term '+' term {  // pid=77
+        std::cerr << "Use production: simple_expression -> term addop term" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($2->get_root());
+        children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_SIMPLE_EXPRESSION, "", children), 77, vid, vnum);
+    }
+    | term '-' term {  // pid=78
+        std::cerr << "Use production: simple_expression -> term addop term" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($2->get_root());
+        children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_SIMPLE_EXPRESSION, "", children), 78, vid, vnum);
+    }
+    | term or_op term {  // pid=79
+        std::cerr << "Use production: simple_expression -> term addop term" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($2->get_root());
+        children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_SIMPLE_EXPRESSION, "", children), 79, vid, vnum);
+    };
+
+term : factor {  // pid=80
+        std::cerr << "Use production: term -> factor" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_TERM, "", children), 80, vid, vnum);
+    }
+    | term mulop factor {  // pid=81
+        std::cerr << "Use production: term -> term mulop factor" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($2->get_root());
+        children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_TERM, "", children), 81, vid, vnum);
+    }
+
+factor : '(' expression ')' {  // pid=82
+        std::cerr << "Use production: factor -> ( expression )" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($2->get_root());
+        children.push_back($3->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_FACTOR, "", children), 82, vid, vnum);
+    }
+    | variable {  // pid=83
+        std::cerr << "Use production: factor -> variable" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_FACTOR, "", children), 83, vid, vnum);
+    }
+    | id '(' expression_list ')' {  // pid=84
+        std::cerr << "Use production: factor -> id ( expression_list )" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($2->get_root());
+        children.push_back($3->get_root());
+        children.push_back($4->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_FACTOR, "", children), 84, vid, vnum);
+    }
+    | num {
+        std::cerr << "Use production: factor -> num" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_FACTOR, "", children), 85, vid, vnum);
+    }
+    | notop factor {  // pid=86
+        std::cerr << "Use production: factor -> notop factor" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($2->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_FACTOR, "", children), 86, vid, vnum);
+    }
+    | '-' factor {  // pid=87
+        std::cerr << "Use production: factor -> - factor" << std::endl;
+        vector<tree::TreeNode> children;
+        vector<std::string> vid;
+        vector<std::string> vnum;
+        children.push_back($1->get_root());
+        children.push_back($2->get_root());
+        $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_FACTOR, "", children), 87, vid, vnum);
+    };
 
 
 %%
