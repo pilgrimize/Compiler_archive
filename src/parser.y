@@ -10,12 +10,14 @@
     extern int yylineno;
     extern char *yytext;
     void yyerror(char *s);
+
 %}
+
 
 %union {
     char* str;
     int num;
-    tree::Tree *Tree;
+    Type_Tree Tree;
 }
 
 %start programstruct
@@ -25,7 +27,7 @@
 %token addop mulop relop
 %token seperator
 %token assignop
-%token literal
+%token <str> literal
 
 %token t_program
 %token t_const
@@ -176,8 +178,8 @@ program_head : t_program id '(' idlist ')' { // pid = 2
         vector<std::string> vid;
         vector<std::string> vnum;
 
-        children.push_back($3->get_root());
-        vid.push_back($1);
+        children.push_back($4->get_root());
+        vid.push_back($2);
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_HEAD, "", children), 2);
         }
     | error id { 
@@ -187,7 +189,7 @@ program_head : t_program id '(' idlist ')' { // pid = 2
         vector<std::string> vid;
         vector<std::string> vnum;
 
-        vid.push_back($1);
+        vid.push_back($2);
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROGRAM_HEAD, "", children), 3);
         }
     ;
@@ -397,7 +399,7 @@ var_declaration : idlist ':' type {  // pid=22
         vector<std::string> vid;
         vector<std::string> vnum;
         children.push_back($1->get_root());
-        children.push_back($4->get_root());
+        children.push_back($3->get_root());
         children.push_back($5->get_root());
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_VAR_DECLARATION, "", children), 23, vid, vnum);
     }
@@ -416,8 +418,8 @@ type : basic_type {  // pid=24
         vector<tree::TreeNode> children;
         vector<std::string> vid;
         vector<std::string> vnum;
-        children.push_back($3->get_root());
         children.push_back($6->get_root());
+        vnum.push_back($3);
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_TYPE, "", children), 25, vid, vnum);
     }
     ;
@@ -450,8 +452,8 @@ period : num t_dot num {  // pid=29
         vector<tree::TreeNode> children;
         vector<std::string> vid;
         vector<std::string> vnum;
-        children.push_back($1->get_root());
-        children.push_back($3->get_root());
+        vnum.push_back($1);
+        vnum.push_back($3);
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PERIOD, "", children), 29, vid, vnum);
     }
     |period ',' num t_dot num {  // pid=30
@@ -460,8 +462,8 @@ period : num t_dot num {  // pid=29
         vector<std::string> vid;
         vector<std::string> vnum;
         children.push_back($1->get_root());
-        children.push_back($3->get_root());
-        children.push_back($5->get_root());
+        vnum.push_back($3);
+        vnum.push_back($5);
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PERIOD, "", children), 30, vid, vnum);
     }
     ;
@@ -472,7 +474,6 @@ subprogram_declarations : subprogram ';' {  // pid=31
         vector<std::string> vid;
         vector<std::string> vnum;
         children.push_back($1->get_root());
-        children.push_back($2->get_root());
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_SUBPROGRAM_DECLARATIONS, "", children), 31, vid, vnum);
     } 
     | subprogram_declarations subprogram ';' {  // pid=32
@@ -481,6 +482,7 @@ subprogram_declarations : subprogram ';' {  // pid=31
         vector<std::string> vid;
         vector<std::string> vnum;
         children.push_back($1->get_root());
+        children.push_back($2->get_root());
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_SUBPROGRAM_DECLARATIONS, "", children), 32, vid, vnum);
     }
     ;
@@ -510,7 +512,7 @@ subprogram_head : subprogram_head ';' subprogram_body {  // pid=34
         vector<tree::TreeNode> children;
         vector<std::string> vid;
         vector<std::string> vnum;
-        children.push_back($2->get_root());
+        vid.push_back($2);
         children.push_back($3->get_root());
         children.push_back($5->get_root());
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_SUBPROGRAM_HEAD, "", children), 35, vid, vnum);
@@ -520,7 +522,7 @@ subprogram_head : subprogram_head ';' subprogram_body {  // pid=34
         vector<tree::TreeNode> children;
         vector<std::string> vid;
         vector<std::string> vnum;
-        children.push_back($2->get_root());
+        vid.push_back($2);
         children.push_back($3->get_root());
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_SUBPROGRAM_HEAD, "", children), 36, vid, vnum);
     }
@@ -529,7 +531,7 @@ subprogram_head : subprogram_head ';' subprogram_body {  // pid=34
         vector<tree::TreeNode> children;
         vector<std::string> vid;
         vector<std::string> vnum;
-        children.push_back($2->get_root());
+        vid.push_back($2);
         children.push_back($4->get_root());
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_SUBPROGRAM_HEAD, "", children), 37, vid, vnum);
     }
@@ -538,7 +540,7 @@ subprogram_head : subprogram_head ';' subprogram_body {  // pid=34
         vector<tree::TreeNode> children;
         vector<std::string> vid;
         vector<std::string> vnum;
-        children.push_back($2->get_root());
+        vid.push_back($2);
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_SUBPROGRAM_HEAD, "", children), 38, vid, vnum);
     }
 
@@ -593,7 +595,6 @@ var_parameter : t_var value_parameter {  // pid=44
         vector<tree::TreeNode> children;
         vector<std::string> vid;
         vector<std::string> vnum;
-        children.push_back($1->get_root());
         children.push_back($2->get_root());
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_VAR_PARAMETER, "", children), 44, vid, vnum);
     };
@@ -681,7 +682,7 @@ statement : variable assignop expression {  // pid=50
         vector<tree::TreeNode> children;
         vector<std::string> vid;
         vector<std::string> vnum;
-        children.push_back($1->get_root());
+        vid.push_back($1);
         children.push_back($3->get_root());
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_STATEMENT, "", children), 51, vid, vnum);
     }
@@ -743,7 +744,7 @@ statement : variable assignop expression {  // pid=50
         vector<tree::TreeNode> children;
         vector<std::string> vid;
         vector<std::string> vnum;
-        children.push_back($2->get_root());
+        vid.push_back($2);
         children.push_back($4->get_root());
         children.push_back($6->get_root());
         children.push_back($8->get_root());
@@ -754,7 +755,7 @@ statement : variable assignop expression {  // pid=50
         vector<tree::TreeNode> children;
         vector<std::string> vid;
         vector<std::string> vnum;
-        children.push_back($2->get_root());
+        vid.push_back($2);
         children.push_back($4->get_root());
         children.push_back($6->get_root());
         children.push_back($8->get_root());
@@ -802,7 +803,7 @@ variable : id {  // pid=64
         vector<tree::TreeNode> children;
         vector<std::string> vid;
         vector<std::string> vnum;
-        children.push_back($1->get_root());
+        vid.push_back($1); 
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_VARIABLE, "", children), 64, vid, vnum);
     }
     | id id_varpart {  // pid=65
@@ -810,7 +811,7 @@ variable : id {  // pid=64
         vector<tree::TreeNode> children;
         vector<std::string> vid;
         vector<std::string> vnum;
-        children.push_back($1->get_root());
+        vid.push_back($1);
         children.push_back($2->get_root());
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_VARIABLE, "", children), 65, vid, vnum);
     };
@@ -829,7 +830,7 @@ procedure_call : id '(' expression_list ')' {  // pid=67
         vector<tree::TreeNode> children;
         vector<std::string> vid;
         vector<std::string> vnum;
-        children.push_back($1->get_root());
+        vid.push_back($1);
         children.push_back($3->get_root());
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROCEDURE_CALL, "", children), 67, vid, vnum);
     }
@@ -838,7 +839,7 @@ procedure_call : id '(' expression_list ')' {  // pid=67
         vector<tree::TreeNode> children;
         vector<std::string> vid;
         vector<std::string> vnum;
-        children.push_back($1->get_root());
+        vid.push_back($1);
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_PROCEDURE_CALL, "", children), 68, vid, vnum);
     };
 
@@ -867,7 +868,7 @@ expression_list : expression_list ',' expression {  // pid=71
         children.push_back($3->get_root());
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_EXPRESSION_LIST, "", children), 71, vid, vnum);
     }
-    expression {
+    |expression {
         std::cerr << "Use production: expression_list -> expression" << std::endl;
         vector<tree::TreeNode> children;
         vector<std::string> vid;
@@ -890,7 +891,6 @@ expression : simple_expression {  // pid=73
         vector<std::string> vid;
         vector<std::string> vnum;
         children.push_back($1->get_root());
-        children.push_back($2->get_root());
         children.push_back($3->get_root());
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_EXPRESSION, "", children), 74, vid, vnum);
     }
@@ -900,7 +900,6 @@ expression : simple_expression {  // pid=73
         vector<std::string> vid;
         vector<std::string> vnum;
         children.push_back($1->get_root());
-        children.push_back($2->get_root());
         children.push_back($3->get_root());
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_EXPRESSION, "", children), 75, vid, vnum);
     };
@@ -919,7 +918,6 @@ simple_expression : term {  // pid=76
         vector<std::string> vid;
         vector<std::string> vnum;
         children.push_back($1->get_root());
-        children.push_back($2->get_root());
         children.push_back($3->get_root());
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_SIMPLE_EXPRESSION, "", children), 77, vid, vnum);
     }
@@ -929,7 +927,6 @@ simple_expression : term {  // pid=76
         vector<std::string> vid;
         vector<std::string> vnum;
         children.push_back($1->get_root());
-        children.push_back($2->get_root());
         children.push_back($3->get_root());
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_SIMPLE_EXPRESSION, "", children), 78, vid, vnum);
     }
@@ -939,7 +936,6 @@ simple_expression : term {  // pid=76
         vector<std::string> vid;
         vector<std::string> vnum;
         children.push_back($1->get_root());
-        children.push_back($2->get_root());
         children.push_back($3->get_root());
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_SIMPLE_EXPRESSION, "", children), 79, vid, vnum);
     };
@@ -958,7 +954,6 @@ term : factor {  // pid=80
         vector<std::string> vid;
         vector<std::string> vnum;
         children.push_back($1->get_root());
-        children.push_back($2->get_root());
         children.push_back($3->get_root());
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_TERM, "", children), 81, vid, vnum);
     }
@@ -968,9 +963,7 @@ factor : '(' expression ')' {  // pid=82
         vector<tree::TreeNode> children;
         vector<std::string> vid;
         vector<std::string> vnum;
-        children.push_back($1->get_root());
         children.push_back($2->get_root());
-        children.push_back($3->get_root());
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_FACTOR, "", children), 82, vid, vnum);
     }
     | variable {  // pid=83
@@ -986,10 +979,8 @@ factor : '(' expression ')' {  // pid=82
         vector<tree::TreeNode> children;
         vector<std::string> vid;
         vector<std::string> vnum;
-        children.push_back($1->get_root());
-        children.push_back($2->get_root());
+        vid.push_back($1);
         children.push_back($3->get_root());
-        children.push_back($4->get_root());
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_FACTOR, "", children), 84, vid, vnum);
     }
     | num {
@@ -997,7 +988,7 @@ factor : '(' expression ')' {  // pid=82
         vector<tree::TreeNode> children;
         vector<std::string> vid;
         vector<std::string> vnum;
-        children.push_back($1->get_root());
+        vid.push_back($1);
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_FACTOR, "", children), 85, vid, vnum);
     }
     | notop factor {  // pid=86
@@ -1005,7 +996,6 @@ factor : '(' expression ')' {  // pid=82
         vector<tree::TreeNode> children;
         vector<std::string> vid;
         vector<std::string> vnum;
-        children.push_back($1->get_root());
         children.push_back($2->get_root());
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_FACTOR, "", children), 86, vid, vnum);
     }
@@ -1014,7 +1004,6 @@ factor : '(' expression ')' {  // pid=82
         vector<tree::TreeNode> children;
         vector<std::string> vid;
         vector<std::string> vnum;
-        children.push_back($1->get_root());
         children.push_back($2->get_root());
         $$ = tree::Tree(std::make_shared<tree::TreeNode>(Tree::T_FACTOR, "", children), 87, vid, vnum);
     };
