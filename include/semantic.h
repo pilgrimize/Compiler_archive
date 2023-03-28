@@ -1,8 +1,8 @@
 #ifndef PASCALS_TO_C_SEMANTIC_H
 #define PASCALS_TO_C_SEMANTIC_H
 
-#include "tree.h"
-#include "symbol.h"
+// #include "tree.h"
+// #include "symbol.h"
 
 namespace semantic {
 

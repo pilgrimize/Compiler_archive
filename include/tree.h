@@ -7,7 +7,8 @@
 #include <memory>
 #include <map>
 
-// namespace tree {
+
+namespace tree {
 
 // TODO: add more tokens
 enum Token {
@@ -91,7 +92,6 @@ enum Token {
     T_VAR_PARAMETER
 };
 
-typedef class Tree *Type_Tree;
 
 class TreeNode {
 private:
@@ -126,11 +126,12 @@ public:
 };
 
 extern Tree ast;
+typedef class tree::Tree *Type_Tree;
 
 // Convert CST to AST, should always return true given a valid CST
 bool cst_to_ast(const Tree& cst);
 
-// }
+}
 
 
 #endif //PASCALS_TO_C_TREE_H
