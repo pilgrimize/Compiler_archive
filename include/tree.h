@@ -89,7 +89,17 @@ enum Token {
     T_OF,
     T_ARRAY,
     T_IDLIST,
-    T_VAR_PARAMETER
+    T_VAR_PARAMETER,
+
+    T_LEFTPAREN,
+    T_RIGHTPAREN,
+    T_LEFTBRACKET,
+    T_RIGHTBRACKET,
+    T_SEMICOLON,
+    T_COMMA,
+    T_COLON,
+    DOT,
+    T_SUBOP
 };
 
 
@@ -97,41 +107,41 @@ class TreeNode {
 private:
     Token token = T_ERROR;
     std::string text;  // for ID and Literal, empty for others
-    std::vector<std::shared_ptr<TreeNode>> children;
+    std::vector<TreeNode*> children;
+    int pid;
 public:
     TreeNode() = default;
-    TreeNode(Token token, std::string text, std::vector<std::shared_ptr<TreeNode>> children = {}) :
-            token(token), text(std::move(text)), children(std::move(children)) {}
+    TreeNode(int pid, Token token, std::string text, std::vector<TreeNode*> children = {}) :
+            pid(pid), token(token), text(std::move(text)), children(std::move(children)) {}
 
     Token get_token() const { return token; }
     std::string get_text() const { return text; }
-    std::vector<std::shared_ptr<TreeNode>> get_children() const { return children; }
+    std::vector<TreeNode*> get_children() const { return children; }
+    auto childrenBegin() { return children.begin(); }
+    auto childrenEnd() { return children.end(); }
+    void childrenPush(TreeNode* x) { children.push_back(x); }
+    void setpid(int x) {pid = x;}
 };
 
 class Tree {
 private:
-    std::shared_ptr<TreeNode> root;
-    int pid; // production id 
-    std::vector<std::string> vid;
-    std::vector<std::string> vnum;
+    TreeNode* root;
 public:
     Tree() = default;
-    explicit Tree(std::shared_ptr<TreeNode> root, int pid, std::vector<std::string> vid, std::vector<std::string> vnum) :
-         root(std::move(root)), pid(pid), vid(std::move(vid)), vnum(std::move(vnum)) {}
-    int get_pid () const { return pid; }
-    std::vector<std::string> get_vid() const { return vid; }
-    std::vector<std::string> get_vnum() const { return vnum; }
+    explicit Tree(TreeNode* root) :
+         root(std::move(root)) {}
 
-    std::shared_ptr<TreeNode> get_root() const { return root; }
+    TreeNode* get_root() const { return root; }
 };
 
-extern Tree ast;
-typedef class tree::Tree *Type_Tree;
+extern Tree* ast;
 
 // Convert CST to AST, should always return true given a valid CST
 bool cst_to_ast(const Tree& cst);
 
 }
+
+typedef tree::Tree *Type_Tree;
 
 
 #endif //PASCALS_TO_C_TREE_H

@@ -3,9 +3,12 @@
 #include "parser.h"
 #include "semantic.h"
 #include "generate.h"
+#include "tools.h"
 
 bool lex_yacc() {
     if (!yyparse()) {
+        tools::print_ast(tree::ast->get_root());
+        tools::destroy_ast(tree::ast->get_root());
         std::cerr << "Lexical and syntactic analysis passed." << std::endl;
         return true;
     } else {

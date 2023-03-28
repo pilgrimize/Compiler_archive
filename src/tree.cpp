@@ -2,7 +2,7 @@
 
 namespace tree {
 
-Tree ast;
+Tree* ast;
 
 // TODO: implement this function
 // Convert CST to AST, should always return true given a valid CST

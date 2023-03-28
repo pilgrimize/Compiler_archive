@@ -3,13 +3,14 @@
 
 namespace semantic {
 
-// symbol::SymbolTableTree symbol_table_tree;
+symbol::SymbolTableTree symbol_table_tree;
 
 // Semantic analysis and construction of the symbol table, returns true if no errors were found
 // TODO: implement this function
-// bool semantic_analysis() {
+bool semantic_analysis() {
+    return true;
     // if (!tree::cst_to_ast(stack::ast_stack.top())) return false;
     // return true;
-// }
+}
 
 }
