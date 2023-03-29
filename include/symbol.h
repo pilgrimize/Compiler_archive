@@ -7,7 +7,6 @@
 #include <memory>
 #include <map>
 #include <variant>
-#include "tree.h"
 
 namespace symbol {
 
@@ -131,8 +130,11 @@ public:
         FOUND_IN_PARENT,
     };
 
-    // Find the entry with the given name, from the current scope to the root scope
-    SearchResult find_entry(const std::string& name);
+    // Search the entry with the given name, from the current scope to the root scope
+    SearchResult search_entry(const std::string& name);
+
+    // Get the entry with the given name, from the current scope to the root scope
+    std::shared_ptr<SymbolTableEntry> get_entry(const std::string& name);
 
     // Add an entry to the current scope
     void add_entry(const std::string& name, const std::shared_ptr<SymbolTableEntry>& entry);

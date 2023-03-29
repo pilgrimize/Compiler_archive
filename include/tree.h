@@ -6,6 +6,7 @@
 #include <vector>
 #include <memory>
 #include <map>
+#include "symbol.h"
 
 namespace tree {
 
@@ -112,6 +113,7 @@ private:
     Token token = T_ERROR;
     std::string text;  // for ID and Literal, empty for others
     std::vector<TreeNode*> children;
+    symbol::BasicType type = symbol::TYPE_NULL;
 public:
     TreeNode() = default;
     TreeNode(int pid, Token token, std::string text, std::vector<TreeNode*> children = {}) :
@@ -121,6 +123,8 @@ public:
     std::string get_text() const { return text; }
     TreeNode* get_child(int child_id) const { return children.at(child_id); }
     std::vector<TreeNode*>& get_children() { return children; }
+    symbol::BasicType get_type() const { return type; }
+    void set_type(symbol::BasicType type) { this->type = type; }
     int get_pid() const { return pid; }
     auto children_begin() { return children.begin(); }
     auto children_end() { return children.end(); }
@@ -147,7 +151,7 @@ bool cst_to_ast(const Tree& cst);
 
 }
 
-typedef tree::Tree *Type_Tree;
+typedef tree::Tree *TypeTree;
 
 
 #endif //PASCALS_TO_C_TREE_H

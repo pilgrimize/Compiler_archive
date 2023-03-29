@@ -40,7 +40,7 @@ void SymbolTableTree::pop_scope() {
     current_node = current_node->get_parent();
 }
 
-SymbolTableTree::SearchResult SymbolTableTree::find_entry(const std::string &name) {
+SymbolTableTree::SearchResult SymbolTableTree::search_entry(const std::string &name) {
     auto node = current_node;
     while (node != nullptr) {
         if (node->has_entry(name)) {
@@ -53,6 +53,18 @@ SymbolTableTree::SearchResult SymbolTableTree::find_entry(const std::string &nam
         node = node->get_parent();
     }
     return NOT_FOUND;
+}
+
+// Get the entry with the given name, from the current scope to the root scope
+std::shared_ptr<SymbolTableEntry> SymbolTableTree::get_entry(const std::string& name) {
+    auto node = current_node;
+    while (node != nullptr) {
+        if (node->has_entry(name)) {
+            return node->get_entry(name);
+        }
+        node = node->get_parent();
+    }
+    throw std::runtime_error("Cannot find entry " + name);
 }
 
 void SymbolTableTree::add_entry(const std::string &name, const std::shared_ptr<SymbolTableEntry> &entry) {
