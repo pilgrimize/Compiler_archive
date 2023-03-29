@@ -21,7 +21,7 @@
 %union {
     char* str;
     char* num;
-    Type_Tree token_Tree;
+    TypeTree token_Tree;
 }
 
 %start programstruct
@@ -165,7 +165,7 @@ factor -> num | variable
 //I need to define the productions above :
 programstruct : program_head semicolon program_body dot { // pid = 1
         std::cerr << "Use production: programstruct -> program_head ; program_body ." << std::endl; 
-        tree:: ast = tools::reduce({$1, $2, $3, $4}, 1, tree::T_PROGRAM_STRUCT);
+        tree::ast = tools::reduce({$1, $2, $3, $4}, 1, tree::T_PROGRAM_STRUCT);
     }
     ;
 program_head : t_program id leftparen idlist rightparen { // pid = 2

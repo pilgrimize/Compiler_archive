@@ -7,7 +7,6 @@
 #include <memory>
 #include <map>
 
-
 namespace tree {
 
 // TODO: add more tokens
@@ -15,6 +14,10 @@ enum Token {
     T_ERROR = -1,
     T_ID,
     T_NUM,
+    T_LITERAL_INT,
+    T_LITERAL_REAL,
+    T_LITERAL_CHAR,
+    T_LITERAL_BOOL,
     T_RELOP,
 	T_SEPERATOR,
 	T_OR_OP,
@@ -105,10 +108,10 @@ enum Token {
 
 class TreeNode {
 private:
+    int pid;
     Token token = T_ERROR;
     std::string text;  // for ID and Literal, empty for others
     std::vector<TreeNode*> children;
-    int pid;
 public:
     TreeNode() = default;
     TreeNode(int pid, Token token, std::string text, std::vector<TreeNode*> children = {}) :
@@ -116,11 +119,13 @@ public:
 
     Token get_token() const { return token; }
     std::string get_text() const { return text; }
-    std::vector<TreeNode*> get_children() const { return children; }
-    auto childrenBegin() { return children.begin(); }
-    auto childrenEnd() { return children.end(); }
+    TreeNode* get_child(int child_id) const { return children.at(child_id); }
+    std::vector<TreeNode*>& get_children() { return children; }
+    int get_pid() const { return pid; }
+    auto children_begin() { return children.begin(); }
+    auto children_end() { return children.end(); }
     void childrenPush(TreeNode* x) { children.push_back(x); }
-    void setpid(int x) {pid = x;}
+    void set_pid(int x) { pid = x; }
 };
 
 class Tree {
@@ -129,7 +134,7 @@ private:
 public:
     Tree() = default;
     explicit Tree(TreeNode* root) :
-         root(std::move(root)) {}
+         root(root) {}
 
     TreeNode* get_root() const { return root; }
 };

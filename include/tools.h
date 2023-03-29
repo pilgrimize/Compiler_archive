@@ -6,7 +6,7 @@
 #include <iostream>
 
 namespace tools{
-    int convertStringToNumber(std::string str);
+    int convertStringToNumber(const std::string& str);
     std::string intToString(int num);
     std::string turn_token_text(tree::Token token);
     tree::Tree* reduce(std::initializer_list<tree::Tree*> list, int pid, tree::Token token);

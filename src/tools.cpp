@@ -3,7 +3,7 @@
 #include "tools.h"
 
 namespace tools{
-    int convertStringToNumber(std::string str){
+    int convertStringToNumber(const std::string& str){
         int num;
         std::stringstream ss;
         ss << str;
@@ -16,29 +16,28 @@ namespace tools{
         return ss.str();
     }
     tree::Tree* reduce(std::initializer_list<tree::Tree*> list, int pid, tree::Token token){
-        tree::TreeNode* tnode = new tree::TreeNode(pid, token, turn_token_text(token));
-        tnode->setpid(pid);
+        auto* tnode = new tree::TreeNode(pid, token, turn_token_text(token));
+        tnode->set_pid(pid);
         for (auto it = list.begin(); it != list.end(); ++it) {
             tnode->childrenPush((*it)->get_root());
         }
-        tree::Tree* t = new tree::Tree(tnode);
-        return t;
+        return new tree::Tree(tnode);
     }
     
     void print_ast(tree::TreeNode* x) {
         // every time first output x's token then print x's direct children's token and last print x's children respectively
         std::cout << "[present node]"<<turn_token_text(x->get_token()) << std::endl<<"[children]"<<std::endl;
-        for (auto it = x->childrenBegin(); it != x->childrenEnd(); ++it) {
+        for (auto it = x->children_begin(); it != x->children_end(); ++it) {
             std::cout << turn_token_text((*it)->get_token())<< "   ";
         }
         std::cout <<std::endl;
-        for (auto it = x->childrenBegin(); it != x->childrenEnd(); ++it) {
+        for (auto it = x->children_begin(); it != x->children_end(); ++it) {
             print_ast(*it);
         }
     }
 
     void destroy_ast(tree::TreeNode* x) {
-        for (auto it = x->childrenBegin(); it != x->childrenEnd(); ++it) {
+        for (auto it = x->children_begin(); it != x->children_end(); ++it) {
             destroy_ast(*it);
         }
         delete x;
