@@ -1,12 +1,13 @@
 #include "semantic.h"
 #include <algorithm>
 #include <iostream>
+#include <optional>
 
 namespace semantic {
 
 symbol::SymbolTableTree symbol_table_tree;
 
-using symbol::BasicType, symbol::SymbolTableEntry;
+using symbol::BasicType, symbol::SymbolTableEntry, symbol::SymbolTableTree;
 using tree::TreeNode;
 
 
@@ -22,6 +23,7 @@ BasicType get_const_type(TreeNode* node) {
 }
 
 BasicType get_basic_type(TreeNode* node) {
+    if (node == nullptr) return symbol::TYPE_NULL;
     auto token = node->get_child(0)->get_token();
     switch (token) {
         case tree::T_INTEGER: return symbol::TYPE_INT;
@@ -58,6 +60,31 @@ std::vector<std::pair<size_t, size_t>> get_dims(TreeNode* node) {
     return dims;
 }
 
+std::pair<std::vector<std::string>, symbol::Param> get_single_param(TreeNode* node) {
+    bool is_referred = node->get_token() == tree::T_VAR_PARAMETER;
+    auto param_node = is_referred ? node->get_child(0)->get_child(1) : node->get_child(0);
+    auto id_list = get_id_list(param_node->get_child(0));
+    auto type = get_basic_type(param_node->get_child(2));
+    return {id_list, symbol::Param(type, is_referred)};
+}
+
+std::vector<std::pair<std::string, symbol::Param>> get_params(TreeNode* node) {
+    std::vector<std::pair<std::string, symbol::Param>> params;
+    if (node->get_pid() == 39) { // param
+        auto [id_list, param] = get_single_param(node->get_child(0));
+        for (auto& id : id_list) {
+            params.emplace_back(id, param);
+        }
+    } else if (node->get_pid() == 40) { // param_list
+        params = get_params(node->get_child(0));
+        auto [id_list, param] = get_single_param(node->get_child(2));
+        for (auto& id : id_list) {
+            params.emplace_back(id, param);
+        }
+    }
+    return params;
+}
+
 std::shared_ptr<SymbolTableEntry> get_type(TreeNode* node) {
     auto token = node->get_child(0)->get_token();
     switch (token) {
@@ -75,6 +102,7 @@ std::shared_ptr<SymbolTableEntry> get_type(TreeNode* node) {
 
 bool dfs_analyze_node(TreeNode* node) {
     int delta = -1;
+    // Enter the node
     switch (node->get_pid()) {
         case 1: // program
             symbol_table_tree.initialize();
@@ -98,7 +126,7 @@ bool dfs_analyze_node(TreeNode* node) {
         case 22: // var declaration
             delta = 0;
         case 23: {
-            // const declaration
+            // var declaration
             if (delta < 0) delta = 2;
             auto id_list = get_id_list(node->get_child(delta + 0));
             auto entry = get_type(node->get_child(delta + 2));
@@ -109,22 +137,55 @@ bool dfs_analyze_node(TreeNode* node) {
                 }
                 symbol_table_tree.add_entry(id, entry);
             }
+            break;
         }
-
-
+        case 34: case 35: case 36: case 37: {
+            auto function_id = node->get_child_by_token(tree::T_ID)->get_text();
+            if (symbol_table_tree.find_entry(function_id) == SymbolTableTree::FOUND) {
+                std::cerr << "Error: redefinition of '" << function_id << "'\n";
+                return false;
+            }
+            auto param_node = node->get_child_by_token(tree::T_FORMAL_PARAMETER)->get_child(1);
+            auto return_type = get_basic_type(node->get_child_by_token(tree::T_BASIC_TYPE));
+            auto params = param_node == nullptr ? std::vector<std::pair<std::string, symbol::Param>>{} : get_params(param_node);
+            std::vector<symbol::Param> param_types;
+            for (auto& [id, param] : params) {
+                param_types.emplace_back(param);
+            }
+            symbol_table_tree.add_entry(function_id, std::make_shared<SymbolTableEntry>(return_type, param_types));
+            symbol_table_tree.push_scope();
+            for (auto& [id, param] : params) {
+                if (symbol_table_tree.find_entry(id) == SymbolTableTree::FOUND) {
+                    std::cerr << "Error: redefinition of '" << id << "'\n";
+                    return false;
+                }
+                symbol_table_tree.add_entry(id, std::make_shared<SymbolTableEntry>(param.type, false, param.is_referred));
+            }
+            break;
+        }
         default:
             break;
     }
 
-    return std::ranges::all_of(node->children_begin(), node->children_end(), [](auto child){return dfs_analyze_node(child);});
+    auto result = std::ranges::all_of(node->children_begin(), node->children_end(), [](auto child){return dfs_analyze_node(child);});
+    if (!result) return false;
+
+    // Exit the node
+    switch (node->get_pid()) {
+        case 33:
+            symbol_table_tree.pop_scope();
+            break;
+        default:
+            break;
+    }
+
+    return true;
 }
 
 // Semantic analysis and construction of the symbol table, returns true if no errors were found
 // TODO: implement this function
 bool semantic_analysis() {
     return dfs_analyze_node(tree::ast->get_root());
-    // if (!tree::cst_to_ast(stack::ast_stack.top())) return false;
-    // return true;
 }
 
 }

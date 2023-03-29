@@ -108,7 +108,7 @@ enum Token {
 
 class TreeNode {
 private:
-    int pid;
+    int pid{};
     Token token = T_ERROR;
     std::string text;  // for ID and Literal, empty for others
     std::vector<TreeNode*> children;
@@ -126,6 +126,7 @@ public:
     auto children_end() { return children.end(); }
     void childrenPush(TreeNode* x) { children.push_back(x); }
     void set_pid(int x) { pid = x; }
+    TreeNode* get_child_by_token(Token child_token) const;
 };
 
 class Tree {

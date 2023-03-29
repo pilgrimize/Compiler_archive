@@ -36,11 +36,12 @@ struct Param {
 struct BasicInfo {
     BasicType basic{};
     bool is_const = false;
+    bool is_referred = false;
 //    bool is_initialized = false;
 //    std::string initialized_value;
     BasicInfo() = default;
-    BasicInfo(BasicType basic, bool is_const):
-            basic(basic), is_const(is_const) {}
+    BasicInfo(BasicType basic, bool is_const, bool is_referred):
+            basic(basic), is_const(is_const), is_referred(is_referred) {}
 //    BasicInfo(BasicType basic, bool is_const, bool is_initialized, std::string initialized_value):
 //            basic(basic), is_const(is_const), is_initialized(is_initialized), initialized_value(std::move(initialized_value)) {}
 };
@@ -79,8 +80,8 @@ struct SymbolTableEntry {
     SymbolTableEntry() = default;
     SymbolTableEntry(ComplexType type, ExtraInfo extra_info):
             type(type), extra_info(std::move(extra_info)) {}
-    explicit SymbolTableEntry(BasicType type, bool is_const = false):
-            type(ComplexType::TYPE_BASIC), extra_info(BasicInfo(type, is_const)) {}
+    explicit SymbolTableEntry(BasicType type, bool is_const = false, bool is_referred = false):
+            type(ComplexType::TYPE_BASIC), extra_info(BasicInfo(type, is_const, is_referred)) {}
     SymbolTableEntry(BasicType type, std::vector<std::pair<size_t,size_t>> dims, bool is_const = false):
             type(ComplexType::TYPE_ARRAY), extra_info(ArrayInfo(type, std::move(dims), is_const)) {}
     explicit SymbolTableEntry(std::map<std::string, BasicType> fields):
