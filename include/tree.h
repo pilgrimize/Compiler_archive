@@ -11,6 +11,11 @@
 namespace tree {
 
 // TODO: add more tokens
+enum PID{
+    programstruct$programhead_semicolon_programbody_dot = 1,
+    programhead$program_id = 2,
+
+};
 enum Token {
     T_ERROR = -1,
     T_ID,
@@ -19,6 +24,7 @@ enum Token {
     T_LITERAL_REAL,
     T_LITERAL_CHAR,
     T_LITERAL_BOOL,
+    T_LITERAL_STRING,
     T_RELOP,
 	T_SEPERATOR,
 	T_OR_OP,
@@ -62,7 +68,6 @@ enum Token {
     T_TERM,
     T_EQUALOP,
     T_FACTOR,
-    T_LITERAL,
     T_NOTOP,
 
     T_PROGRAM,

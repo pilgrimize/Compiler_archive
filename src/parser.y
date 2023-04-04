@@ -165,7 +165,7 @@ factor -> num | variable
 //I need to define the productions above :
 programstruct : program_head semicolon program_body dot { // pid = 1
         std::cerr << "Use production: programstruct -> program_head ; program_body ." << std::endl; 
-        tree::ast = tools::reduce({$1, $2, $3, $4}, 1, tree::T_PROGRAM_STRUCT);
+        tree::ast = tools::reduce({$1, $2, $3, $4}, P_PROGRAM, tree::T_PROGRAM_STRUCT);
     }
     ;
 program_head : t_program id leftparen idlist rightparen { // pid = 2
@@ -485,7 +485,7 @@ variable : id {  // pid=65
         $$ = tools::reduce({$1, $2}, 66, tree::T_VARIABLE);
     };
 
-id_varpart : leftbracket expression rightbracket {  // pid=67
+id_varpart : leftbracket expression_list rightbracket {  // pid=67
         std::cerr << "Use production: id_varpart -> [ expression ]" << std::endl;
         $$ = tools::reduce({$1, $2, $3}, 67, tree::T_ID_VARPART);
     }

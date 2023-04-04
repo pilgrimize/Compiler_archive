@@ -29,8 +29,7 @@ t_downto "downto"
 t_do "do"
 t_read "read"
 t_write "write"
-t_true "true"
-t_false "false"
+bool_value "true"|"false"
 t_dot ".."
 t_repeat "repeat"
 t_until "until"
@@ -59,16 +58,34 @@ digit [0-9]
 digits ({digit})+
 optional_fraction "."{digits}
 num {digits}
-float_num {digits}{optional_fraction}
-literal {quateop}({letter}|{digit})*{quateop} 
+real_num {digits}{optional_fraction}
+others "@"|"#"|"$"|"%"|"^"|"&"|"*"|"-"|"+"|"="|"|"|"["|"]"|"{"|"}"|";"|":"|","|"<"|">"|"/"|"?"|"~"
+literal_char {quateop}({letter}|{digit}|{others}){quateop}
+literal_string {quateop}({letter}|{digit}|{others})*{quateop} 
 id {letter}({letter}|{digit})*
 comment \{[^}]*\}
 
 %%
 
 {num}           {std::cerr << "num:" << yytext << std::endl; 
-                yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_NUM,yytext )); 
+                yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_LITERAL_INT,yytext )); 
                 return num;
+                }
+{real_num}    {std::cerr << "float_num:" << yytext << std::endl; 
+                yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_LITERAL_REAL ,yytext )); 
+                return float_num;
+                }
+{bool_value}   {std::cerr << "bool_value:" << yytext << std::endl; 
+                yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_LITERAL_BOOL ,yytext )); 
+                return bool_value;
+                }
+{literal_string} {std::cerr << "literal_string:" << yytext << std::endl; 
+                yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_LITERAL_STRING ,yytext )); 
+                return literal_string;
+                }
+{literal_char} {std::cerr << "literal_char:" << yytext << std::endl; 
+                yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_LITERAL_CHAR ,yytext )); 
+                return literal_char;
                 }
 {leftparen}     {std::cerr << "leftparen:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_LEFTPAREN,"" )); return leftparen;}
 {rightparen}    {std::cerr << "rightparen:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_RIGHTPAREN,"" )); return rightparen;}
@@ -120,8 +137,6 @@ comment \{[^}]*\}
 {t_while}       {std::cerr << "t_while:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_WHILE,"" )); return t_while;}
 {t_read}       {std::cerr << "t_read:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_READ,"" )); return t_read;}
 {t_write}       {std::cerr << "t_write:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_WRITE,"" )); return t_write;}
-
-{literal}      {std::cerr << "literal:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_LITERAL,"" )); return literal;}
 
 {comment}         {std::cerr << "comment:" << yytext << std::endl; /* do nothing */}
 {id}            {std::cerr << "id:" << yytext << std::endl; 
