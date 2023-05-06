@@ -2,6 +2,8 @@
 #include <algorithm>
 #include <iostream>
 
+#include "tools.h"
+
 namespace semantic {
 
 symbol::SymbolTableTree symbol_table_tree;
@@ -163,9 +165,10 @@ std::vector<BasicType> get_expression_list_type(TreeNode* node) {
 }
 
 bool dfs_analyze_node(TreeNode* node) {
-    std::cout << "Analyzing node: " << node->get_pid() << std::endl;
+    std::cout << "Entering node: " << tools::turn_token_text(node->get_token()) << std::endl;
     int delta = -1;
     // Enter the node
+
     switch (node->get_pid()) {
         case tree::programstruct__T__programhead_semicolon__programbody_dot: // program
             symbol_table_tree.initialize();
@@ -176,7 +179,7 @@ bool dfs_analyze_node(TreeNode* node) {
             // const declaration
             if (delta < 0) delta = 2;
             auto text = node->get_child(delta + 0)->get_text();
-            if (symbol_table_tree.search_entry(text)) {
+            if (symbol_table_tree.search_entry(text) == SymbolTableTree::FOUND) {
                 std::cerr << "Error: redefinition of '" << text << "'" << std::endl;
                 return false;
             }
@@ -194,7 +197,7 @@ bool dfs_analyze_node(TreeNode* node) {
             auto id_list = get_id_list(node->get_child(delta + 0));
             auto entry = get_type(node->get_child(delta + 2));
             for (auto& id : id_list) {
-                if (symbol_table_tree.search_entry(id)) {
+                if (symbol_table_tree.search_entry(id) == SymbolTableTree::FOUND) {
                     std::cerr << "Error: redefinition of '" << id << "'" << std::endl;
                     return false;
                 }
@@ -236,6 +239,7 @@ bool dfs_analyze_node(TreeNode* node) {
     auto result = std::ranges::all_of(node->children_begin(), node->children_end(), [](auto child){return dfs_analyze_node(child);});
     if (!result) return false;
 
+    std::cout << "Exiting node: " << tools::turn_token_text(node->get_token()) << std::endl;
     // Exit the node
     switch (node->get_pid()) {
         case tree::subprogram__T__subprogram_head__semicolon__subprogram_body:
@@ -471,6 +475,7 @@ bool dfs_analyze_node(TreeNode* node) {
 // Semantic analysis and construction of the symbol table, returns true if no errors were found
 // TODO: implement this function
 bool semantic_analysis() {
+    std::cout << "Semantic analysis..." << std::endl;
     return dfs_analyze_node(tree::ast->get_root());
 }
 

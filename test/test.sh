@@ -5,12 +5,15 @@ INPUT_FILE=$2
 EXPECTED_OUTPUT=$3
 
 if test -z "$EXPECTED_OUTPUT"; then
-    $EXECUTABLE -i "$INPUT_FILE" -l debug.log -o debug.out
+  if $EXECUTABLE -i "$INPUT_FILE" -l debug.log -o debug.out; then
     exit 0
+  else
+    exit 1
+  fi
 fi
 
 if diff -u <($EXECUTABLE -i "$INPUT_FILE" -l /dev/null) "$EXPECTED_OUTPUT" > /dev/null; then
-    exit 0
+  exit 0
 else
-    echo 1
+  echo 1
 fi

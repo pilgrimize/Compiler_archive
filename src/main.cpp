@@ -8,7 +8,6 @@
 bool lex_yacc() {
     if (!yyparse()) {
         tools::print_ast(tree::ast->get_root());
-        tools::destroy_ast(tree::ast->get_root());
         std::cerr << "Lexical and syntactic analysis passed." << std::endl;
         return true;
     } else {
@@ -37,7 +36,7 @@ bool code_generation() {
     }
 }
 
-void parse_args(int argc, char *argv[]) {
+int parse_args(int argc, char *argv[]) {
     std::string input_file, output_file, log_file;
     int c;
     while (true) {
@@ -87,12 +86,15 @@ void parse_args(int argc, char *argv[]) {
         }
     }
 
-    if (lex_yacc()) {
+    if (lex_yacc() && semantic_analysis()) {
         std::cerr << "Compilation passed." << std::endl;
+        return 0;
+    } else {
+        std::cerr << "Compilation failed." << std::endl;
+        return 1;
     }
 }
 
 int main(int argc, char *argv[]) {
-    parse_args(argc, argv);
-    return 0;
+    return parse_args(argc, argv);
 }
