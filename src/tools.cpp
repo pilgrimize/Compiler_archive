@@ -93,7 +93,6 @@ namespace tools{
             case tree::T_TERM: return "T_TERM";
             case tree::T_EQUALOP: return "T_EQUALOP";
             case tree::T_FACTOR: return "T_FACTOR";
-            case tree::T_LITERAL: return "T_LITERAL";
             case tree::T_NOTOP: return "T_NOTOP";
             case tree::T_PROGRAM: return "T_PROGRAM";
             case tree::T_CONST: return "T_CONST";

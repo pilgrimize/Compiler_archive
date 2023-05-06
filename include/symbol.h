@@ -97,15 +97,31 @@ private:
     std::shared_ptr<SymbolTableNode> parent;
     std::vector<std::shared_ptr<SymbolTableNode>> children;
     std::map<std::string, std::shared_ptr<SymbolTableEntry>> entries;
+    std::string scope_name;
+    std::vector<std::shared_ptr<SymbolTableNode>> traverse_sequence;
+
 public:
     SymbolTableNode() = default;
-    explicit SymbolTableNode(std::shared_ptr<SymbolTableNode> parent) : parent(std::move(parent)) {}
+    SymbolTableNode(std::shared_ptr<SymbolTableNode> parent, std::string scope_name) :
+            parent(std::move(parent)), scope_name(std::move(scope_name)) {}
 
     std::shared_ptr<SymbolTableNode> get_parent() const { return parent; }
     std::vector<std::shared_ptr<SymbolTableNode>> get_children() const { return children; }
     bool has_entry(const std::string& name) const { return entries.find(name) != entries.end(); }
     std::shared_ptr<SymbolTableEntry> get_entry(const std::string& name) const { return entries.at(name); }
     void add_entry(const std::string& name, const std::shared_ptr<SymbolTableEntry>& entry) { entries.emplace(name, entry); }
+    std::string get_scope_name() const { return scope_name; }
+    void initialize_traverse_sequence() {
+        traverse_sequence = children;
+        std::reverse(traverse_sequence.begin(), traverse_sequence.end());
+    }
+    std::shared_ptr<SymbolTableNode> next_child() {
+        if (traverse_sequence.empty()) initialize_traverse_sequence();
+        auto next_child = traverse_sequence.back();
+        traverse_sequence.pop_back();
+        return next_child;
+    }
+    
 };
 
 class SymbolTableTree {
@@ -119,22 +135,28 @@ public:
     void initialize();
 
     // Enter a new scope
-    void push_scope();
+    void push_scope(BasicType return_type, const std::string& scope_name);
 
     // Exit the current scope
     void pop_scope();
 
+    // Enter the scope of the next child node
+    void next_scope();
+
     enum SearchResult {
         FOUND,
         NOT_FOUND,
-        FOUND_IN_PARENT,
+        FOUND_IN_ANCESTOR,
     };
 
+    // Get the current scope name
+    std::string get_scope_name() const { return current_node->get_scope_name(); }
+
     // Search the entry with the given name, from the current scope to the root scope
-    SearchResult search_entry(const std::string& name);
+    SearchResult search_entry(const std::string& name, bool ignore_scope_name = false);
 
     // Get the entry with the given name, from the current scope to the root scope
-    std::shared_ptr<SymbolTableEntry> get_entry(const std::string& name);
+    std::shared_ptr<SymbolTableEntry> get_entry(const std::string& name, bool ignore_scope_name = false);
 
     // Add an entry to the current scope
     void add_entry(const std::string& name, const std::shared_ptr<SymbolTableEntry>& entry);

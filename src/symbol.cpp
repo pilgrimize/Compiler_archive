@@ -27,10 +27,13 @@ void SymbolTableTree::initialize() {
     current_node = root;
 }
 
-void SymbolTableTree::push_scope() {
-    auto new_node = std::make_shared<SymbolTableNode>(current_node);
+void SymbolTableTree::push_scope(BasicType return_type, const std::string& scope_name) {
+    auto new_node = std::make_shared<SymbolTableNode>(current_node, scope_name);
     current_node->get_children().emplace_back(new_node);
     current_node = new_node;
+    if (return_type != TYPE_NULL) {  // Add the return value of the function
+        add_entry(scope_name, std::make_shared<SymbolTableEntry>(return_type, false, false));
+    }
 }
 
 void SymbolTableTree::pop_scope() {
@@ -40,14 +43,22 @@ void SymbolTableTree::pop_scope() {
     current_node = current_node->get_parent();
 }
 
-SymbolTableTree::SearchResult SymbolTableTree::search_entry(const std::string &name) {
+void SymbolTableTree::next_scope() {
+    current_node = current_node->next_child();
+}
+
+SymbolTableTree::SearchResult SymbolTableTree::search_entry(const std::string &name, bool ignore_scope_name) {
     auto node = current_node;
     while (node != nullptr) {
         if (node->has_entry(name)) {
+            if (ignore_scope_name && node->get_scope_name() == name) {
+                node = node->get_parent();
+                continue;
+            }
             if (node == current_node) {
                 return FOUND;
             } else {
-                return FOUND_IN_PARENT;
+                return FOUND_IN_ANCESTOR;
             }
         }
         node = node->get_parent();
@@ -56,10 +67,14 @@ SymbolTableTree::SearchResult SymbolTableTree::search_entry(const std::string &n
 }
 
 // Get the entry with the given name, from the current scope to the root scope
-std::shared_ptr<SymbolTableEntry> SymbolTableTree::get_entry(const std::string& name) {
+std::shared_ptr<SymbolTableEntry> SymbolTableTree::get_entry(const std::string& name, bool ignore_scope_name) {
     auto node = current_node;
     while (node != nullptr) {
         if (node->has_entry(name)) {
+            if (ignore_scope_name && node->get_scope_name() == name) {
+                node = node->get_parent();
+                continue;
+            }
             return node->get_entry(name);
         }
         node = node->get_parent();
