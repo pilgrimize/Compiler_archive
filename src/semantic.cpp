@@ -229,7 +229,8 @@ bool dfs_analyze_node(TreeNode* node) {
                 std::cerr << "Error: redefinition of '" << function_id << "'" << std::endl;
                 return false;
             }
-            auto param_node = node->get_child_by_token(tree::T_FORMAL_PARAMETER)->get_child(1);
+            auto param_node = node->get_child_by_token(tree::T_FORMAL_PARAMETER);
+            if (param_node != nullptr) param_node = param_node->get_child(1);
             auto return_type = get_basic_type(node->get_child_by_token(tree::T_BASIC_TYPE));
             auto params = param_node == nullptr ? std::vector<std::pair<std::string, symbol::Param>>{} : get_params(param_node);
             std::vector<symbol::Param> param_types;
@@ -269,6 +270,7 @@ bool dfs_analyze_node(TreeNode* node) {
             break;
         }
         case tree::statement__T__t_if__expression__t_then__statement__else_part:
+        case tree::statement__T__t_if__expression__t_then__statement:
         case tree::statement__T__t_while__T__expression__t_do__statement:
         case tree::statement__T__t_repeat__statement_list__t_until__expression:{
             // condition and loop
