@@ -66,7 +66,7 @@ BasicType get_const_type(TreeNode* node) {
     auto token = node->get_children().back()->get_token();
     switch (token) {
         case tree::T_LITERAL_INT: return symbol::TYPE_INT;
-        case tree::T_LITERAL_REAL: return symbol::TYPE_FLOAT;
+        case tree::T_DOUBLE_VALUE: return symbol::TYPE_FLOAT;
         case tree::T_LITERAL_CHAR: return symbol::TYPE_CHAR;
         case tree::T_LITERAL_BOOL: return symbol::TYPE_BOOL;
         default: return symbol::TYPE_NULL;

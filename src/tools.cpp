@@ -93,6 +93,7 @@ namespace tools{
             case tree::T_TERM: return "T_TERM";
             case tree::T_EQUALOP: return "T_EQUALOP";
             case tree::T_FACTOR: return "T_FACTOR";
+            // case tree::T_LITERAL: return "T_LITERAL";
             case tree::T_NOTOP: return "T_NOTOP";
             case tree::T_PROGRAM: return "T_PROGRAM";
             case tree::T_CONST: return "T_CONST";
@@ -132,6 +133,22 @@ namespace tools{
             case tree::T_COLON: return "T_COLON";
             case tree::T_SUBOP: return "T_SUBOP";
             case tree::DOT: return "DOT";
+
+            case tree::T_LITERAL_INT: return "T_LITERAL_INT";
+            case tree::T_DOUBLE_VALUE: return "T_DOUBLE_VALUE";
+            case tree::T_LITERAL_CHAR: return "T_LITERAL_CHAR";
+            case tree::T_LITERAL_STRING: return "T_LITERAL_STRING";
+            case tree::T_LITERAL_BOOL: return "T_LITERAL_BOOL";
+            case tree::T_READLN: return "T_READLN";
+            case tree::T_WRITELN: return "T_WRITELN";
+            case tree::T_SINGLE: return "T_SINGLE";
+            case tree::T_DOUBLE: return "T_DOUBLE";
+            case tree::T_BYTE: return "T_BYTE";
+            case tree::T_SHORTINT: return "T_SHORTINT";
+            case tree::T_LONGINT: return "T_LONGINT";
+            case tree::T_STRING: return "T_STRING";
+            case tree::T_FALSE: return "T_FALSE";
+            case tree::T_TRUE: return "T_TRUE";
         }
     }
 }

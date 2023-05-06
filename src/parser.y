@@ -26,6 +26,21 @@
 
 %start programstruct
 %token <token_Tree> num
+
+%token <token_Tree> t_string
+%token <token_Tree> t_char
+%token <token_Tree> literal_string
+%token <token_Tree> literal_char
+%token <token_Tree> double_value
+%token <token_Tree> t_writeln
+%token <token_Tree> t_readln
+%token <token_Tree> bool_value
+%token <token_Tree> t_double
+%token <token_Tree> t_longint
+%token <token_Tree> t_byte
+%token <token_Tree> t_single
+%token <token_Tree> t_shortint
+
 %token <token_Tree> id
 %token <token_Tree> keyword
 %token <token_Tree> addop mulop relop
@@ -54,7 +69,6 @@
 %token <token_Tree> t_integer
 %token <token_Tree> t_real
 %token <token_Tree> t_boolean
-%token <token_Tree> t_char
 %token <token_Tree> t_dot
 %token <token_Tree> t_downto
 %token <token_Tree> t_while
@@ -63,7 +77,6 @@
 %token <token_Tree> t_case
 %token <token_Tree> or_op
 %token <token_Tree> notop
-%token <token_Tree> float_num
 
 %token <token_Tree> leftparen
 %token <token_Tree> rightparen
@@ -165,16 +178,16 @@ factor -> num | variable
 //I need to define the productions above :
 programstruct : program_head semicolon program_body dot { // pid = 1
         std::cerr << "Use production: programstruct -> program_head ; program_body ." << std::endl; 
-        tree::ast = tools::reduce({$1, $2, $3, $4}, P_PROGRAM, tree::T_PROGRAM_STRUCT);
+        tree::ast = tools::reduce({$1, $2, $3, $4}, tree::programstruct__programhead_semicolon__programbody_dot, tree::T_PROGRAM_STRUCT);
     }
     ;
 program_head : t_program id leftparen idlist rightparen { // pid = 2
         std::cerr << "Use production: program_head -> program id ( idlist )" << std::endl; 
-        $$ = tools::reduce({$1, $2, $3, $4, $5}, 2, tree::T_PROGRAM_HEAD);
+        $$ = tools::reduce({$1, $2, $3, $4, $5}, tree::program_head__t_program__id_leftparen__idlist__rightparen , tree::T_PROGRAM_HEAD);
         }
     | t_program id { // pid = 3
         std::cerr << "Use production: program_head -> program id" << std::endl; 
-        $$ = tools::reduce({$1, $2},3, tree::T_PROGRAM_HEAD);
+        $$ = tools::reduce({$1, $2}, tree:: program_head__t_program__id, tree::T_PROGRAM_HEAD);
         }
     | error id leftparen idlist rightparen { 
         // we fix the lack of 'program' at the beginning of the program_head'
@@ -189,81 +202,98 @@ program_head : t_program id leftparen idlist rightparen { // pid = 2
 
 program_body : const_declarations var_declarations subprogram_declarations compound_statement { // pid = 4
         std::cerr << "Use production: program_body -> const_declarations var_declarations subprogram_declarations compound_statement" << std::endl; 
-        $$ = tools::reduce({$1, $2, $3, $4}, 4, tree::T_PROGRAM_BODY);
+        $$ = tools::reduce({$1, $2, $3, $4}, tree::program_body__const_declarations__var_declarations__subprogram_declarations__compound_statement
+        , tree::T_PROGRAM_BODY);
 
         }
     | const_declarations var_declarations compound_statement { // pid=5
         std::cerr << "Use production: program_body -> const_declarations var_declarations compound_statement" << std::endl;
-        $$ = tools::reduce({$1, $2, $3}, 5, tree::T_PROGRAM_BODY);
+        $$ = tools::reduce({$1, $2, $3}, tree::program_body__const_declarations__var_declarations__compound_statement
+        , tree::T_PROGRAM_BODY);
         }
     | const_declarations subprogram_declarations compound_statement { // pid=6
         std::cerr << "Use production: program_body -> const_declarations subprogram_declarations compound_statement" << std::endl; 
-        $$ = tools::reduce({$1, $2, $3}, 6, tree::T_PROGRAM_BODY);
+        $$ = tools::reduce({$1, $2, $3}, tree::program_body__const_declarations__subprogram_declarations__compound_statement
+        , tree::T_PROGRAM_BODY);
         }
     | var_declarations subprogram_declarations compound_statement { // pid=7
         std::cerr << "Use production: program_body -> var_declarations subprogram_declarations compound_statement" << std::endl; 
-        $$ = tools::reduce({$1, $2, $3}, 7, tree::T_PROGRAM_BODY);
+        $$ = tools::reduce({$1, $2, $3}, tree::program_body__var_declarations__subprogram_declarations__compound_statement
+        , tree::T_PROGRAM_BODY);
         }
     | const_declarations compound_statement {  // pid=8
         std::cerr << "Use production: program_body -> const_declarations compound_statement" << std::endl; 
-        $$ = tools::reduce({$1, $2}, 8, tree::T_PROGRAM_BODY);
+        $$ = tools::reduce({$1, $2}, tree::program_body__const_declarations__compound_statement
+        , tree::T_PROGRAM_BODY);
         }
 
     | var_declarations compound_statement {  // pid=9
         std::cerr << "Use production: program_body -> var_declarations compound_statement" << std::endl; 
-        $$ = tools::reduce({$1, $2}, 9, tree::T_PROGRAM_BODY);
+        $$ = tools::reduce({$1, $2}, tree::program_body__var_declarations__compound_statement
+        , tree::T_PROGRAM_BODY);
     }
     | subprogram_declarations compound_statement {  // pid=10
         std::cerr << "Use production: program_body -> subprogram_declarations compound_statement" << std::endl; 
-        $$ = tools::reduce({$1, $2}, 10, tree::T_PROGRAM_BODY);
+        $$ = tools::reduce({$1, $2}, tree::program_body__subprogram_declarations__compound_statement
+        , tree::T_PROGRAM_BODY);
         }
     | compound_statement {  // pid=11
         std::cerr << "Use production: program_body -> compound_statement" << std::endl; 
-        $$ = tools::reduce({$1}, 11, tree::T_PROGRAM_BODY);
+        $$ = tools::reduce({$1}, tree::program_body__compound_statement
+        , tree::T_PROGRAM_BODY);
         }
     ;
 
 idlist : id {  // pid=12
         std::cerr << "Use production: idlist -> id" << std::endl; 
-        $$ = tools::reduce({$1}, 12, tree::T_IDLIST);
+        $$ = tools::reduce({$1}, tree::idlist__id
+        , tree::T_IDLIST);
         }
     | idlist comma id {  // pid=13
         std::cerr << "Use production: idlist -> idlist , id" << std::endl;
-        $$ = tools::reduce({$1, $2, $3}, 13, tree::T_IDLIST);
+        $$ = tools::reduce({$1, $2, $3}, tree::idlist__idlist__comma__id
+        , tree::T_IDLIST);
         }
     ;
 
 const_declarations :
     t_const const_declaration semicolon {  // pid=14
         std::cerr << "Use production: const_declarations -> const const_declaration ;" << std::endl;
-        $$ = tools::reduce({$1, $2, $3}, 14, tree::T_CONST_DECLARATIONS);
+        $$ = tools::reduce({$1, $2, $3}, tree::const_declarations__t_const__const_declaration__semicolon
+        , tree::T_CONST_DECLARATIONS);
         }
 
 const_declaration : id equalop const_value {  // pid=15
         std::cerr << "Use production: const_declaration -> id = constant" << std::endl; 
-        $$ = tools::reduce({$1, $2, $3}, 15, tree::T_CONST_DECLARATION);
+        $$ = tools::reduce({$1, $2, $3}, tree::const_declaration__id__equalop__const_value
+        , tree::T_CONST_DECLARATION);
     }
     | const_declaration semicolon id equalop const_value {  // pid=16
         std::cerr << "Use production: const_declaration -> const_declaration , id = constant" << std::endl; 
-        $$ = tools::reduce({$1, $2, $3, $4, $5}, 16, tree::T_CONST_DECLARATION);
+        $$ = tools::reduce({$1, $2, $3, $4, $5}, tree::const_declaration__const_declaration__semicolon__id__equalop__const_value
+        , tree::T_CONST_DECLARATION);
         }
     ;
 
 const_value : num {  // pid=17
         std::cerr << "Use production: const_value -> num" << std::endl; 
-        $$ = tools::reduce({$1}, 17, tree::T_CONST_VALUE);
+        $$ = tools::reduce({$1}, tree::const_value__num
+        , tree::T_CONST_VALUE);
         }
     | addop num {  // pid=18
         std::cerr << "Use production: const_value -> + num" << std::endl; 
-        $$ = tools::reduce({$1, $2}, 18, tree::T_CONST_VALUE);
+        $$ = tools::reduce({$1, $2}, tree::const_value__addop__num
+        , tree::T_CONST_VALUE);
         }
     | subop num {  // pid=19
         std::cerr << "Use production: const_value -> - num" << std::endl; 
-        $$ = tools::reduce({$1, $2}, 19, tree::T_CONST_VALUE);
+        $$ = tools::reduce({$1, $2}, tree::const_value__subop__num
+        , tree::T_CONST_VALUE);
         }
     | literal {  // pid=20
         std::cerr << "Use production: const_value -> literal" << std::endl; 
-        $$ = tools::reduce({$1}, 20, tree::T_CONST_VALUE);
+        $$ = tools::reduce({$1}, tree::const_value__literal
+        , tree::T_CONST_VALUE);
         }
     ;
     // to do 
@@ -271,144 +301,202 @@ const_value : num {  // pid=17
 var_declarations :
     t_var var_declaration semicolon {  // pid=21
         std::cerr << "Use production: var_declarations -> var var_declaration ;" << std::endl;
-        $$ = tools::reduce({$1, $2, $3}, 21, tree::T_VAR_DECLARATIONS);
+        $$ = tools::reduce({$1, $2, $3}, tree::var_declarations__t_var__var_declaration__semicolon
+        , tree::T_VAR_DECLARATIONS);
     }
     ;
 
 var_declaration : idlist colon type {  // pid=22
         std::cerr << "Use production: var_declaration -> id_list : type" << std::endl;
-        $$ = tools::reduce({$1, $2, $3}, 22, tree::T_VAR_DECLARATION);
+        $$ = tools::reduce({$1, $2, $3}, tree::var_declaration__idlist__colon__type
+        , tree::T_VAR_DECLARATION);
     }
     | var_declaration semicolon idlist colon type {  // pid=23
         std::cerr << "Use production: var_declaration -> var_declaration ; id_list : type" << std::endl;
-        $$ = tools::reduce({$1, $2, $3, $4, $5}, 23, tree::T_VAR_DECLARATION);
+        $$ = tools::reduce({$1, $2, $3, $4, $5}, tree::var_declaration__var_declaration__semicolon__idlist__colon__type
+        , tree::T_VAR_DECLARATION);
     }
     ;
 
 type : basic_type {  // pid=24
         std::cerr << "Use production: type -> basic_type" << std::endl;
-        $$ = tools::reduce({$1}, 24, tree::T_TYPE);
+        $$ = tools::reduce({$1}, tree::type__basic_type
+        , tree::T_TYPE);
     }
     | t_array leftbracket period rightbracket t_of basic_type {  // pid=25
         std::cerr << "Use production: type -> array [ num ] of basic_type" << std::endl;
-        $$ = tools::reduce({$1, $2, $3, $4, $5, $6}, 25, tree::T_TYPE);
+        $$ = tools::reduce({$1, $2, $3, $4, $5, $6}, tree::type__t_array__leftbracket__period__rightbracket__t_of__basic_type
+        , tree::T_TYPE);
     }
     ;
     
 basic_type : t_integer {  // pid=26
         std::cerr << "Use production: basic_type -> integer" << std::endl;
-        $$ = tools::reduce({$1}, 26, tree::T_BASIC_TYPE);
+        $$ = tools::reduce({$1}, tree::basic_type__t_integer
+        , tree::T_BASIC_TYPE);
     }
-    | t_real {  // pid=27
-        std::cerr << "Use production: basic_type -> real" << std::endl;
-        $$ = tools::reduce({$1}, 27, tree::T_BASIC_TYPE);
+    | t_single {  // pid=27
+        std::cerr << "Use production: basic_type -> single" << std::endl;
+        $$ = tools::reduce({$1}, tree::basic_type__t_single
+        , tree::T_BASIC_TYPE);
     }
     | t_boolean {  // pid=28
         std::cerr << "Use production: basic_type -> boolean" << std::endl;
-        $$ = tools::reduce({$1}, 28, tree::T_BASIC_TYPE);
+        $$ = tools::reduce({$1}, tree::basic_type__t_boolean
+        , tree::T_BASIC_TYPE);
+    }
+    | t_char {  // pid=29
+        std::cerr << "Use production: basic_type -> char" << std::endl;
+        $$ = tools::reduce({$1}, tree::basic_type__t_char
+        , tree::T_BASIC_TYPE);
+    }
+    | t_string {  // pid=30
+        std::cerr << "Use production: basic_type -> string" << std::endl;
+        $$ = tools::reduce({$1}, tree::basic_type__t_string
+        , tree::T_BASIC_TYPE);
+    }
+    | t_longint {  // pid=30
+        std::cerr << "Use production: basic_type -> longint" << std::endl;
+        $$ = tools::reduce({$1}, tree::basic_type__t_longint
+        , tree::T_BASIC_TYPE);
+    }
+    | t_byte {  // pid=30
+        std::cerr << "Use production: basic_type -> byte" << std::endl;
+        $$ = tools::reduce({$1}, tree::basic_type__t_byte
+        , tree::T_BASIC_TYPE);
+    }
+    | t_double {  // pid=30
+        std::cerr << "Use production: basic_type -> double" << std::endl;
+        $$ = tools::reduce({$1}, tree::basic_type__t_double
+        , tree::T_BASIC_TYPE);
     }
     ;
     
 period : num t_dot num {  // pid=29
         std::cerr << "Use production: period -> num . num" << std::endl;
-        $$ = tools::reduce({$1, $2, $3}, 29, tree::T_PERIOD);
+        $$ = tools::reduce({$1, $2, $3}, tree::period__num__t_dot__num
+        , tree::T_PERIOD);
     }
     |period comma num t_dot num {  // pid=30
         std::cerr << "Use production: period -> period , num . num" << std::endl;
-        $$ = tools::reduce({$1, $2, $3, $4, $5}, 30, tree::T_PERIOD);
+        $$ = tools::reduce({$1, $2, $3, $4, $5}, tree::period__period__comma__num__t_dot__num
+        , tree::T_PERIOD);
     }
     ;
 
 subprogram_declarations : subprogram semicolon {  // pid=31
         std::cerr << "Use production: subprogram_declarations -> subprogram_declarations subprogram_declaration ;" << std::endl;
-        $$ = tools::reduce({$1, $2}, 31, tree::T_SUBPROGRAM_DECLARATIONS);
+        $$ = tools::reduce({$1, $2}, tree::subprogram_declarations__subprogram__semicolon
+        , tree::T_SUBPROGRAM_DECLARATIONS);
     } 
     | subprogram_declarations subprogram semicolon {  // pid=32
         std::cerr << "Use production: subprogram_declarations -> subprogram_declaration ;" << std::endl;
-        $$ = tools::reduce({$1, $2, $3}, 32, tree::T_SUBPROGRAM_DECLARATIONS);
+        $$ = tools::reduce({$1, $2, $3}, tree::subprogram_declarations__subprogram_declarations__subprogram__semicolon
+        , tree::T_SUBPROGRAM_DECLARATIONS);
     }
     ;
 
 subprogram : subprogram_head semicolon subprogram_body {  // pid=33
         std::cerr << "Use production: subprogram -> subprogram_head ; subprogram_declarations compound_statement" << std::endl;
-        $$ = tools::reduce({$1, $2, $3}, 33, tree::T_SUBPROGRAM);
+        $$ = tools::reduce({$1, $2, $3}, tree::subprogram__subprogram_head__semicolon__subprogram_body
+        , tree::T_SUBPROGRAM);
     }
     ;
 
 subprogram_head : 
       t_function id formal_parameter colon basic_type {  // pid=34
         std::cerr << "Use production: subprogram_head -> function id formal_parameter : basic_type" << std::endl;
-        $$ = tools::reduce({$1, $2, $3, $4, $5}, 34, tree::T_SUBPROGRAM_HEAD);
+        $$ = tools::reduce({$1, $2, $3, $4, $5}, tree::subprogram_head__t_function__id__formal_parameter__colon__basic_type
+        , tree::T_SUBPROGRAM_HEAD);
     }
     | t_procedure id formal_parameter {  // pid=35
         std::cerr << "Use production: subprogram_head -> procedure id formal_parameter" << std::endl;
-        $$ = tools::reduce({$1, $2, $3}, 35, tree::T_SUBPROGRAM_HEAD);
+        $$ = tools::reduce({$1, $2, $3}, tree::subprogram_head__t_procedure__id__formal_parameter
+        , tree::T_SUBPROGRAM_HEAD);
     }
     | t_function id colon basic_type {  // pid=36
         std::cerr << "Use production: subprogram_head -> function id : basic_type" << std::endl;
-        $$ = tools::reduce({$1, $2, $3, $4}, 36, tree::T_SUBPROGRAM_HEAD);
+        $$ = tools::reduce({$1, $2, $3, $4}, tree::subprogram_head__t_function__id__colon__basic_type
+        , tree::T_SUBPROGRAM_HEAD);
     }
     | t_procedure id {  // pid=37
         std::cerr << "Use production: subprogram_head -> procedure id" << std::endl;
-        $$ = tools::reduce({$1, $2}, 37, tree::T_SUBPROGRAM_HEAD);
-    }
+        $$ = tools::reduce({$1, $2}, tree::subprogram_head__t_procedure__id
+        , tree::T_SUBPROGRAM_HEAD);
+    };
 
-    formal_parameter : leftparen parameter_list rightparen {  // pid=38
+formal_parameter : leftparen parameter_list rightparen {  // pid=38
         std::cerr << "Use production: formal_parameter -> ( parameter_list )" << std::endl;
-        $$ = tools::reduce({$1, $2, $3}, 38, tree::T_FORMAL_PARAMETER);
-    }
-    ;
+        $$ = tools::reduce({$1, $2, $3}, tree::formal_parameter__leftparen__parameter_list__rightparen
+        , tree::T_FORMAL_PARAMETER);
+    };
 
 parameter_list : parameter {  // pid=39
         std::cerr << "Use production: parameter_list -> parameter" << std::endl;
-        $$ = tools::reduce({$1}, 39, tree::T_PARAMETER_LIST);
+        $$ = tools::reduce({$1}, tree::parameter_list__parameter
+        , tree::T_PARAMETER_LIST);
     }
     | parameter_list semicolon parameter {  // pid=40
         std::cerr << "Use production: parameter_list -> parameter_list ; parameter" << std::endl;
-        $$ = tools::reduce({$1, $2, $3}, 40, tree::T_PARAMETER_LIST);
+        $$ = tools::reduce({$1, $2, $3}, tree::parameter_list__parameter_list__semicolon__parameter
+        , tree::T_PARAMETER_LIST);
     }
     ;
 
 parameter :  var_parameter {  // pid=41
         std::cerr << "Use production: parameter -> var_parameter" << std::endl;
-        $$ = tools::reduce({$1}, 41, tree::T_PARAMETER);
+        $$ = tools::reduce({$1}, tree::parameter__var_parameter
+        , tree::T_PARAMETER);
     }
     | value_parameter {  // pid=42
         std::cerr << "Use production: parameter -> value_parameter" << std::endl;
-        $$ = tools::reduce({$1}, 42, tree::T_PARAMETER);
+        $$ = tools::reduce({$1}, tree::parameter__value_parameter
+        , tree::T_PARAMETER);
     };
 
 var_parameter : t_var value_parameter {  // pid=43
         std::cerr << "Use production: var_parameter -> var value_parameter" << std::endl;
-        $$ = tools::reduce({$1, $2}, 43, tree::T_VAR_PARAMETER);
+        $$ = tools::reduce({$1, $2}, tree::var_parameter__t_var__value_parameter
+        , tree::T_VAR_PARAMETER);
     };
     
 value_parameter : idlist colon basic_type {  // pid=44
         std::cerr << "Use production: value_parameter -> idlist : basic_type" << std::endl;
-        $$ = tools::reduce({$1, $2, $3}, 44, tree::T_VALUE_PARAMETER);
+        $$ = tools::reduce({$1, $2, $3}, tree::value_parameter__idlist__colon__basic_type
+        , tree::T_VALUE_PARAMETER);
     };
 
 subprogram_body : compound_statement {  // pid=45
         std::cerr << "Use production: subprogram_body -> compound_statement" << std::endl;
-        $$ = tools::reduce({$1}, 45, tree::T_SUBPROGRAM_BODY);
+        $$ = tools::reduce({$1}, tree::subprogram_body__compound_statement
+        , tree::T_SUBPROGRAM_BODY);
     }
-    | const_declarations {  // pid=46
-        std::cerr << "Use production: subprogram_body -> const_declarations" << std::endl;
-        $$ = tools::reduce({$1}, 46, tree::T_SUBPROGRAM_BODY);
+    | const_declarations compound_statement {  // pid=46
+        std::cerr << "Use production: subprogram_body -> const_declarations compound_statement" << std::endl;
+        $$ = tools::reduce({$1, $2}, tree::subprogram_body__const_declarations__compound_statement
+        , tree::T_SUBPROGRAM_BODY);
     }
-    | var_declarations {    // pid=47
-        std::cerr << "Use production: subprogram_body -> var_declarations" << std::endl;
-        $$ = tools::reduce({$1}, 47, tree::T_SUBPROGRAM_BODY);
+    | var_declarations compound_statement{    // pid=47
+        std::cerr << "Use production: subprogram_body -> var_declarations compound_statement" << std::endl;
+        $$ = tools::reduce({$1, $2}, tree::subprogram_body__var_declarations__compound_statement
+        , tree::T_SUBPROGRAM_BODY);
+    }
+    |  const_declarations var_declarations compound_statement{
+        std::cerr << "Use production: subprogram_body -> const_declarations var_declarations compound_statement" << std::endl;
+        $$ = tools::reduce({$1, $2, $3}, tree::subprogram_body__const_declarations__var_declarations__compound_statement
+        , tree::T_SUBPROGRAM_BODY);
     }
     ;
 
 compound_statement : t_begin statement_list t_end {  // pid=48
         std::cerr << "Use production: compound_statement -> begin statement_list end" << std::endl;
-        $$ = tools::reduce({$1, $2, $3}, 48, tree::T_COMPOUND_STATEMENT);
+        $$ = tools::reduce({$1, $2, $3}, tree::compound_statement__t_begin__statement_list__t_end
+        , tree::T_COMPOUND_STATEMENT);
     }
     | t_begin t_end{    // pid=49
         std::cerr << "Use production: compound_statement -> begin end" << std::endl;
-        $$ = tools::reduce({$1, $2}, 49, tree::T_COMPOUND_STATEMENT);
+        $$ = tools::reduce({$1, $2}, tree::compound_statement__t_begin__t_end
+        , tree::T_COMPOUND_STATEMENT);
     }
 
 statement_list : statement {  // pid=50
@@ -416,168 +504,236 @@ statement_list : statement {  // pid=50
         $$ = tools::reduce({$1}, 50, tree::T_STATEMENT_LIST);
     }| statement_list semicolon statement {  // pid=51
         std::cerr << "Use production: statement_list -> statement_list ; statement" << std::endl;
-        $$ = tools::reduce({$1, $2, $3}, 51, tree::T_STATEMENT_LIST);
+        $$ = tools::reduce({$1, $2, $3}, tree::statement_list__statement_list__semicolon__statement
+        , tree::T_STATEMENT_LIST);
     };
 
 statement : variable assignop expression {  // pid=52
         std::cerr << "Use production: statement -> variable assignop expression" << std::endl;
-        $$ = tools::reduce({$1, $2, $3}, 52, tree::T_STATEMENT);
-    }
-    | id assignop expression {  // pid=53
-        std::cerr << "Use production: statement -> id assignop expression" << std::endl;
-        $$ = tools::reduce({$1, $2, $3}, 53, tree::T_STATEMENT);
+        $$ = tools::reduce({$1, $2, $3}, tree::statement__variable__assignop__expression
+        , tree::T_STATEMENT);
     }
     | procedure_call {  // pid=54
         std::cerr << "Use production: statement -> procedure_call" << std::endl;
-        $$ = tools::reduce({$1}, 54, tree::T_STATEMENT);
+        $$ = tools::reduce({$1}, tree::statement__procedure_call
+        , tree::T_STATEMENT);
     }
     | compound_statement {  // pid=55
         std::cerr << "Use production: statement -> compound_statement" << std::endl;
-        $$ = tools::reduce({$1}, 55, tree::T_STATEMENT);
+        $$ = tools::reduce({$1}, tree::statement__compound_statement
+        , tree::T_STATEMENT);
     }  
     // 54 to do
-    | t_if expression t_then statement else_part  {  // pid=56
-        std::cerr << "Use production: statement -> if expression then statement else statement" << std::endl;
-        $$ = tools::reduce({$1, $2, $3, $4, $5}, 56, tree::T_STATEMENT);
+    | t_if expression t_then statement {  // pid=56
+        std::cerr << "Use production: statement -> if expression then statement" << std::endl;
+        $$ = tools::reduce({$1, $2, $3, $4}, tree::statement__t_if__expression__t_then__statement
+        , tree::T_STATEMENT);
     }
-    | t_while expression t_do statement {  // pid=57
+    | t_if expression t_then statement else_part  {  // pid=56
+        std::cerr << "Use production: statement -> if expression then statement else_part" << std::endl;
+        $$ = tools::reduce({$1, $2, $3, $4, $5}, tree::statement__t_if__expression__t_then__statement__else_part
+        , tree::T_STATEMENT);
+    }
+    | t_while expression t_do statement_list {  // pid=57
         std::cerr << "Use production: statement -> while expression do statement" << std::endl;
-        $$ = tools::reduce({$1, $2, $3, $4}, 57, tree::T_STATEMENT);
+        $$ = tools::reduce({$1, $2, $3, $4}, tree::t_while__expression__t_do__statement
+        , tree::T_STATEMENT);
     }
     | t_repeat statement_list t_until expression {  // pid=58
         std::cerr << "Use production: statement -> repeat statement_list until expression" << std::endl;
-        $$ = tools::reduce({$1, $2, $3, $4}, 58, tree::T_STATEMENT);
+        $$ = tools::reduce({$1, $2, $3, $4}, tree::statement__t_repeat__statement_list__t_until__expression
+        , tree::T_STATEMENT);
     }
-    | t_for id assignop expression t_to expression t_do statement {  // pid=59
+    | t_for id assignop expression t_to expression t_do statement_list {  // pid=59
         std::cerr << "Use production: statement -> for id assignop expression to expression do statement" << std::endl;
-        $$ = tools::reduce({$1, $2, $3, $4, $5, $6, $7}, 59, tree::T_STATEMENT);
+        $$ = tools::reduce({$1, $2, $3, $4, $5, $6, $7}, tree::statement__t_for__id__assignop__expression__t_to__expression__t_do__statement
+        , tree::T_STATEMENT);
     }
-    | t_for id assignop expression t_downto expression t_do statement {  // pid=60
+    | t_for id assignop expression t_downto expression t_do statement_list {  // pid=60
         std::cerr << "Use production: statement -> for id assignop expression downto expression do statement" << std::endl;
-        $$ = tools::reduce({$1, $2, $3, $4, $5, $6, $7}, 60, tree::T_STATEMENT);
+        $$ = tools::reduce({$1, $2, $3, $4, $5, $6, $7}, tree::statement__t_for__id__assignop__expression__t_downto__expression__t_do__statement
+        , tree::T_STATEMENT);
     }
     | t_read leftparen variable_list rightparen {  // pid=61
         std::cerr << "Use production: statement -> read ( idlist )" << std::endl;
-        $$ = tools::reduce({$1, $2, $3, $4}, 61, tree::T_STATEMENT);
+        $$ = tools::reduce({$1, $2, $3, $4}, tree::statement__t_read__leftparen__variable_list__rightparen
+        , tree::T_STATEMENT);
+    }
+    | t_readln leftparen variable_list rightparen {  // pid=61
+        std::cerr << "Use production: statement -> readln ( idlist )" << std::endl;
+        $$ = tools::reduce({$1, $2, $3, $4}, tree::statement__t_readln__leftparen__variable_list__rightparen
+        , tree::T_STATEMENT);
     }
     | t_write leftparen expression_list rightparen {  // pid=62
         std::cerr << "Use production: statement -> write ( expression_list )" << std::endl;
-        $$ = tools::reduce({$1, $2, $3, $4}, 62, tree::T_STATEMENT);
+        $$ = tools::reduce({$1, $2, $3, $4}, tree::statement__t_write__leftparen__expression_list__rightparen
+        , tree::T_STATEMENT);
+    }
+    | t_writeln leftparen expression_list rightparen {  // pid=62
+        std::cerr << "Use production: statement -> writeln ( expression_list )" << std::endl;
+        $$ = tools::reduce({$1, $2, $3, $4}, tree::statement__t_writeln__leftparen__expression_list__rightparen
+        , tree::T_STATEMENT);
     }
     ;
 
 variable_list : variable {  // pid=63
         std::cerr << "Use production: variable_list -> variable" << std::endl;
-        $$ = tools::reduce({$1}, 63, tree::T_VARIABLE_LIST);
+        $$ = tools::reduce({$1}, tree::variable_list__variable
+        , tree::T_VARIABLE_LIST);
     }
     | variable_list comma variable {  // pid=64
         std::cerr << "Use production: variable_list -> variable_list , variable" << std::endl;
-        $$ = tools::reduce({$1, $2, $3}, 64, tree::T_VARIABLE_LIST);
+        $$ = tools::reduce({$1, $2, $3}, tree::variable_list__variable_list__comma__variable
+        , tree::T_VARIABLE_LIST);
     }
     ;
 
 variable : id {  // pid=65
         std::cerr << "Use production: variable -> id" << std::endl;
-        $$ = tools::reduce({$1}, 65, tree::T_VARIABLE);
+        $$ = tools::reduce({$1}, tree::variable__id
+        , tree::T_VARIABLE);
     }
     | id id_varpart {  // pid=66
         std::cerr << "Use production: variable -> id id_varpart" << std::endl;
-        $$ = tools::reduce({$1, $2}, 66, tree::T_VARIABLE);
+        $$ = tools::reduce({$1, $2}, tree::variable__id__id_varpart
+        , tree::T_VARIABLE);
     };
 
 id_varpart : leftbracket expression_list rightbracket {  // pid=67
         std::cerr << "Use production: id_varpart -> [ expression ]" << std::endl;
-        $$ = tools::reduce({$1, $2, $3}, 67, tree::T_ID_VARPART);
+        $$ = tools::reduce({$1, $2, $3}, tree::id_varpart__leftbracket__expression_list__rightbracket
+        , tree::T_ID_VARPART);
     }
 
 procedure_call : id leftparen expression_list rightparen {  // pid=68
         std::cerr << "Use production: procedure_call -> id ( expression_list )" << std::endl;
-        $$ = tools::reduce({$1, $2, $3, $4}, 68, tree::T_PROCEDURE_CALL);
+        $$ = tools::reduce({$1, $2, $3, $4}, tree::procedure_call__id__leftparen__expression_list__rightparen
+        , tree::T_PROCEDURE_CALL);
     }
     | id { // pid=69
         std::cerr << "Use production: procedure_call -> id" << std::endl;
-        $$ = tools::reduce({$1}, 69, tree::T_PROCEDURE_CALL);
+        $$ = tools::reduce({$1}, tree::procedure_call__id
+        , tree::T_PROCEDURE_CALL);
     };
 
 else_part : t_else statement {  // pid=70
         std::cerr << "Use production: else_part -> else statement" << std::endl;
-        $$ = tools::reduce({$1, $2}, 70, tree::T_ELSE_PART);
+        $$ = tools::reduce({$1, $2}, tree::else_part__t_else__statement
+        , tree::T_ELSE_PART);
     }
     | t_else  {  // pid = 71
-        $$ = tools::reduce({$1}, 71, tree::T_ELSE_PART);
+        $$ = tools::reduce({$1}, tree::else_part__t_else
+        , tree::T_ELSE_PART);
     };
 
 expression_list : expression_list comma expression {  // pid=72
         std::cerr << "Use production: expression_list -> expression_list , expression" << std::endl;
-        $$ = tools::reduce({$1, $2, $3}, 72, tree::T_EXPRESSION_LIST);
+        $$ = tools::reduce({$1, $2, $3}, tree::expression_list__expression_list__comma__expression
+        , tree::T_EXPRESSION_LIST);
     }
     |expression {   // pid=73
         std::cerr << "Use production: expression_list -> expression" << std::endl;
-        $$ = tools::reduce({$1}, 73, tree::T_EXPRESSION_LIST);
+        $$ = tools::reduce({$1}, tree::expression_list__expression
+        , tree::T_EXPRESSION_LIST);
     };
 
 expression : simple_expression {  // pid=74
         std::cerr << "Use production: expression -> simple_expression" << std::endl;
-        $$ = tools::reduce({$1}, 74, tree::T_EXPRESSION);
+        $$ = tools::reduce({$1}, tree::expression__simple_expression
+        , tree::T_EXPRESSION);
     }
     | simple_expression relop simple_expression {  // pid=75
         std::cerr << "Use production: expression -> simple_expression relop simple_expression" << std::endl;
-        $$ = tools::reduce({$1, $2, $3}, 75, tree::T_EXPRESSION);
+        $$ = tools::reduce({$1, $2, $3}, tree::expression__simple_expression__relop__simple_expression
+        , tree::T_EXPRESSION);
     }
     | simple_expression equalop simple_expression {  // pid=76
         std::cerr << "Use production: expression -> simple_expression = simple_expression" << std::endl;
-        $$ = tools::reduce({$1, $2, $3}, 76, tree::T_EXPRESSION);
+        $$ = tools::reduce({$1, $2, $3}, tree::expression__simple_expression__equalop__simple_expression
+        , tree::T_EXPRESSION);
     };
 
 simple_expression : term {  // pid=77
         std::cerr << "Use production: simple_expression -> term" << std::endl;
-        $$ = tools::reduce({$1}, 77, tree::T_SIMPLE_EXPRESSION);
+        $$ = tools::reduce({$1}, tree::simple_expression__term
+        , tree::T_SIMPLE_EXPRESSION);
     }
-    | term addop term {  // pid=78
+    | simple_expression addop term {  // pid=78
         std::cerr << "Use production: simple_expression -> term addop term" << std::endl;
-        $$ = tools::reduce({$1, $2, $3}, 78, tree::T_SIMPLE_EXPRESSION);
+        $$ = tools::reduce({$1, $2, $3}, tree::simple_expression__term__addop__term
+        , tree::T_SIMPLE_EXPRESSION);
     }
-    | term subop term {  // pid=79
+    | simple_expression subop term {  // pid=79
         std::cerr << "Use production: simple_expression -> term addop term" << std::endl;
-        $$ = tools::reduce({$1, $2, $3}, 79, tree::T_SIMPLE_EXPRESSION);
+        $$ = tools::reduce({$1, $2, $3}, tree::simple_expression__term__subop__term
+        , tree::T_SIMPLE_EXPRESSION);
     }
-    | term or_op term {  // pid=80
+    | simple_expression or_op term {  // pid=80
         std::cerr << "Use production: simple_expression -> term addop term" << std::endl;
-        $$ = tools::reduce({$1, $2, $3}, 80, tree::T_SIMPLE_EXPRESSION);
+        $$ = tools::reduce({$1, $2, $3}, tree::simple_expression__term__or_op__term
+        , tree::T_SIMPLE_EXPRESSION);
+    }
+    | literal_string{
+        std::cerr << "Use production: simple_expression -> literal_string" << std::endl;
+        $$ = tools::reduce({$1}, tree::simple_expression__literal_string
+        , tree::T_SIMPLE_EXPRESSION);
+    }
+    | literal_char{
+        std::cerr << "Use production: simple_expression -> literal_char" << std::endl;
+        $$ = tools::reduce({$1}, tree::simple_expression__literal_char
+        , tree::T_SIMPLE_EXPRESSION);
     };
 
 term : factor {  // pid=81
         std::cerr << "Use production: term -> factor" << std::endl;
-        $$ = tools::reduce({$1}, 81, tree::T_TERM);
+        $$ = tools::reduce({$1}, tree::term__factor
+        , tree::T_TERM);
     }
     | term mulop factor {  // pid=82
         std::cerr << "Use production: term -> term mulop factor" << std::endl;
-        $$ = tools::reduce({$1, $2, $3}, 82, tree::T_TERM);
+        $$ = tools::reduce({$1, $2, $3}, tree::term__term__mulop__factor
+        , tree::T_TERM);
     }
 
 factor : leftparen expression rightparen {  // pid=83
         std::cerr << "Use production: factor -> ( expression )" << std::endl;
-        $$ = tools::reduce({$1, $2, $3}, 83, tree::T_FACTOR);
+        $$ = tools::reduce({$1, $2, $3}, tree::factor__leftparen__expression__rightparen
+        , tree::T_FACTOR);
     }
     | variable {  // pid=84
         std::cerr << "Use production: factor -> variable" << std::endl;
-        $$ = tools::reduce({$1}, 84, tree::T_FACTOR);
+        $$ = tools::reduce({$1}, tree::factor__variable
+        , tree::T_FACTOR);
     }
     | id leftparen expression_list rightparen {  // pid=85
         std::cerr << "Use production: factor -> id ( expression_list )" << std::endl;
-        $$ = tools::reduce({$1, $2, $3, $4}, 85, tree::T_FACTOR);
+        $$ = tools::reduce({$1, $2, $3, $4}, tree::factor__id__leftparen__expression_list__rightparen
+        , tree::T_FACTOR);
     }
     | num { // pid=86
         std::cerr << "Use production: factor -> num" << std::endl;
-        $$ = tools::reduce({$1}, 86, tree::T_FACTOR);
+        $$ = tools::reduce({$1}, tree::factor__num
+        , tree::T_FACTOR);
+    }
+    | double_value {
+        std::cerr << "Use production: factor -> double_value" << std::endl;
+        $$ = tools::reduce({$1}, tree::factor__double_value
+        , tree::T_FACTOR);
     }
     | notop factor {  // pid=87
         std::cerr << "Use production: factor -> notop factor" << std::endl;
-        $$ = tools::reduce({$1, $2}, 87, tree::T_FACTOR);
+        $$ = tools::reduce({$1, $2}, tree::factor__notop__factor
+        , tree::T_FACTOR);
     }
     | subop factor {  // pid=88
         std::cerr << "Use production: factor -> - factor" << std::endl;
-        $$ = tools::reduce({$1, $2}, 88, tree::T_FACTOR);
+        $$ = tools::reduce({$1, $2}, tree::factor__subop__factor
+        , tree::T_FACTOR);
+    };
+    | bool_value{
+        std::cerr << "Use production: factor -> bool_value" << std::endl;
+        $$ = tools::reduce({$1}, tree::factor__bool_value
+        , tree::T_FACTOR);
     };
 
 %%
