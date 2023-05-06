@@ -53,7 +53,7 @@ bool is_id_constant(TreeNode* node) {
 }
 
 bool is_variable_assignable(TreeNode* node) {
-    // a variable is a left value if it is not a constant and it is not a function call
+    // a variable can be assigned if it is not a constant and it is not a function call
     auto id_text = node->get_child(0)->get_text();
     if (node->get_children().size() == 2) {
         return !std::get<symbol::ArrayInfo>(symbol_table_tree.get_entry(id_text)->extra_info).is_const;
@@ -239,13 +239,11 @@ bool dfs_analyze_node(TreeNode* node) {
             break;
         case 52: case 53: {
             // assign
-            BasicType left_type;
             if (!is_variable_assignable(node->get_child(0))) {
                 std::cerr << "Error: cannot assign to a right value or a constant" << std::endl;
                 return false;
             }
-            else left_type = get_basic_id_type(node->get_child(0));
-
+            auto left_type = node->get_child(0)->get_type();
             auto right_type = node->get_child(2)->get_type();
             if (!check_type(left_type, right_type, 0)) return false;
             break;
