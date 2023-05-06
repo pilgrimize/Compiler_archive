@@ -54,14 +54,29 @@ bool is_id_constant(TreeNode* node) {
     return std::get<symbol::BasicInfo>(symbol_table_tree.get_entry(node->get_text())->extra_info).is_const;
 }
 
-bool is_variable_assignable(TreeNode* node) {
+bool check_variable_assignable(TreeNode* node) {
     // a variable can be assigned if it is not a constant and it is not a function call
     auto id_text = node->get_child(0)->get_text();
+    bool assignable = true;
     if (node->get_children().size() == 2) {
-        return !std::get<symbol::ArrayInfo>(symbol_table_tree.get_entry(id_text)->extra_info).is_const;
+        assignable = !std::get<symbol::ArrayInfo>(symbol_table_tree.get_entry(id_text)->extra_info).is_const;
     } else {
-        return id_text == symbol_table_tree.get_scope_name() || !std::get<symbol::BasicInfo>(symbol_table_tree.get_entry(id_text)->extra_info).is_const;
+        assignable = id_text == symbol_table_tree.get_scope_name() || !std::get<symbol::BasicInfo>(symbol_table_tree.get_entry(id_text)->extra_info).is_const;
     }
+    if (!assignable) {
+        std::cerr << "Error: cannot assign to " << id_text << ": a right value or a constant" << std::endl;
+        return false;
+    }
+    return true;
+}
+
+bool check_variable_list_assignable(TreeNode* node) {
+    auto variable_node = node->get_child(node->get_pid() == tree::variable_list__T__variable ? 0 : 2);
+    if (!check_variable_assignable(variable_node)) return false;
+    if (node->get_pid() == tree::variable_list__T__variable_list__comma__variable) {
+        return check_variable_list_assignable(node->get_child(0));
+    }
+    return true;
 }
 
 BasicType get_const_type(TreeNode* node) {
@@ -89,9 +104,9 @@ BasicType get_basic_type(TreeNode* node) {
 
 std::vector<std::string> get_id_list(TreeNode* node) {
     std::vector<std::string> id_list;
-    if (node->get_pid() == 12) { // id
+    if (node->get_pid() == tree::idlist__T__id) { // id
         id_list.emplace_back(node->get_child(0)->get_text());
-    } else if (node->get_pid() == 3) { // id_list
+    } else if (node->get_pid() == tree::idlist__T__idlist__comma__id) { // id_list
         id_list = get_id_list(node->get_child(0));
         id_list.emplace_back(node->get_child(2)->get_text());
     }
@@ -100,11 +115,11 @@ std::vector<std::string> get_id_list(TreeNode* node) {
 
 std::vector<std::pair<size_t, size_t>> get_dims(TreeNode* node) {
     std::vector<std::pair<size_t, size_t>> dims;
-    if (node->get_pid() == 29) { // dim
+    if (node->get_pid() == tree::period__T__num__t_dot__num) { // dim
         dims.emplace_back(
                 std::stoul(node->get_child(0)->get_text()),
                 std::stoul(node->get_child(2)->get_text()));
-    } else if (node->get_pid() == 30) { // dim_list
+    } else if (node->get_pid() == tree::period__T__period__comma__num__t_dot__num) { // dim_list
         dims = get_dims(node->get_child(0));
         dims.emplace_back(
                 std::stoul(node->get_child(2)->get_text()),
@@ -123,12 +138,12 @@ std::pair<std::vector<std::string>, symbol::Param> get_single_param(TreeNode* no
 
 std::vector<std::pair<std::string, symbol::Param>> get_params(TreeNode* node) {
     std::vector<std::pair<std::string, symbol::Param>> params;
-    if (node->get_pid() == 39) { // param
+    if (node->get_pid() == tree::parameter_list__T__parameter) { // param
         auto [id_list, param] = get_single_param(node->get_child(0));
         for (auto& id : id_list) {
             params.emplace_back(id, param);
         }
-    } else if (node->get_pid() == 40) { // param_list
+    } else if (node->get_pid() == tree::parameter_list__T__parameter_list__semicolon__parameter) { // param_list
         params = get_params(node->get_child(0));
         auto [id_list, param] = get_single_param(node->get_child(2));
         for (auto& id : id_list) {
@@ -155,9 +170,9 @@ std::shared_ptr<SymbolTableEntry> get_type(TreeNode* node) {
 
 std::vector<BasicType> get_expression_list_type(TreeNode* node) {
     std::vector<BasicType> types;
-    if (node->get_pid() == 73) { // expression
+    if (node->get_pid() == tree::expression_list__T__expression) { // expression
         types.emplace_back(node->get_child(0)->get_type());
-    } else if (node->get_pid() == 73) { // expression_list
+    } else if (node->get_pid() == tree::expression_list__T__expression_list__comma__expression) { // expression_list
         types = get_expression_list_type(node->get_child(0));
         types.emplace_back(node->get_child(2)->get_type());
     }
@@ -247,10 +262,7 @@ bool dfs_analyze_node(TreeNode* node) {
             break;
         case tree::statement__T__variable__assignop__expression: {
             // assign
-            if (!is_variable_assignable(node->get_child(0))) {
-                std::cerr << "Error: cannot assign to a right value or a constant" << std::endl;
-                return false;
-            }
+            if (!check_variable_assignable(node->get_child(0))) return false;
             auto left_type = node->get_child(0)->get_type();
             auto right_type = node->get_child(2)->get_type();
             if (!check_type(left_type, right_type, 0)) return false;
@@ -279,6 +291,11 @@ bool dfs_analyze_node(TreeNode* node) {
             }
             break;
         }
+        case tree::statement__T__t_read__leftparen__variable_list__rightparen:{
+            if (!check_variable_list_assignable(node->get_child(2))) return false;
+            break;
+        }
+
         case tree::variable__T__id: {
             // id as variable
             auto id_text = node->get_child(0)->get_text();
@@ -302,9 +319,8 @@ bool dfs_analyze_node(TreeNode* node) {
                     }
                     node->set_type(info.ret_type);
                 }
-                break;
             }
-
+            break;
         }
         case tree::variable__T__id__id_varpart: {
             // array element as variable
