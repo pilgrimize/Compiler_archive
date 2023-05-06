@@ -15,7 +15,7 @@ namespace tools{
         ss << num;
         return ss.str();
     }
-    tree::Tree* reduce(std::initializer_list<tree::Tree*> list, int pid, tree::Token token){
+    tree::Tree* reduce(std::initializer_list<tree::Tree*> list, tree::PID pid, tree::Token token){
         auto* tnode = new tree::TreeNode(pid, token, turn_token_text(token));
         tnode->set_pid(pid);
         for (auto it = list.begin(); it != list.end(); ++it) {

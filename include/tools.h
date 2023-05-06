@@ -9,7 +9,7 @@ namespace tools{
     int convertStringToNumber(const std::string& str);
     std::string intToString(int num);
     std::string turn_token_text(tree::Token token);
-    tree::Tree* reduce(std::initializer_list<tree::Tree*> list, int pid, tree::Token token);
+    tree::Tree* reduce(std::initializer_list<tree::Tree*> list, tree::PID pid, tree::Token token);
     void print_ast(tree::TreeNode* x);
     void destroy_ast(tree::TreeNode* x);
 }

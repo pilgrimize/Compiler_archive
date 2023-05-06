@@ -163,15 +163,16 @@ std::vector<BasicType> get_expression_list_type(TreeNode* node) {
 }
 
 bool dfs_analyze_node(TreeNode* node) {
+    std::cout << "Analyzing node: " << node->get_pid() << std::endl;
     int delta = -1;
     // Enter the node
     switch (node->get_pid()) {
-        case 1: // program
+        case tree::programstruct__T__programhead_semicolon__programbody_dot: // program
             symbol_table_tree.initialize();
             break;
-        case 15: // const declaration
+        case tree::const_declaration__T__id__equalop__const_value: // const declaration
             delta = 0;
-        case 16: {
+        case tree::const_declaration__T__const_declaration__semicolon__id__equalop__const_value: {
             // const declaration
             if (delta < 0) delta = 2;
             auto text = node->get_child(delta + 0)->get_text();
@@ -185,9 +186,9 @@ bool dfs_analyze_node(TreeNode* node) {
             symbol_table_tree.add_entry(text, entry);
             break;
         }
-        case 22: // var declaration
+        case tree::var_declaration__T__idlist__colon__type: // var declaration
             delta = 0;
-        case 23: {
+        case tree::var_declaration__T__var_declaration__semicolon__idlist__colon__type: {
             // var declaration
             if (delta < 0) delta = 2;
             auto id_list = get_id_list(node->get_child(delta + 0));
@@ -201,7 +202,10 @@ bool dfs_analyze_node(TreeNode* node) {
             }
             break;
         }
-        case 34: case 35: case 36: case 37: {
+        case tree::subprogram_head__T__t_function__id__formal_parameter__colon__basic_type:
+        case tree::subprogram_head__T__t_procedure__id__formal_parameter:
+        case tree::subprogram_head__T__t_function__id__colon__basic_type:
+        case tree::subprogram_head__T__t_procedure__id: {
             auto function_id = node->get_child_by_token(tree::T_ID)->get_text();
             if (symbol_table_tree.search_entry(function_id) == SymbolTableTree::FOUND) {
                 std::cerr << "Error: redefinition of '" << function_id << "'" << std::endl;
@@ -234,10 +238,10 @@ bool dfs_analyze_node(TreeNode* node) {
 
     // Exit the node
     switch (node->get_pid()) {
-        case 33:
+        case tree::subprogram__T__subprogram_head__semicolon__subprogram_body:
             symbol_table_tree.pop_scope();
             break;
-        case 52: case 53: {
+        case tree::statement__T__variable__assignop__expression: {
             // assign
             if (!is_variable_assignable(node->get_child(0))) {
                 std::cerr << "Error: cannot assign to a right value or a constant" << std::endl;
@@ -248,7 +252,9 @@ bool dfs_analyze_node(TreeNode* node) {
             if (!check_type(left_type, right_type, 0)) return false;
             break;
         }
-        case 56: case 57: case 58: {
+        case tree::statement__T__t_if__expression__t_then__statement__else_part:
+        case tree::statement__T__t_while__T__expression__t_do__statement:
+        case tree::statement__T__t_repeat__statement_list__t_until__expression:{
             // condition and loop
             auto expression_type = node->get_child_by_token(tree::T_EXPRESSION)->get_type();
             if (expression_type != symbol::TYPE_BOOL) {
@@ -257,7 +263,8 @@ bool dfs_analyze_node(TreeNode* node) {
             }
             break;
         }
-        case 59: case 60: {
+        case tree::statement__T__t_for__id__assignop__expression__t_to__expression__t_do__statement:
+        case tree::statement__T__t_for__id__assignop__expression__t_downto__expression__t_do__statement:{
             // for loop
             auto id_node = node->get_child(1);
             if (!check_id(id_node, true, true)) return false;
@@ -268,7 +275,7 @@ bool dfs_analyze_node(TreeNode* node) {
             }
             break;
         }
-        case 65: {
+        case tree::variable__T__id: {
             // id as variable
             auto id_text = node->get_child(0)->get_text();
             if (id_text == symbol_table_tree.get_scope_name()) {
@@ -295,7 +302,7 @@ bool dfs_analyze_node(TreeNode* node) {
             }
 
         }
-        case 66: {
+        case tree::variable__T__id__id_varpart: {
             // array element as variable
             auto id_text = node->get_child(0)->get_text();
             if (!check_id(node->get_child(0), false, false)) return false;
@@ -319,7 +326,7 @@ bool dfs_analyze_node(TreeNode* node) {
             node->set_type(info.basic);
             break;
         }
-        case 68: {
+        case tree::procedure_call__T__id__leftparen__expression_list__rightparen: {
             // procedure call
             auto id_text = node->get_child(0)->get_text();
             if (!check_id(node->get_child(0), false, false)) return false;
@@ -346,7 +353,7 @@ bool dfs_analyze_node(TreeNode* node) {
             }
             break;
         }
-        case 69: {
+        case tree::procedure_call__T__id: {
             // procedure call
             if (!check_id(node->get_child(0), false, false)) return false;
             auto entry = symbol_table_tree.get_entry(node->get_child(0)->get_text());
@@ -365,11 +372,15 @@ bool dfs_analyze_node(TreeNode* node) {
             }
             break;
         }
-        case 74: case 77: case 81: case 84: {
+        case tree::expression__T__simple_expression:
+        case tree::simple_expression__T__term:
+        case tree::term__T__factor:
+        case tree::factor__T__variable:{
             node->set_type(node->get_child(0)->get_type());
             break;
         }
-        case 75: case 76: {
+        case tree::expression__T__simple_expression__relop__simple_expression:
+        case tree::expression__T__simple_expression__equalop__simple_expression: {
             auto type_a = node->get_child(0)->get_type();
             auto type_b = node->get_child(2)->get_type();
             if (!((type_a == symbol::TYPE_INT || type_a == symbol::TYPE_FLOAT) && (type_b == symbol::TYPE_INT || type_b == symbol::TYPE_FLOAT))) {
@@ -379,7 +390,9 @@ bool dfs_analyze_node(TreeNode* node) {
             node->set_type(symbol::TYPE_BOOL);
             break;
         }
-        case 78: case 79: case 82: {
+        case tree::simple_expression__T__term__addop__term:
+        case tree::simple_expression__T__term__subop__term:
+        case tree::term__T__term__mulop__factor: {
             auto type_a = node->get_child(0)->get_type();
             auto type_b = node->get_child(2)->get_type();
             if (!((type_a == symbol::TYPE_INT || type_a == symbol::TYPE_FLOAT) && (type_b == symbol::TYPE_INT || type_b == symbol::TYPE_FLOAT))) {
@@ -389,7 +402,7 @@ bool dfs_analyze_node(TreeNode* node) {
             node->set_type(type_a == symbol::TYPE_INT && type_b == symbol::TYPE_INT ? symbol::TYPE_INT : symbol::TYPE_FLOAT);
             break;
         }
-        case 80: {
+        case tree::simple_expression__T__term__or_op__term: {
             auto type_a = node->get_child(0)->get_type();
             auto type_b = node->get_child(2)->get_type();
             if (!(type_a == symbol::TYPE_INT && type_b == symbol::TYPE_INT)) {
@@ -399,11 +412,11 @@ bool dfs_analyze_node(TreeNode* node) {
             node->set_type(symbol::TYPE_INT);
             break;
         }
-        case 83: {
+        case tree::factor__T__leftparen__expression__rightparen: {
             node->set_type(node->get_child(1)->get_type());
             break;
         }
-        case 85: {
+        case tree::factor__T__id__leftparen__expression_list__rightparen: {
             // function call
             if (!check_id(node->get_child(0), false, false, true)) return false;
             auto entry = symbol_table_tree.get_entry(node->get_child(0)->get_text(), true);
@@ -426,11 +439,11 @@ bool dfs_analyze_node(TreeNode* node) {
             node->set_type(info.ret_type);
             break;
         }
-        case 86: {
+        case tree::factor__T__num: {
             node->set_type(symbol::TYPE_INT);
             break;
         }
-        case 87: {
+        case tree::factor__T__notop__factor: {
             auto type = node->get_child(1)->get_type();
             if (type != symbol::TYPE_INT) {
                 std::cerr << "Error: expected integer type for not operation, found others" << std::endl;
@@ -439,7 +452,7 @@ bool dfs_analyze_node(TreeNode* node) {
             node->set_type(symbol::TYPE_INT);
             break;
         }
-        case 88: {
+        case tree::factor__T__subop__factor: {
             auto type = node->get_child(1)->get_type();
             if (!(type == symbol::TYPE_INT || type == symbol::TYPE_FLOAT)) {
                 std::cerr << "Error: expected integer or real type for minus operation, found others" << std::endl;
