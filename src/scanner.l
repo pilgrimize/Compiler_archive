@@ -34,13 +34,23 @@ t_dot ".."
 t_repeat "repeat"
 t_until "until"
 t_case "case"
+t_writeln "writeln"
+t_readln "readln"
+t_single "single"
+t_double "double"
+t_shortint "shortint"
+t_longint "longint"
+t_byte "byte"
+t_string "string"
 
 or_op "or"
-addop '+'
-subop '-'
+addop "+"
+subop "-"
 mulop "*"|"/"|"div"|"mod"|"and"
 relop "<"|">"|"<>"|"<="|">="
 notop "not"
+literal_char {quateop}({letter}|{digit}|{others}){quateop}
+literal_string {quateop}({letter}|{digit}|{others})*{quateop} 
 quateop "'"
 equalop "="
 assignop ":="
@@ -58,10 +68,8 @@ digit [0-9]
 digits ({digit})+
 optional_fraction "."{digits}
 num {digits}
-real_num {digits}{optional_fraction}
-others "@"|"#"|"$"|"%"|"^"|"&"|"*"|"-"|"+"|"="|"|"|"["|"]"|"{"|"}"|";"|":"|","|"<"|">"|"/"|"?"|"~"
-literal_char {quateop}({letter}|{digit}|{others}){quateop}
-literal_string {quateop}({letter}|{digit}|{others})*{quateop} 
+double_value {digits}{optional_fraction}
+others "@"|"#"|"$"|"%"|"^"|"&"|"*"|"-"|"+"|"="|"|"|"["|"]"|"{"|"}"|";"|":"|","|"<"|">"|"/"|"?"|"~"|" "
 id {letter}({letter}|{digit})*
 comment \{[^}]*\}
 
@@ -71,9 +79,9 @@ comment \{[^}]*\}
                 yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_LITERAL_INT,yytext )); 
                 return num;
                 }
-{real_num}    {std::cerr << "float_num:" << yytext << std::endl; 
-                yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_LITERAL_REAL ,yytext )); 
-                return float_num;
+{double_value}    {std::cerr << "double_value:" << yytext << std::endl; 
+                yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_DOUBLE_VALUE ,yytext )); 
+                return double_value;
                 }
 {bool_value}   {std::cerr << "bool_value:" << yytext << std::endl; 
                 yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_LITERAL_BOOL ,yytext )); 
@@ -120,6 +128,15 @@ comment \{[^}]*\}
 {t_else}        {std::cerr << "t_else:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_ELSE,"" )); return t_else;}
 {t_procedure}   {std::cerr << "t_procedure:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_PROCEDURE,"" )); return t_procedure;}
 {t_function}    {std::cerr << "t_function:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_FUNCTION,"" )); return t_function;}
+{t_writeln}     {std::cerr << "t_writeln:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_WRITELN,"" )); return t_writeln;}
+{t_readln}     {std::cerr << "t_readln:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_READLN,"" )); return t_readln;}
+{t_double}    {std::cerr << "t_double:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_DOUBLE,"" )); return t_double;}
+{t_single}      {std::cerr << "t_single:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_SINGLE,"" )); return t_single;}
+{t_longint}     {std::cerr << "t_longint:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_LONGINT,"" )); return t_longint;}
+{t_byte}        {std::cerr << "t_byte:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_BYTE,"" )); return t_byte;}
+{t_shortint}    {std::cerr << "t_shortint:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_SHORTINT,"" )); return t_shortint;}
+{t_string}      {std::cerr << "t_string:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_STRING,"" )); return t_string;}
+{t_char}        {std::cerr << "t_char:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_CHAR,"" )); return t_char;}
 
 {t_begin}       {std::cerr << "t_begin:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_BEGIN,"" )); return t_begin;}
 {t_end}         {std::cerr << "t_end:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(0,tree::T_END,"" )); return t_end;}
