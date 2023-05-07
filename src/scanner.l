@@ -87,13 +87,13 @@ comment \{[^}]*\}
                 yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_LITERAL_BOOL ,yytext ));
                 return bool_value;
                 }
-{literal_string} {std::cerr << "literal_string:" << yytext << std::endl; 
-                yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_LITERAL_STRING ,yytext ));
-                return literal_string;
-                }
 {literal_char} {std::cerr << "literal_char:" << yytext << std::endl; 
                 yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_LITERAL_CHAR ,yytext ));
                 return literal_char;
+                }
+{literal_string} {std::cerr << "literal_string:" << yytext << std::endl; 
+                yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_LITERAL_STRING ,yytext ));
+                return literal_string;
                 }
 {leftparen}     {std::cerr << "leftparen:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_LEFTPAREN,yytext )); return leftparen;}
 {rightparen}    {std::cerr << "rightparen:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_RIGHTPAREN,yytext)); return rightparen;}
