@@ -23,7 +23,6 @@ var
 			a := a + 1;
 			port(aa,aa,b)
 		until a = 10;
-		for 
 	   if first<k then quick(first,k, counter);
 	   if i<last then quick(i,last, counter);
 	   P:= P + counter

@@ -525,9 +525,9 @@ statement : variable assignop expression {  // pid=52
     }  
     // 54 to do
     | t_if expression t_then statement {  // pid=56
-            std::cerr << "Use production: statement -> if expression then statement" << std::endl;
-            $$ = tools::reduce({$1, $2, $3, $4}, tree::statement__T__t_if__expression__t_then__statement
-            , tree::T_STATEMENT);
+        std::cerr << "Use production: statement -> if expression then statement" << std::endl;
+        $$ = tools::reduce({$1, $2, $3, $4}, tree::statement__T__t_if__expression__t_then__statement
+        , tree::T_STATEMENT);
     }
     | t_if expression t_then statement else_part  {  // pid=56
         std::cerr << "Use production: statement -> if expression then statement else_part" << std::endl;
