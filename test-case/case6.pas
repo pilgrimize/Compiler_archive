@@ -1,9 +1,9 @@
 program aff(b);
-var a,b:integer;
+var a,b,i:integer;
 begin
 	a := 1;
 	b:= a-1;
-	while a < x do begin
+	while a < b do begin
 		i:= i+1
 	end
 end.

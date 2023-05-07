@@ -2,6 +2,8 @@
 
 namespace symbol {
 
+SymbolTableTree symbol_table_tree;
+
 TypeCategory get_type_category(BasicType type) {
     switch (type) {
         case TYPE_NULL: return TYPE_CATEGORY_NULL;

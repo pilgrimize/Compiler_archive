@@ -1,4 +1,5 @@
 program andd(input,output);
+var x, y:integer;
 procedure Q;
 begin
 end;
@@ -8,10 +9,11 @@ var i:string;
 begin
     f:=y;
     y:=y-1;
-    if y>1 then f:=f*f
+    if y>1 then f:=f*f()
 end;
 begin
-    P;writeln(x);
-    y:=N;
-    Q(a,b,c,d,ddd);writeln(x)
+    Q;
+    x:=f;
+    writeln(x);
+    writeln(x)
 end.

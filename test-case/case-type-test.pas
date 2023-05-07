@@ -8,5 +8,5 @@ begin
 	p :='a';
 	a := 1;
 	b:= a-1;
-	write(a,b,s,p)
+	writeln(a,b,s,p)
 end.

@@ -6,7 +6,8 @@
 
 namespace semantic {
 
-symbol::SymbolTableTree symbol_table_tree;
+#define symbol_table_tree symbol::symbol_table_tree
+// symbol::SymbolTableTree symbol_table_tree;
 
 using symbol::BasicType, symbol::SymbolTableEntry, symbol::SymbolTableTree;
 using tree::TreeNode;
