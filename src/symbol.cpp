@@ -2,6 +2,17 @@
 
 namespace symbol {
 
+TypeCategory get_type_category(BasicType type) {
+    switch (type) {
+        case TYPE_NULL: return TYPE_CATEGORY_NULL;
+        case TYPE_INT: case TYPE_LONGINT: case TYPE_SHORTINT: case TYPE_BYTE: return TYPE_CATEGORY_INT;
+        case TYPE_FLOAT: case TYPE_SINGLE: case TYPE_DOUBLE: return TYPE_CATEGORY_FLOAT;
+        case TYPE_BOOL: return TYPE_CATEGORY_BOOL;
+        case TYPE_CHAR: return TYPE_CATEGORY_CHAR;
+        case TYPE_STRING: return TYPE_CATEGORY_STRING;
+    }
+}
+
 // Compare if entry_a and entry_b have the same type
 bool compare_type(const std::shared_ptr<symbol::SymbolTableEntry>& entry_a, const std::shared_ptr<symbol::SymbolTableEntry>& entry_b) {
     if (entry_a->type != entry_b->type) {

@@ -16,7 +16,24 @@ enum BasicType {
     TYPE_FLOAT,
     TYPE_CHAR,
     TYPE_BOOL,
+    TYPE_STRING,
+    TYPE_SINGLE,
+    TYPE_DOUBLE,
+    TYPE_SHORTINT,
+    TYPE_LONGINT,
+    TYPE_BYTE,
 };
+
+enum TypeCategory {
+    TYPE_CATEGORY_NULL = -1,
+    TYPE_CATEGORY_INT,
+    TYPE_CATEGORY_FLOAT,
+    TYPE_CATEGORY_CHAR,
+    TYPE_CATEGORY_BOOL,
+    TYPE_CATEGORY_STRING,
+};
+
+TypeCategory get_type_category(BasicType type);
 
 enum ComplexType {
     TYPE_BASIC,

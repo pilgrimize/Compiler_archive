@@ -11,16 +11,15 @@ symbol::SymbolTableTree symbol_table_tree;
 using symbol::BasicType, symbol::SymbolTableEntry, symbol::SymbolTableTree;
 using tree::TreeNode;
 
-// Check if two types match
-bool check_type(BasicType type_a, BasicType type_b, int check_mode = 0) {
-    switch (check_mode) {
-        case 0: // assignment
-            if (type_a == type_b || (type_a == symbol::TYPE_FLOAT && type_b == symbol::TYPE_INT)) return true;
-            std::cerr << "Error: type mismatched for assignment" << std::endl;
-            return false;
-        default:
-            return false;
-    }
+// Check if type_b can be assigned to type_a
+bool check_type_assignable(BasicType type_a, BasicType type_b) {
+    auto category_a = symbol::get_type_category(type_a);
+    auto category_b = symbol::get_type_category(type_b);
+    if (category_a == category_b
+        || (category_a == symbol::TYPE_CATEGORY_FLOAT && category_b == symbol::TYPE_CATEGORY_INT)
+        || (category_a == symbol::TYPE_CATEGORY_STRING && category_b == symbol::TYPE_CATEGORY_CHAR)) return true;
+    std::cerr << "Error: type mismatched for assignment" << std::endl;
+    return false;
 }
 
 bool check_id(TreeNode* node, bool expect_basic = true, bool expect_not_constant = false, bool ignore_scope_name = false) {
@@ -98,6 +97,12 @@ BasicType get_basic_type(TreeNode* node) {
         case tree::T_REAL: return symbol::TYPE_FLOAT;
         case tree::T_CHAR: return symbol::TYPE_CHAR;
         case tree::T_BOOLEAN: return symbol::TYPE_BOOL;
+        case tree::T_STRING: return symbol::TYPE_STRING;
+        case tree::T_SINGLE: return symbol::TYPE_SINGLE;
+        case tree::T_DOUBLE: return symbol::TYPE_DOUBLE;
+        case tree::T_SHORTINT: return symbol::TYPE_SHORTINT;
+        case tree::T_LONGINT: return symbol::TYPE_LONGINT;
+        case tree::T_BYTE: return symbol::TYPE_BYTE;
         default: return symbol::TYPE_NULL;
     }
 }
@@ -268,7 +273,7 @@ bool dfs_analyze_node(TreeNode* node) {
             auto left_type = node->get_child(0)->get_type();
             auto right_type = node->get_child(2)->get_type();
             std::cout << left_type << " " << right_type << std::endl;
-            if (!check_type(left_type, right_type, 0)) return false;
+            if (!check_type_assignable(left_type, right_type)) return false;
             break;
         }
         case tree::statement__T__t_if__expression__t_then__statement__else_part:
@@ -288,14 +293,17 @@ bool dfs_analyze_node(TreeNode* node) {
             // for loop
             auto id_node = node->get_child(1);
             if (!check_id(id_node, true, true)) return false;
-            auto id_type = get_basic_id_type(id_node);
-            if (id_type != symbol::TYPE_INT || node->get_child(3)->get_type() != symbol::TYPE_INT || node->get_child(3)->get_type() != symbol::TYPE_INT) {
+            auto id_type = symbol::get_type_category(get_basic_id_type(id_node)),
+                expression_type_a = symbol::get_type_category(node->get_child(3)->get_type()),
+                expression_type_b = symbol::get_type_category(node->get_child(5)->get_type());
+            if (id_type != symbol::TYPE_CATEGORY_INT || expression_type_a != symbol::TYPE_CATEGORY_INT || expression_type_b != symbol::TYPE_CATEGORY_INT) {
                 std::cerr << "Error: expected integer type for for-loop index, found others" << std::endl;
                 return false;
             }
             break;
         }
-        case tree::statement__T__t_read__leftparen__variable_list__rightparen:{
+        case tree::statement__T__t_read__leftparen__variable_list__rightparen:
+        case tree::statement__T__t_readln__leftparen__variable_list__rightparen: {
             if (!check_variable_list_assignable(node->get_child(2))) return false;
             break;
         }
@@ -342,7 +350,7 @@ bool dfs_analyze_node(TreeNode* node) {
                 return false;
             }
             for (auto type: index_list) {
-                if (type != symbol::TYPE_INT) {
+                if (symbol::get_type_category(type) != symbol::TYPE_CATEGORY_INT) {
                     std::cerr << "Error: expected integer type for array index, found others" << std::endl;
                     return false;
                 }
@@ -370,7 +378,7 @@ bool dfs_analyze_node(TreeNode* node) {
                 return false;
             }
             for (int i = 0; i < param_list.size(); ++i) {
-                if (!check_type(param_list[i], info.params[i].type, 0)) {
+                if (!check_type_assignable(param_list[i], info.params[i].type)) {
                     std::cerr << "Error: type mismatched for parameter '" << i << "' of procedure '" << id_text << "'" << std::endl;
                     return false;
                 }
@@ -403,10 +411,18 @@ bool dfs_analyze_node(TreeNode* node) {
             node->set_type(node->get_child(0)->get_type());
             break;
         }
+        case tree::simple_expression__T__literal_char: {
+            node->set_type(symbol::TYPE_CHAR);
+            break;
+        }
+        case tree::simple_expression__T__literal_string: {
+            node->set_type(symbol::TYPE_STRING);
+            break;
+        }
         case tree::expression__T__simple_expression__relop__simple_expression: {
-            auto type_a = node->get_child(0)->get_type();
-            auto type_b = node->get_child(2)->get_type();
-            if (!((type_a == symbol::TYPE_INT || type_a == symbol::TYPE_FLOAT) && (type_b == symbol::TYPE_INT || type_b == symbol::TYPE_FLOAT))) {
+            auto category_a = symbol::get_type_category(node->get_child(0)->get_type());
+            auto category_b = symbol::get_type_category(node->get_child(2)->get_type());
+            if (!((category_a == symbol::TYPE_CATEGORY_INT || category_a == symbol::TYPE_CATEGORY_FLOAT) && (category_b == symbol::TYPE_CATEGORY_INT || category_b == symbol::TYPE_CATEGORY_FLOAT))) {
                 std::cerr << "Error: expected integer or real type for comparison, found others" << std::endl;
                 return false;
             }
@@ -414,10 +430,10 @@ bool dfs_analyze_node(TreeNode* node) {
             break;
         }
         case tree::expression__T__simple_expression__equalop__simple_expression: {
-            auto type_a = node->get_child(0)->get_type();
-            auto type_b = node->get_child(2)->get_type();
-            if (!((type_a == symbol::TYPE_INT || type_a == symbol::TYPE_FLOAT) && (type_b == symbol::TYPE_INT || type_b == symbol::TYPE_FLOAT))
-                && type_a != type_b) {
+            auto category_a = symbol::get_type_category(node->get_child(0)->get_type());
+            auto category_b = symbol::get_type_category(node->get_child(2)->get_type());
+            if (!((category_a == symbol::TYPE_CATEGORY_INT || category_a == symbol::TYPE_CATEGORY_FLOAT) && (category_b == symbol::TYPE_CATEGORY_INT || category_b == symbol::TYPE_CATEGORY_FLOAT))
+                && category_a != category_b) {
                 std::cerr << "Error: expected same or comparable types for comparison, found others" << std::endl;
                 return false;
             }
@@ -426,42 +442,42 @@ bool dfs_analyze_node(TreeNode* node) {
         }
         case tree::simple_expression__T__term__addop__term:
         case tree::simple_expression__T__term__subop__term: {
-            auto type_a = node->get_child(0)->get_type();
-            auto type_b = node->get_child(2)->get_type();
-            if (!((type_a == symbol::TYPE_INT || type_a == symbol::TYPE_FLOAT) && (type_b == symbol::TYPE_INT || type_b == symbol::TYPE_FLOAT))) {
+            auto category_a = symbol::get_type_category(node->get_child(0)->get_type());
+            auto category_b = symbol::get_type_category(node->get_child(2)->get_type());
+            if (!((category_a == symbol::TYPE_CATEGORY_INT || category_a == symbol::TYPE_CATEGORY_FLOAT) && (category_b == symbol::TYPE_CATEGORY_INT || category_b == symbol::TYPE_CATEGORY_FLOAT))) {
                 std::cerr << "Error: expected integer or real type for arithmetic operation, found others" << std::endl;
                 return false;
             }
-            node->set_type(type_a == symbol::TYPE_INT && type_b == symbol::TYPE_INT ? symbol::TYPE_INT : symbol::TYPE_FLOAT);
+            node->set_type(category_a == symbol::TYPE_CATEGORY_INT && category_b == symbol::TYPE_CATEGORY_INT ? symbol::TYPE_INT : symbol::TYPE_FLOAT);
             break;
         }
         case tree::term__T__term__mulop__factor: {
             auto operator_text = node->get_child(1)->get_text();
-            auto type_a = node->get_child(0)->get_type();
-            auto type_b = node->get_child(2)->get_type();
+            auto category_a = symbol::get_type_category(node->get_child(0)->get_type());
+            auto category_b = symbol::get_type_category(node->get_child(2)->get_type());
             if (operator_text == "and") {
-                if (!((type_a == type_b) && (type_a == symbol::TYPE_INT || type_a == symbol::TYPE_BOOL))) {
+                if (!((category_a == category_b) && (category_a == symbol::TYPE_CATEGORY_INT || category_a == symbol::TYPE_CATEGORY_BOOL))) {
                     std::cerr << "Error: expected both integer or boolean types for bit operation, found others" << std::endl;
                     return false;
                 }
-                node->set_type(type_a);
+                node->set_type(category_a == symbol::TYPE_CATEGORY_INT ? symbol::TYPE_INT : symbol::TYPE_BOOL);
             } else {
-                if (!((type_a == symbol::TYPE_INT || type_a == symbol::TYPE_FLOAT) && (type_b == symbol::TYPE_INT || type_b == symbol::TYPE_FLOAT))) {
-                    std::cerr << "Error: expected integer or real types for arithmetic operation, found others" << std::endl;
+                if (!((category_a == symbol::TYPE_CATEGORY_INT || category_a == symbol::TYPE_CATEGORY_FLOAT) && (category_b == symbol::TYPE_CATEGORY_INT || category_b == symbol::TYPE_CATEGORY_FLOAT))) {
+                    std::cerr << "Error: expected integer or real type for arithmetic operation, found others" << std::endl;
                     return false;
                 }
-                node->set_type(type_a == symbol::TYPE_INT && type_b == symbol::TYPE_INT ? symbol::TYPE_INT : symbol::TYPE_FLOAT);
+                node->set_type(category_a == symbol::TYPE_CATEGORY_INT && category_b == symbol::TYPE_CATEGORY_INT ? symbol::TYPE_INT : symbol::TYPE_FLOAT);
             }
             break;
         }
         case tree::simple_expression__T__term__or_op__term: {
-            auto type_a = node->get_child(0)->get_type();
-            auto type_b = node->get_child(2)->get_type();
-            if (!((type_a == type_b) && (type_a == symbol::TYPE_INT || type_a == symbol::TYPE_BOOL))) {
+            auto category_a = symbol::get_type_category(node->get_child(0)->get_type());
+            auto category_b = symbol::get_type_category(node->get_child(2)->get_type());
+            if (!((category_a == category_b) && (category_a == symbol::TYPE_CATEGORY_INT || category_a == symbol::TYPE_CATEGORY_BOOL))) {
                 std::cerr << "Error: expected both integer or boolean types for bit operation, found others" << std::endl;
                 return false;
             }
-            node->set_type(type_a);
+            node->set_type(category_a == symbol::TYPE_CATEGORY_INT ? symbol::TYPE_INT : symbol::TYPE_BOOL);
             break;
         }
         case tree::factor__T__leftparen__expression__rightparen: {
@@ -483,7 +499,7 @@ bool dfs_analyze_node(TreeNode* node) {
             }
             auto param_list = get_expression_list_type(node->get_child(2));
             for (int i = 0; i < param_list.size(); ++i) {
-                if (!check_type(param_list[i], info.params[i].type, 0)) {
+                if (!check_type_assignable(param_list[i], info.params[i].type)) {
                     std::cerr << "Error: type mismatched for parameter '" << i << "' of function '" << node->get_child(0)->get_text() << "'" << std::endl;
                     return false;
                 }
@@ -493,6 +509,10 @@ bool dfs_analyze_node(TreeNode* node) {
         }
         case tree::factor__T__num: {
             node->set_type(symbol::TYPE_INT);
+            break;
+        }
+        case tree::factor__T__double_value: {
+            node->set_type(symbol::TYPE_FLOAT);
             break;
         }
         case tree::factor__T__notop__factor: {
@@ -505,12 +525,12 @@ bool dfs_analyze_node(TreeNode* node) {
             break;
         }
         case tree::factor__T__subop__factor: {
-            auto type = node->get_child(1)->get_type();
-            if (!(type == symbol::TYPE_INT || type == symbol::TYPE_FLOAT)) {
-                std::cerr << "Error: expected integer or real type for minus operation, found others" << std::endl;
+            auto category = symbol::get_type_category(node->get_child(1)->get_type());
+            if (!(category == symbol::TYPE_CATEGORY_INT || category == symbol::TYPE_CATEGORY_FLOAT)) {
+                std::cerr << "Error: expected integer or real category for minus operation, found others" << std::endl;
                 return false;
             }
-            node->set_type(type);
+            node->set_type(category == symbol::TYPE_CATEGORY_INT ? symbol::TYPE_INT : symbol::TYPE_FLOAT);
             break;
         }
         case tree::factor__T__bool_value: {
@@ -525,12 +545,9 @@ bool dfs_analyze_node(TreeNode* node) {
 }
 
 // Semantic analysis and construction of the symbol table, returns true if no errors were found
-// TODO: implement this function
 bool semantic_analysis() {
     std::cout << "Semantic analysis..." << std::endl;
-//    return dfs_analyze_node(tree::ast->get_root());
-    auto res = dfs_analyze_node(tree::ast->get_root());
-    return res;
+    return dfs_analyze_node(tree::ast->get_root());
 }
 
 }
