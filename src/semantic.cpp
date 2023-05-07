@@ -256,6 +256,7 @@ bool dfs_analyze_node(TreeNode* node) {
     if (!result) return false;
 
     std::cout << "Exiting node: " << tools::turn_token_text(node->get_token()) << std::endl;
+
     // Exit the node
     switch (node->get_pid()) {
         case tree::subprogram__T__subprogram_head__semicolon__subprogram_body:
@@ -266,6 +267,7 @@ bool dfs_analyze_node(TreeNode* node) {
             if (!check_variable_assignable(node->get_child(0))) return false;
             auto left_type = node->get_child(0)->get_type();
             auto right_type = node->get_child(2)->get_type();
+            std::cout << left_type << " " << right_type << std::endl;
             if (!check_type(left_type, right_type, 0)) return false;
             break;
         }
@@ -401,8 +403,7 @@ bool dfs_analyze_node(TreeNode* node) {
             node->set_type(node->get_child(0)->get_type());
             break;
         }
-        case tree::expression__T__simple_expression__relop__simple_expression:
-        case tree::expression__T__simple_expression__equalop__simple_expression: {
+        case tree::expression__T__simple_expression__relop__simple_expression: {
             auto type_a = node->get_child(0)->get_type();
             auto type_b = node->get_child(2)->get_type();
             if (!((type_a == symbol::TYPE_INT || type_a == symbol::TYPE_FLOAT) && (type_b == symbol::TYPE_INT || type_b == symbol::TYPE_FLOAT))) {
@@ -412,9 +413,19 @@ bool dfs_analyze_node(TreeNode* node) {
             node->set_type(symbol::TYPE_BOOL);
             break;
         }
+        case tree::expression__T__simple_expression__equalop__simple_expression: {
+            auto type_a = node->get_child(0)->get_type();
+            auto type_b = node->get_child(2)->get_type();
+            if (!((type_a == symbol::TYPE_INT || type_a == symbol::TYPE_FLOAT) && (type_b == symbol::TYPE_INT || type_b == symbol::TYPE_FLOAT))
+                && type_a != type_b) {
+                std::cerr << "Error: expected same or comparable types for comparison, found others" << std::endl;
+                return false;
+            }
+            node->set_type(symbol::TYPE_BOOL);
+            break;
+        }
         case tree::simple_expression__T__term__addop__term:
-        case tree::simple_expression__T__term__subop__term:
-        case tree::term__T__term__mulop__factor: {
+        case tree::simple_expression__T__term__subop__term: {
             auto type_a = node->get_child(0)->get_type();
             auto type_b = node->get_child(2)->get_type();
             if (!((type_a == symbol::TYPE_INT || type_a == symbol::TYPE_FLOAT) && (type_b == symbol::TYPE_INT || type_b == symbol::TYPE_FLOAT))) {
@@ -424,14 +435,33 @@ bool dfs_analyze_node(TreeNode* node) {
             node->set_type(type_a == symbol::TYPE_INT && type_b == symbol::TYPE_INT ? symbol::TYPE_INT : symbol::TYPE_FLOAT);
             break;
         }
+        case tree::term__T__term__mulop__factor: {
+            auto operator_text = node->get_child(1)->get_text();
+            auto type_a = node->get_child(0)->get_type();
+            auto type_b = node->get_child(2)->get_type();
+            if (operator_text == "and") {
+                if (!((type_a == type_b) && (type_a == symbol::TYPE_INT || type_a == symbol::TYPE_BOOL))) {
+                    std::cerr << "Error: expected both integer or boolean types for bit operation, found others" << std::endl;
+                    return false;
+                }
+                node->set_type(type_a);
+            } else {
+                if (!((type_a == symbol::TYPE_INT || type_a == symbol::TYPE_FLOAT) && (type_b == symbol::TYPE_INT || type_b == symbol::TYPE_FLOAT))) {
+                    std::cerr << "Error: expected integer or real types for arithmetic operation, found others" << std::endl;
+                    return false;
+                }
+                node->set_type(type_a == symbol::TYPE_INT && type_b == symbol::TYPE_INT ? symbol::TYPE_INT : symbol::TYPE_FLOAT);
+            }
+            break;
+        }
         case tree::simple_expression__T__term__or_op__term: {
             auto type_a = node->get_child(0)->get_type();
             auto type_b = node->get_child(2)->get_type();
-            if (!(type_a == symbol::TYPE_INT && type_b == symbol::TYPE_INT)) {
-                std::cerr << "Error: expected integer type for bit operation, found others" << std::endl;
+            if (!((type_a == type_b) && (type_a == symbol::TYPE_INT || type_a == symbol::TYPE_BOOL))) {
+                std::cerr << "Error: expected both integer or boolean types for bit operation, found others" << std::endl;
                 return false;
             }
-            node->set_type(symbol::TYPE_INT);
+            node->set_type(type_a);
             break;
         }
         case tree::factor__T__leftparen__expression__rightparen: {
@@ -467,11 +497,11 @@ bool dfs_analyze_node(TreeNode* node) {
         }
         case tree::factor__T__notop__factor: {
             auto type = node->get_child(1)->get_type();
-            if (type != symbol::TYPE_INT) {
-                std::cerr << "Error: expected integer type for not operation, found others" << std::endl;
+            if (type != symbol::TYPE_INT && type != symbol::TYPE_BOOL) {
+                std::cerr << "Error: expected integer or boolean type for not operation, found others" << std::endl;
                 return false;
             }
-            node->set_type(symbol::TYPE_INT);
+            node->set_type(type);
             break;
         }
         case tree::factor__T__subop__factor: {
@@ -481,6 +511,10 @@ bool dfs_analyze_node(TreeNode* node) {
                 return false;
             }
             node->set_type(type);
+            break;
+        }
+        case tree::factor__T__bool_value: {
+            node->set_type(symbol::TYPE_BOOL);
             break;
         }
         default:
@@ -494,7 +528,9 @@ bool dfs_analyze_node(TreeNode* node) {
 // TODO: implement this function
 bool semantic_analysis() {
     std::cout << "Semantic analysis..." << std::endl;
-    return dfs_analyze_node(tree::ast->get_root());
+//    return dfs_analyze_node(tree::ast->get_root());
+    auto res = dfs_analyze_node(tree::ast->get_root());
+    return res;
 }
 
 }

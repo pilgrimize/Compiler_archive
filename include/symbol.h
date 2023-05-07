@@ -107,6 +107,7 @@ public:
 
     std::shared_ptr<SymbolTableNode> get_parent() const { return parent; }
     std::vector<std::shared_ptr<SymbolTableNode>> get_children() const { return children; }
+    void add_child(const std::shared_ptr<SymbolTableNode>& child) { children.emplace_back(child); }
     bool has_entry(const std::string& name) const { return entries.find(name) != entries.end(); }
     std::shared_ptr<SymbolTableEntry> get_entry(const std::string& name) const { return entries.at(name); }
     void add_entry(const std::string& name, const std::shared_ptr<SymbolTableEntry>& entry) { entries.emplace(name, entry); }
@@ -160,6 +161,8 @@ public:
 
     // Add an entry to the current scope
     void add_entry(const std::string& name, const std::shared_ptr<SymbolTableEntry>& entry);
+
+    std::shared_ptr<SymbolTableNode> get_current_node() const { return current_node; }
 };
 
 extern SymbolTableTree symbol_table_tree;

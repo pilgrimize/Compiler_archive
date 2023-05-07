@@ -29,7 +29,7 @@ void SymbolTableTree::initialize() {
 
 void SymbolTableTree::push_scope(BasicType return_type, const std::string& scope_name) {
     auto new_node = std::make_shared<SymbolTableNode>(current_node, scope_name);
-    current_node->get_children().emplace_back(new_node);
+    current_node->add_child(new_node);
     current_node = new_node;
     if (return_type != TYPE_NULL) {  // Add the return value of the function
         add_entry(scope_name, std::make_shared<SymbolTableEntry>(return_type, false, false));
