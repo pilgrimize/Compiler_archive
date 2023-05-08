@@ -141,7 +141,7 @@ comment \{[^}]*\}
 {notop}         {std::cerr << "notop:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_NOTOP,yytext ,yylineno )); return notop;}
 {quateop}       {std::cerr << "quateop:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_QUATEOP,yytext ,yylineno )); return quateop;}
 {addop}         {std::cerr << "addop:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_ADDOP,yytext ,yylineno )); return addop;}
-{subop}         {std::cerr << "subop:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_SUBOP,yytext ,yylineno )); return addop;}
+{subop}         {std::cerr << "subop:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_SUBOP,yytext ,yylineno )); return subop;}
 {or_op}         {std::cerr << "or_op:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_OR_OP,yytext ,yylineno )); return or_op;}
 {mulop}         {std::cerr << "mulop:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_MULOP,yytext ,yylineno )); return mulop;}
 {relop}         {std::cerr << "relop:" << yytext << std::endl; yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_RELOP,yytext ,yylineno )); return relop;}
