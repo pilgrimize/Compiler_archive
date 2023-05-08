@@ -550,7 +550,7 @@ statement : variable assignop expression {  // pid=52
         $$ = tools::reduce({$1, $2, $3, $4, $5}, $1->get_root()->get_line(),  tree::statement__T__t_if__expression__t_then__statement__else_part
         , tree::T_STATEMENT);
     }
-    | t_while expression t_do statement_list {  // pid=57
+    | t_while expression t_do statement {  // pid=57
         std::cerr << "Use production: statement -> while expression do statement" << std::endl;
         $$ = tools::reduce({$1, $2, $3, $4}, $1->get_root()->get_line(),  tree::statement__T__t_while__T__expression__t_do__statement
         , tree::T_STATEMENT);
@@ -560,12 +560,12 @@ statement : variable assignop expression {  // pid=52
         $$ = tools::reduce({$1, $2, $3, $4}, $1->get_root()->get_line(),  tree::statement__T__t_repeat__statement_list__t_until__expression
         , tree::T_STATEMENT);
     }
-    | t_for id assignop expression t_to expression t_do statement_list {  // pid=59
+    | t_for id assignop expression t_to expression t_do statement {  // pid=59
         std::cerr << "Use production: statement -> for id assignop expression to expression do statement" << std::endl;
         $$ = tools::reduce({$1, $2, $3, $4, $5, $6, $7}, $1->get_root()->get_line(),  tree::statement__T__t_for__id__assignop__expression__t_to__expression__t_do__statement
         , tree::T_STATEMENT);
     }
-    | t_for id assignop expression t_downto expression t_do statement_list {  // pid=60
+    | t_for id assignop expression t_downto expression t_do statement {  // pid=60
         std::cerr << "Use production: statement -> for id assignop expression downto expression do statement" << std::endl;
         $$ = tools::reduce({$1, $2, $3, $4, $5, $6, $7}, $1->get_root()->get_line(),  tree::statement__T__t_for__id__assignop__expression__t_downto__expression__t_do__statement
         , tree::T_STATEMENT);
