@@ -32,7 +32,7 @@ enum PID{
     const_value__T__num,
     const_value__T__addop__num,
     const_value__T__subop__num,
-    const_value__T__literal,
+    const_value__T__literal_string,
     var_declarations__T__t_var__var_declaration__semicolon,
     var_declaration__T__idlist__colon__type,
     var_declaration__T__var_declaration__semicolon__idlist__colon__type,
@@ -116,7 +116,10 @@ enum PID{
     basic_type__T__t_byte,
     basic_type__T__t_longint,
     basic_type__T__t_single,
-    basic_type__T__t_double
+    basic_type__T__t_double,
+    const_value__T__addop__double_value,
+    const_value__T__subop__double_value,
+    const_value__T__double_value
 
 };
 enum Token {
@@ -233,12 +236,14 @@ private:
     std::string text;  // for ID and Literal, empty for others
     std::vector<TreeNode*> children;
     symbol::BasicType type = symbol::TYPE_NULL;
+    int line;
 public:
     TreeNode() = default;
-    TreeNode(PID pid, Token token, std::string text, std::vector<TreeNode*> children = {}) :
-            pid(pid), token(token), text(std::move(text)), children(std::move(children)) {}
+    TreeNode(PID pid, Token token, std::string text, int line, std::vector<TreeNode*> children = {}) :
+            pid(pid), token(token), text(std::move(text)), line(line), children(std::move(children)) {}
 
     Token get_token() const { return token; }
+    int get_line() const { return line; }
     std::string get_text() const { return text; }
     TreeNode* get_child(int child_id) const { return children.at(child_id); }
     std::vector<TreeNode*>& get_children() { return children; }

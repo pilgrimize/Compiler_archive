@@ -228,7 +228,7 @@ bool generate_by_pid(tree::TreeNode* node) {
                 case tree::const_value__T__num:   
                     generate_by_pid(node->get_child(0));
                     break;
-                case tree::const_value__T__literal:
+                case tree::const_value__T__literal_string:
                     generate_by_pid(node->get_child(0));
                     break;
                 case tree::const_value__T__addop__num:

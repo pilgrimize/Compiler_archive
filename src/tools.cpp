@@ -15,8 +15,9 @@ namespace tools{
         ss << num;
         return ss.str();
     }
-    tree::Tree* reduce(std::initializer_list<tree::Tree*> list, tree::PID pid, tree::Token token){
-        auto* tnode = new tree::TreeNode(pid, token, turn_token_text(token));
+    tree::Tree* reduce(std::initializer_list<tree::Tree*> list, int line, tree::PID pid, tree::Token token , std::string text){
+        if(text == "") text = turn_token_text(token);
+        auto* tnode = new tree::TreeNode(pid, token, text, line);
         tnode->set_pid(pid);
         for (auto it = list.begin(); it != list.end(); ++it) {
             tnode->childrenPush((*it)->get_root());
@@ -26,7 +27,7 @@ namespace tools{
     
     void print_ast(tree::TreeNode* x) {
         // every time first output x's token then print x's direct children's token and last print x's children respectively
-        std::cout << "[present node]"<<turn_token_text(x->get_token()) << std::endl<<"[children]"<<std::endl;
+        std::cout << "[present node]"<<turn_token_text(x->get_token()) << " , text: "<< x->get_text()<< ", line: "<< x->get_line() << std::endl<<"[children]"<<std::endl;
         for (auto it = x->children_begin(); it != x->children_end(); ++it) {
             std::cout << turn_token_text((*it)->get_token())<< "   ";
         }
@@ -149,6 +150,7 @@ namespace tools{
             case tree::T_STRING: return "T_STRING";
             case tree::T_FALSE: return "T_FALSE";
             case tree::T_TRUE: return "T_TRUE";
+            case tree::T_VAR_PARAMETER: return "T_VAR_PARAMETER";
         }
     }
 }
