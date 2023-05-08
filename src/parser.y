@@ -193,12 +193,15 @@ program_head : t_program id leftparen idlist rightparen { // pid = 2
         }
     /* | error id leftparen idlist rightparen { 
         // we fix the lack of 'program' at the beginning of the program_head'
-        log( "error on program_head fixed", $1->get_root()->get_line(), DEBUG); yyerrok; 
-        }
+        log( "error on program_head fixed", $2->get_root()->get_line(), DEBUG); 
+        tree::Tree* t_program_proxy = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_PROGRAM,"program" ,$2->get_root()->get_line() ));
+        $$ = tools::reduce({$2, $3, $4, $5}, $2->get_root()->get_line(),  tree::program_head__T__t_program__id_leftparen__idlist__rightparen , tree::T_PROGRAM_HEAD);
+        yyerrok; 
+        } */
     | error id { 
         // we fix the lack of 'program' at the beginning of the program_head'
-        log( "error on program_head fixed", $1->get_root()->get_line(), DEBUG); yyerrok; 
-        } */
+        log( "error on program_head fixed", $2->get_root()->get_line(), DEBUG); yyerrok; 
+        }
     ;
 
 
@@ -564,12 +567,12 @@ statement : variable assignop expression {  // pid=52
     }
     | t_for id assignop expression t_to expression t_do statement {  // pid=59
         log( "Use production: statement -> for id assignop expression to expression do statement", $1->get_root()->get_line(), DEBUG);
-        $$ = tools::reduce({$1, $2, $3, $4, $5, $6, $7}, $1->get_root()->get_line(),  tree::statement__T__t_for__id__assignop__expression__t_to__expression__t_do__statement
+        $$ = tools::reduce({$1, $2, $3, $4, $5, $6, $7, $8}, $1->get_root()->get_line(),  tree::statement__T__t_for__id__assignop__expression__t_to__expression__t_do__statement
         , tree::T_STATEMENT);
     }
     | t_for id assignop expression t_downto expression t_do statement {  // pid=60
         log( "Use production: statement -> for id assignop expression downto expression do statement", $1->get_root()->get_line(), DEBUG);
-        $$ = tools::reduce({$1, $2, $3, $4, $5, $6, $7}, $1->get_root()->get_line(),  tree::statement__T__t_for__id__assignop__expression__t_downto__expression__t_do__statement
+        $$ = tools::reduce({$1, $2, $3, $4, $5, $6, $7, $8}, $1->get_root()->get_line(),  tree::statement__T__t_for__id__assignop__expression__t_downto__expression__t_do__statement
         , tree::T_STATEMENT);
     }
     | t_read leftparen variable_list rightparen {  // pid=61
