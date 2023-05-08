@@ -134,7 +134,7 @@ std::vector<std::pair<size_t, size_t>> get_dims(TreeNode* node) {
 }
 
 std::pair<std::vector<std::string>, symbol::Param> get_single_param(TreeNode* node) {
-    bool is_referred = node->get_token() == tree::T_VAR_PARAMETER;
+    bool is_referred = node->get_child(0)->get_token() == tree::T_VAR_PARAMETER;
     auto param_node = is_referred ? node->get_child(0)->get_child(1) : node->get_child(0);
     auto id_list = get_id_list(param_node->get_child(0));
     auto type = get_basic_type(param_node->get_child(2));
@@ -202,7 +202,7 @@ bool dfs_analyze_node(TreeNode* node) {
             auto id_list = get_id_list(node->get_child(3));
             for (auto& id : id_list) {
                 if (symbol_table_tree.search_entry(id) == SymbolTableTree::FOUND) {
-                    log("Redefinition of '" + id + "'", line_number, ERROR);
+                    log("Redefinition of '" + id + "'", line_number);
                     return false;
                 }
                 symbol_table_tree.add_entry(id, std::make_shared<SymbolTableEntry>(symbol::TYPE_NULL));
@@ -216,7 +216,7 @@ bool dfs_analyze_node(TreeNode* node) {
             if (delta < 0) delta = 2;
             auto text = node->get_child(delta + 0)->get_text();
             if (symbol_table_tree.search_entry(text) == SymbolTableTree::FOUND) {
-                log("Redefinition of '" + text + "'", line_number, ERROR);
+                log("Redefinition of '" + text + "'", line_number);
                 return false;
             }
             auto initialize_value = node->get_child(delta + 2)->get_text();
