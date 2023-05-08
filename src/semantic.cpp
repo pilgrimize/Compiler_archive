@@ -6,10 +6,7 @@
 
 namespace semantic {
 
-#define symbol_table_tree symbol::symbol_table_tree
-// symbol::SymbolTableTree symbol_table_tree;
-
-using symbol::BasicType, symbol::SymbolTableEntry, symbol::SymbolTableTree;
+using symbol::BasicType, symbol::SymbolTableEntry, symbol::SymbolTableTree, symbol::symbol_table_tree;
 using tree::TreeNode;
 
 // Check if type_b can be assigned to type_a
@@ -446,7 +443,7 @@ bool dfs_analyze_node(TreeNode* node) {
             auto category_a = symbol::get_type_category(node->get_child(0)->get_type());
             auto category_b = symbol::get_type_category(node->get_child(2)->get_type());
             if (!((category_a == symbol::TYPE_CATEGORY_INT || category_a == symbol::TYPE_CATEGORY_FLOAT) && (category_b == symbol::TYPE_CATEGORY_INT || category_b == symbol::TYPE_CATEGORY_FLOAT))) {
-                std::cerr << "Error: expected integer or real type for arithmetic operation, found others" << std::endl;
+                std::cerr << "Error: expected integer or real types for arithmetic operation, found others" << std::endl;
                 return false;
             }
             node->set_type(category_a == symbol::TYPE_CATEGORY_INT && category_b == symbol::TYPE_CATEGORY_INT ? symbol::TYPE_INT : symbol::TYPE_FLOAT);
@@ -462,9 +459,15 @@ bool dfs_analyze_node(TreeNode* node) {
                     return false;
                 }
                 node->set_type(category_a == symbol::TYPE_CATEGORY_INT ? symbol::TYPE_INT : symbol::TYPE_BOOL);
+            } else if (operator_text == "mod"){
+                if (!(category_a == symbol::TYPE_CATEGORY_INT && category_b == symbol::TYPE_CATEGORY_INT)) {
+                    std::cerr << "Error: expected integer types for mod operation, found others" << std::endl;
+                    return false;
+                }
+                node->set_type(symbol::TYPE_INT);
             } else {
                 if (!((category_a == symbol::TYPE_CATEGORY_INT || category_a == symbol::TYPE_CATEGORY_FLOAT) && (category_b == symbol::TYPE_CATEGORY_INT || category_b == symbol::TYPE_CATEGORY_FLOAT))) {
-                    std::cerr << "Error: expected integer or real type for arithmetic operation, found others" << std::endl;
+                    std::cerr << "Error: expected integer or real types for arithmetic operation, found others" << std::endl;
                     return false;
                 }
                 node->set_type(category_a == symbol::TYPE_CATEGORY_INT && category_b == symbol::TYPE_CATEGORY_INT ? symbol::TYPE_INT : symbol::TYPE_FLOAT);
