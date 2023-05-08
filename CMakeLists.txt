@@ -30,5 +30,5 @@ find_program(TEST_SCRIPT NAMES test.sh HINTS ${CMAKE_CURRENT_SOURCE_DIR}/test/ R
 
 add_test(
         NAME final_test
-        COMMAND ${TEST_SCRIPT} $<TARGET_FILE:pascals-to-c> ${CMAKE_CURRENT_SOURCE_DIR}/test-case/case-type-test.pas
+        COMMAND ${TEST_SCRIPT} $<TARGET_FILE:pascals-to-c> ${CMAKE_CURRENT_SOURCE_DIR}/test-case/case1.pas
 )

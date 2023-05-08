@@ -1,13 +1,16 @@
+#include "logger.h"
 #include "semantic.h"
+#include "tools.h"
 #include <algorithm>
 #include <iostream>
-
-#include "tools.h"
 
 namespace semantic {
 
 using symbol::BasicType, symbol::SymbolTableEntry, symbol::SymbolTableTree, symbol::symbol_table_tree;
 using tree::TreeNode;
+using namespace logger;
+
+int line_number = 0;
 
 // Check if type_b can be assigned to type_a
 bool check_type_assignable(BasicType type_a, BasicType type_b) {
@@ -16,24 +19,24 @@ bool check_type_assignable(BasicType type_a, BasicType type_b) {
     if (category_a == category_b
         || (category_a == symbol::TYPE_CATEGORY_FLOAT && category_b == symbol::TYPE_CATEGORY_INT)
         || (category_a == symbol::TYPE_CATEGORY_STRING && category_b == symbol::TYPE_CATEGORY_CHAR)) return true;
-    std::cerr << "Error: type mismatched for assignment" << std::endl;
+    log("Type mismatched for assignment", line_number);
     return false;
 }
 
 bool check_id(TreeNode* node, bool expect_basic = true, bool expect_not_constant = false, bool ignore_scope_name = false) {
     auto id_text = node->get_text();
     if (symbol_table_tree.search_entry(id_text, ignore_scope_name) == SymbolTableTree::NOT_FOUND) {
-        std::cerr << "Error: '" << id_text << "' is not defined" << std::endl;
+        log("Undefined identifier " + id_text, line_number);
         return false;
     } else if(expect_basic){
         auto entry = symbol_table_tree.get_entry(id_text);
         if (entry->type != symbol::TYPE_BASIC) {
-            std::cerr << "Error: '" << id_text << "' is not a basic type" << std::endl;
+            log("'" + id_text + "' is not a basic type", line_number);
             return false;
         } else {
             auto type_info = std::get<symbol::BasicInfo>(entry->extra_info);
             if (expect_not_constant && type_info.is_const) {
-                std::cerr << "Error: '" << id_text << "' is a constant, which cannot be assigned" << std::endl;
+                log("'" + id_text + "' is a constant, which cannot be assigned", line_number);
                 return false;
             }
         }
@@ -61,7 +64,7 @@ bool check_variable_assignable(TreeNode* node) {
         assignable = id_text == symbol_table_tree.get_scope_name() || !std::get<symbol::BasicInfo>(symbol_table_tree.get_entry(id_text)->extra_info).is_const;
     }
     if (!assignable) {
-        std::cerr << "Error: cannot assign to " << id_text << ": a right value or a constant" << std::endl;
+        log("Cannot assign to " + id_text + ": a right value or a constant", line_number);
         return false;
     }
     return true;
@@ -183,7 +186,8 @@ std::vector<BasicType> get_expression_list_type(TreeNode* node) {
 }
 
 bool dfs_analyze_node(TreeNode* node) {
-    std::cout << "Entering node: " << tools::turn_token_text(node->get_token()) << std::endl;
+    line_number = node->get_line();
+    log("Entering node: " + tools::turn_token_text(node->get_token()), line_number, DEBUG);
     int delta = -1;
     // Enter the node
 
@@ -198,7 +202,7 @@ bool dfs_analyze_node(TreeNode* node) {
             if (delta < 0) delta = 2;
             auto text = node->get_child(delta + 0)->get_text();
             if (symbol_table_tree.search_entry(text) == SymbolTableTree::FOUND) {
-                std::cerr << "Error: redefinition of '" << text << "'" << std::endl;
+                log("Redefinition of '" + text + "'", line_number, ERROR);
                 return false;
             }
             auto initialize_value = node->get_child(delta + 2)->get_text();
@@ -216,7 +220,7 @@ bool dfs_analyze_node(TreeNode* node) {
             auto entry = get_type(node->get_child(delta + 2));
             for (auto& id : id_list) {
                 if (symbol_table_tree.search_entry(id) == SymbolTableTree::FOUND) {
-                    std::cerr << "Error: redefinition of '" << id << "'" << std::endl;
+                    log("Redefinition of '" + id + "'", line_number, ERROR);
                     return false;
                 }
                 symbol_table_tree.add_entry(id, entry);
@@ -229,7 +233,7 @@ bool dfs_analyze_node(TreeNode* node) {
         case tree::subprogram_head__T__t_procedure__id: {
             auto function_id = node->get_child_by_token(tree::T_ID)->get_text();
             if (symbol_table_tree.search_entry(function_id) == SymbolTableTree::FOUND) {
-                std::cerr << "Error: redefinition of '" << function_id << "'" << std::endl;
+                log("Redefinition of '" + function_id + "'", line_number, ERROR);
                 return false;
             }
             auto param_node = node->get_child_by_token(tree::T_FORMAL_PARAMETER);
@@ -244,7 +248,7 @@ bool dfs_analyze_node(TreeNode* node) {
             symbol_table_tree.push_scope(return_type, function_id);
             for (auto& [id, param] : params) {
                 if (symbol_table_tree.search_entry(id) == SymbolTableTree::FOUND) {
-                    std::cerr << "Error: redefinition of '" << id << "'" << std::endl;
+                    log("Redefinition of '" + id + "'", line_number, ERROR);
                     return false;
                 }
                 symbol_table_tree.add_entry(id, std::make_shared<SymbolTableEntry>(param.type, false, param.is_referred));
@@ -258,7 +262,8 @@ bool dfs_analyze_node(TreeNode* node) {
     auto result = std::ranges::all_of(node->children_begin(), node->children_end(), [](auto child){return dfs_analyze_node(child);});
     if (!result) return false;
 
-    std::cout << "Exiting node: " << tools::turn_token_text(node->get_token()) << std::endl;
+    line_number = node->get_line();
+    log("Exiting node: " + tools::turn_token_text(node->get_token()), line_number, DEBUG);
 
     // Exit the node
     switch (node->get_pid()) {
@@ -281,7 +286,7 @@ bool dfs_analyze_node(TreeNode* node) {
             // condition and loop
             auto expression_type = node->get_child_by_token(tree::T_EXPRESSION)->get_type();
             if (expression_type != symbol::TYPE_BOOL) {
-                std::cerr << "Error: expected boolean type for condition, found others" << std::endl;
+                log("Expected boolean type for condition, found others", line_number, ERROR);
                 return false;
             }
             break;
@@ -295,7 +300,7 @@ bool dfs_analyze_node(TreeNode* node) {
                 expression_type_a = symbol::get_type_category(node->get_child(3)->get_type()),
                 expression_type_b = symbol::get_type_category(node->get_child(5)->get_type());
             if (id_type != symbol::TYPE_CATEGORY_INT || expression_type_a != symbol::TYPE_CATEGORY_INT || expression_type_b != symbol::TYPE_CATEGORY_INT) {
-                std::cerr << "Error: expected integer type for for-loop index, found others" << std::endl;
+                log("Expected integer type for for-loop index, found others", line_number, ERROR);
                 return false;
             }
             break;
@@ -320,11 +325,11 @@ bool dfs_analyze_node(TreeNode* node) {
                 } else if (entry->type == symbol::TYPE_FUNCTION){
                     auto info = std::get<symbol::FunctionInfo>(entry->extra_info);
                     if (info.ret_type == symbol::TYPE_NULL) {
-                        std::cerr << "Error: '" << id_text << "' is not a function" << std::endl;
+                        log("'" + id_text + "' is not a function", line_number, ERROR);
                         return false;
                     }
                     if (!info.params.empty()) {
-                        std::cerr << "Error: parameter mismatched for function '" << id_text << "'" << std::endl;
+                        log("Parameter mismatched for function '" + id_text + "'", line_number, ERROR);
                         return false;
                     }
                     node->set_type(info.ret_type);
@@ -338,18 +343,18 @@ bool dfs_analyze_node(TreeNode* node) {
             if (!check_id(node->get_child(0), false, false)) return false;
             auto entry = symbol_table_tree.get_entry(id_text);
             if (entry->type != symbol::TYPE_ARRAY) {
-                std::cerr << "Error: '" << id_text << "' is not an array" << std::endl;
+                log("'" + id_text + "' is not an array", line_number, ERROR);
                 return false;
             }
             auto info = std::get<symbol::ArrayInfo>(entry->extra_info);
             auto index_list = get_expression_list_type(node->get_child(1)->get_child(1));
             if (index_list.size() != info.dims.size()) {
-                std::cerr << "Error: dimension mismatched for array '" << id_text << "'" << std::endl;
+                log("Dimension mismatched for array '" + id_text + "'", line_number, ERROR);
                 return false;
             }
             for (auto type: index_list) {
                 if (symbol::get_type_category(type) != symbol::TYPE_CATEGORY_INT) {
-                    std::cerr << "Error: expected integer type for array index, found others" << std::endl;
+                    log("Expected integer type for array index, found others", line_number, ERROR);
                     return false;
                 }
             }
@@ -362,22 +367,22 @@ bool dfs_analyze_node(TreeNode* node) {
             if (!check_id(node->get_child(0), false, false)) return false;
             auto entry = symbol_table_tree.get_entry(id_text);
             if (entry->type != symbol::TYPE_FUNCTION) {
-                std::cerr << "Error: '" << id_text << "' is not a procedure" << std::endl;
+                log("'" + id_text + "' is not a procedure", line_number, ERROR);
                 return false;
             }
             auto info = std::get<symbol::FunctionInfo>(entry->extra_info);
             if (info.ret_type != symbol::TYPE_NULL) {
-                std::cerr << "Error: '" << id_text << "' is not a procedure" << std::endl;
+                log("'" + id_text + "' is not a procedure", line_number, ERROR);
                 return false;
             }
             auto param_list = get_expression_list_type(node->get_child(2));
             if (param_list.size() != info.params.size()) {
-                std::cerr << "Error: parameter mismatched for procedure '" << id_text << "'" << std::endl;
+                log("Parameter mismatched for procedure '" + id_text + "'", line_number, ERROR);
                 return false;
             }
             for (int i = 0; i < param_list.size(); ++i) {
                 if (!check_type_assignable(param_list[i], info.params[i].type)) {
-                    std::cerr << "Error: type mismatched for parameter '" << i << "' of procedure '" << id_text << "'" << std::endl;
+                    log("Type mismatched for parameter '" + std::to_string(i) + "' of procedure '" + id_text + "'", line_number, ERROR);
                     return false;
                 }
             }
@@ -385,19 +390,20 @@ bool dfs_analyze_node(TreeNode* node) {
         }
         case tree::procedure_call__T__id: {
             // procedure call
+            auto id_text = node->get_child(0)->get_text();
             if (!check_id(node->get_child(0), false, false)) return false;
-            auto entry = symbol_table_tree.get_entry(node->get_child(0)->get_text());
+            auto entry = symbol_table_tree.get_entry(id_text);
             if (entry->type != symbol::TYPE_FUNCTION) {
-                std::cerr << "Error: '" << node->get_child(0)->get_text() << "' is not a procedure" << std::endl;
+                log("'" + id_text + "' is not a procedure", line_number, ERROR);
                 return false;
             }
             auto info = std::get<symbol::FunctionInfo>(entry->extra_info);
             if (info.ret_type != symbol::TYPE_NULL) {
-                std::cerr << "Error: '" << node->get_child(0)->get_text() << "' is not a procedure" << std::endl;
+                log("'" + id_text + "' is not a procedure", line_number, ERROR);
                 return false;
             }
             if (!info.params.empty()) {
-                std::cerr << "Error: parameter mismatched for procedure '" << node->get_child(0)->get_text() << "'" << std::endl;
+                log("Parameter mismatched for procedure '" + id_text + "'", line_number, ERROR);
                 return false;
             }
             break;
@@ -421,7 +427,7 @@ bool dfs_analyze_node(TreeNode* node) {
             auto category_a = symbol::get_type_category(node->get_child(0)->get_type());
             auto category_b = symbol::get_type_category(node->get_child(2)->get_type());
             if (!((category_a == symbol::TYPE_CATEGORY_INT || category_a == symbol::TYPE_CATEGORY_FLOAT) && (category_b == symbol::TYPE_CATEGORY_INT || category_b == symbol::TYPE_CATEGORY_FLOAT))) {
-                std::cerr << "Error: expected integer or real type for comparison, found others" << std::endl;
+                log("Expected integer or real type for comparison, found others", line_number, ERROR);
                 return false;
             }
             node->set_type(symbol::TYPE_BOOL);
@@ -432,7 +438,7 @@ bool dfs_analyze_node(TreeNode* node) {
             auto category_b = symbol::get_type_category(node->get_child(2)->get_type());
             if (!((category_a == symbol::TYPE_CATEGORY_INT || category_a == symbol::TYPE_CATEGORY_FLOAT) && (category_b == symbol::TYPE_CATEGORY_INT || category_b == symbol::TYPE_CATEGORY_FLOAT))
                 && category_a != category_b) {
-                std::cerr << "Error: expected same or comparable types for comparison, found others" << std::endl;
+                log("Expected same or comparable types for comparison, found others", line_number, ERROR);
                 return false;
             }
             node->set_type(symbol::TYPE_BOOL);
@@ -443,7 +449,7 @@ bool dfs_analyze_node(TreeNode* node) {
             auto category_a = symbol::get_type_category(node->get_child(0)->get_type());
             auto category_b = symbol::get_type_category(node->get_child(2)->get_type());
             if (!((category_a == symbol::TYPE_CATEGORY_INT || category_a == symbol::TYPE_CATEGORY_FLOAT) && (category_b == symbol::TYPE_CATEGORY_INT || category_b == symbol::TYPE_CATEGORY_FLOAT))) {
-                std::cerr << "Error: expected integer or real types for arithmetic operation, found others" << std::endl;
+                log("Expected integer or real type for arithmetic operation, found others", line_number, ERROR);
                 return false;
             }
             node->set_type(category_a == symbol::TYPE_CATEGORY_INT && category_b == symbol::TYPE_CATEGORY_INT ? symbol::TYPE_INT : symbol::TYPE_FLOAT);
@@ -455,19 +461,19 @@ bool dfs_analyze_node(TreeNode* node) {
             auto category_b = symbol::get_type_category(node->get_child(2)->get_type());
             if (operator_text == "and") {
                 if (!((category_a == category_b) && (category_a == symbol::TYPE_CATEGORY_INT || category_a == symbol::TYPE_CATEGORY_BOOL))) {
-                    std::cerr << "Error: expected both integer or boolean types for bit operation, found others" << std::endl;
+                    log("Expected both integer or boolean types for bit operation, found others", line_number, ERROR);
                     return false;
                 }
                 node->set_type(category_a == symbol::TYPE_CATEGORY_INT ? symbol::TYPE_INT : symbol::TYPE_BOOL);
             } else if (operator_text == "mod"){
                 if (!(category_a == symbol::TYPE_CATEGORY_INT && category_b == symbol::TYPE_CATEGORY_INT)) {
-                    std::cerr << "Error: expected integer types for mod operation, found others" << std::endl;
+                    log("Expected integer types for mod operation, found others", line_number, ERROR);
                     return false;
                 }
                 node->set_type(symbol::TYPE_INT);
             } else {
                 if (!((category_a == symbol::TYPE_CATEGORY_INT || category_a == symbol::TYPE_CATEGORY_FLOAT) && (category_b == symbol::TYPE_CATEGORY_INT || category_b == symbol::TYPE_CATEGORY_FLOAT))) {
-                    std::cerr << "Error: expected integer or real types for arithmetic operation, found others" << std::endl;
+                    log("Expected integer or real type for arithmetic operation, found others", line_number, ERROR);
                     return false;
                 }
                 node->set_type(category_a == symbol::TYPE_CATEGORY_INT && category_b == symbol::TYPE_CATEGORY_INT ? symbol::TYPE_INT : symbol::TYPE_FLOAT);
@@ -478,7 +484,7 @@ bool dfs_analyze_node(TreeNode* node) {
             auto category_a = symbol::get_type_category(node->get_child(0)->get_type());
             auto category_b = symbol::get_type_category(node->get_child(2)->get_type());
             if (!((category_a == category_b) && (category_a == symbol::TYPE_CATEGORY_INT || category_a == symbol::TYPE_CATEGORY_BOOL))) {
-                std::cerr << "Error: expected both integer or boolean types for bit operation, found others" << std::endl;
+                log("Expected both integer or boolean types for bit operation, found others", line_number, ERROR);
                 return false;
             }
             node->set_type(category_a == symbol::TYPE_CATEGORY_INT ? symbol::TYPE_INT : symbol::TYPE_BOOL);
@@ -490,21 +496,22 @@ bool dfs_analyze_node(TreeNode* node) {
         }
         case tree::factor__T__id__leftparen__expression_list__rightparen: {
             // function call
+            auto id_text = node->get_child(0)->get_text();
             if (!check_id(node->get_child(0), false, false, true)) return false;
-            auto entry = symbol_table_tree.get_entry(node->get_child(0)->get_text(), true);
+            auto entry = symbol_table_tree.get_entry(id_text, true);
             if (entry->type != symbol::TYPE_FUNCTION) {
-                std::cerr << "Error: '" << node->get_child(0)->get_text() << "' is not a function" << std::endl;
+                log("'" + id_text + "' is not a function", line_number, ERROR);
                 return false;
             }
             auto info = std::get<symbol::FunctionInfo>(entry->extra_info);
             if (info.ret_type == symbol::TYPE_NULL) {
-                std::cerr << "Error: '" << node->get_child(0)->get_text() << "' is not a function" << std::endl;
+                log("'" + id_text + "' is not a function", line_number, ERROR);
                 return false;
             }
             auto param_list = get_expression_list_type(node->get_child(2));
             for (int i = 0; i < param_list.size(); ++i) {
                 if (!check_type_assignable(param_list[i], info.params[i].type)) {
-                    std::cerr << "Error: type mismatched for parameter '" << i << "' of function '" << node->get_child(0)->get_text() << "'" << std::endl;
+                    log("Type mismatched for parameter '" + std::to_string(i) + "' of function '" + id_text + "'", line_number, ERROR);
                     return false;
                 }
             }
@@ -522,7 +529,7 @@ bool dfs_analyze_node(TreeNode* node) {
         case tree::factor__T__notop__factor: {
             auto type = node->get_child(1)->get_type();
             if (type != symbol::TYPE_INT && type != symbol::TYPE_BOOL) {
-                std::cerr << "Error: expected integer or boolean type for not operation, found others" << std::endl;
+                log("Expected integer or boolean type for not operation, found others", line_number, ERROR);
                 return false;
             }
             node->set_type(type);
@@ -531,7 +538,7 @@ bool dfs_analyze_node(TreeNode* node) {
         case tree::factor__T__subop__factor: {
             auto category = symbol::get_type_category(node->get_child(1)->get_type());
             if (!(category == symbol::TYPE_CATEGORY_INT || category == symbol::TYPE_CATEGORY_FLOAT)) {
-                std::cerr << "Error: expected integer or real category for minus operation, found others" << std::endl;
+                log("Expected integer or real category for minus operation, found others", line_number, ERROR);
                 return false;
             }
             node->set_type(category == symbol::TYPE_CATEGORY_INT ? symbol::TYPE_INT : symbol::TYPE_FLOAT);
@@ -550,7 +557,7 @@ bool dfs_analyze_node(TreeNode* node) {
 
 // Semantic analysis and construction of the symbol table, returns true if no errors were found
 bool semantic_analysis() {
-    std::cout << "Semantic analysis..." << std::endl;
+    log("Semantic analysis...", -1, INFO);
     return dfs_analyze_node(tree::ast->get_root());
 }
 
