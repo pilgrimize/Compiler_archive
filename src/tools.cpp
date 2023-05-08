@@ -1,6 +1,8 @@
 #include <string>
 #include <sstream>
 #include "tools.h"
+#include "logger.h"
+using namespace logger;
 
 namespace tools{
     int convertStringToNumber(const std::string& str){
@@ -27,11 +29,12 @@ namespace tools{
     
     void print_ast(tree::TreeNode* x) {
         // every time first output x's token then print x's direct children's token and last print x's children respectively
-        std::cout << "[present node]"<<turn_token_text(x->get_token()) << " , text: "<< x->get_text()<< ", line: "<< x->get_line() << std::endl<<"[children]"<<std::endl;
+        log(std::string("[present node]")+turn_token_text(x->get_token())+std::string(" , text: ")+x->get_text(), x->get_line(),DEBUG);
+        log("[direct children]",-1,DEBUG);
         for (auto it = x->children_begin(); it != x->children_end(); ++it) {
-            std::cout << turn_token_text((*it)->get_token())<< "   ";
+            log( turn_token_text((*it)->get_token())+"   ",-1,DEBUG);
         }
-        std::cout <<std::endl;
+        log("",-1,DEBUG);
         for (auto it = x->children_begin(); it != x->children_end(); ++it) {
             print_ast(*it);
         }
