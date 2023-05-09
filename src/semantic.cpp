@@ -34,7 +34,7 @@ bool check_type_assignable(BasicType type_a, BasicType type_b) {
 bool check_id(TreeNode* node, bool expect_basic = true, bool expect_not_constant = false, bool ignore_scope_name = false) {
     auto id_text = node->get_text();
     if (symbol_table_tree.search_entry(id_text, ignore_scope_name) == SymbolTableTree::NOT_FOUND) {
-        log("Undefined identifier " + id_text, line_number);
+        log("Undefined identifier '" + id_text + "'", line_number);
         error_detected();
         return false;
     } else if(expect_basic){
@@ -313,8 +313,8 @@ void dfs_analyze_node(TreeNode* node) {
             auto left_type = node->get_child(0)->get_type();
             auto right_type = node->get_child(2)->get_type();
             if (!check_type_assignable(left_type, right_type)) {
-                log("Type mismatched for assigning " + node->get_child(2)->get_text() +
-                    " to " + node->get_child(0)->get_text(), line_number);
+                log("Type mismatched for assigning '" + node->get_child(2)->get_text() +
+                    "' to '" + node->get_child(0)->get_text() + "'", line_number);
                 error_detected();
             }
             break;
@@ -373,6 +373,7 @@ void dfs_analyze_node(TreeNode* node) {
                     if (info.ret_type == symbol::TYPE_NULL) {
                         log("'" + id_text + "' is not a function", line_number);
                         error_detected();
+                        break;
                     }
                     if (!info.params.empty()) {
                         log("Parameter mismatched for function '" + id_text + "'", line_number);
@@ -385,12 +386,14 @@ void dfs_analyze_node(TreeNode* node) {
         }
         case tree::variable__T__id__id_varpart: {
             // array element as variable
+            log("hello", -1, DEBUG);
             auto id_text = node->get_child(0)->get_text();
             if (!check_id(node->get_child(0), false, false)) break;
             auto entry = symbol_table_tree.get_entry(id_text);
             if (entry->type != symbol::TYPE_ARRAY) {
                 log("'" + id_text + "' is not an array", line_number);
                 error_detected();
+                break;
             }
             auto info = std::get<symbol::ArrayInfo>(entry->extra_info);
             auto index_list = get_expression_list_type(node->get_child(1)->get_child(1));
@@ -404,9 +407,6 @@ void dfs_analyze_node(TreeNode* node) {
                     error_detected();
                 }
             }
-            for (auto type: index_list) {
-
-            }
             node->set_type(info.basic);
             break;
         }
@@ -418,26 +418,30 @@ void dfs_analyze_node(TreeNode* node) {
             if (entry->type != symbol::TYPE_FUNCTION) {
                 log("'" + id_text + "' is not a procedure", line_number);
                 error_detected();
+                break;
             }
             auto info = std::get<symbol::FunctionInfo>(entry->extra_info);
             if (info.ret_type != symbol::TYPE_NULL) {
                 log("'" + id_text + "' is not a procedure", line_number);
                 error_detected();
+                break;
             }
             auto param_list = get_expression_list_type(node->get_child(2));
             if (param_list.size() != info.params.size()) {
-                log("Parameter mismatched for procedure '" + id_text + "'", line_number);
+                log("Expected " + std::to_string(info.params.size()) + " parameters for function '" + id_text + "', found " + std::to_string(param_list.size()), line_number);
                 error_detected();
+                break;
             }
             for (int i = 0; i < param_list.size(); ++i) {
-                if (!check_type_assignable(param_list[i], info.params[i].type)) {
-                    log("Type mismatched for parameter '" + std::to_string(i) + "' of procedure '" + id_text + "'", line_number);
+                if (!check_type_assignable(info.params[i].type, param_list[i])) {
+                    log("Type mismatched for parameter " + std::to_string(i + 1) + " of procedure '" + id_text + "'", line_number);
                     error_detected();
                 }
             }
             break;
         }
-        case tree::procedure_call__T__id: {
+        case tree::procedure_call__T__id:
+        case tree::procedure_call__T__id__leftparen__rightparen: {
             // procedure call
             auto id_text = node->get_child(0)->get_text();
             if (!check_id(node->get_child(0), false, false)) break;
@@ -445,15 +449,18 @@ void dfs_analyze_node(TreeNode* node) {
             if (entry->type != symbol::TYPE_FUNCTION) {
                 log("'" + id_text + "' is not a procedure", line_number);
                 error_detected();
+                break;
             }
             auto info = std::get<symbol::FunctionInfo>(entry->extra_info);
             if (info.ret_type != symbol::TYPE_NULL) {
                 log("'" + id_text + "' is not a procedure", line_number);
                 error_detected();
+                break;
             }
             if (!info.params.empty()) {
-                log("Parameter mismatched for procedure '" + id_text + "'", line_number);
+                log("Expected " + std::to_string(info.params.size()) + " parameters for function '" + id_text + "', found 0", line_number);
                 error_detected();
+                break;
             }
             break;
         }
@@ -543,6 +550,7 @@ void dfs_analyze_node(TreeNode* node) {
             node->set_type(node->get_child(1)->get_type());
             break;
         }
+        case tree::factor__T__id__leftparen__rightparen:
         case tree::factor__T__id__leftparen__expression_list__rightparen: {
             // function call
             auto id_text = node->get_child(0)->get_text();
@@ -557,10 +565,24 @@ void dfs_analyze_node(TreeNode* node) {
                 log("'" + id_text + "' is not a function", line_number);
                 error_detected();
             }
-            auto param_list = get_expression_list_type(node->get_child(2));
+            auto params_node = node->get_child_by_token(tree::T_EXPRESSION_LIST);
+            if (params_node == nullptr) {
+                if (!info.params.empty()) {
+                    log("Expected " + std::to_string(info.params.size()) + " parameters for function '" + id_text + "', found 0", line_number);
+                    error_detected();
+                }
+                node->set_type(info.ret_type);
+                break;
+            }
+            auto param_list = get_expression_list_type(params_node);
+            if (info.params.size() != param_list.size()) {
+                log("Expected " + std::to_string(info.params.size()) + " parameters for function '" + id_text + "', found " + std::to_string(param_list.size()), line_number);
+                error_detected();
+                break;
+            }
             for (int i = 0; i < param_list.size(); ++i) {
-                if (!check_type_assignable(param_list[i], info.params[i].type)) {
-                    log("Type mismatched for parameter '" + std::to_string(i) + "' of function '" + id_text + "'", line_number);
+                if (!check_type_assignable(info.params[i].type, param_list[i])) {
+                    log("Type mismatched for parameter " + std::to_string(i + 1) + " of function '" + id_text + "'", line_number);
                     error_detected();
                 }
             }
