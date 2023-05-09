@@ -65,10 +65,10 @@ bool is_id_constant(TreeNode* node) {
     return std::get<symbol::BasicInfo>(symbol_table_tree.get_entry(node->get_text())->extra_info).is_const;
 }
 
-bool check_variable_assignable(TreeNode* node) {
+bool check_variable_assignable(TreeNode* node, bool suppress_log = false) {
     // a variable can be assigned if it is not a constant and it is not a function call
     auto id_text = node->get_child(0)->get_text();
-    bool assignable = true;
+    bool assignable;
     if (node->get_children().size() == 2) {
         assignable = !std::get<symbol::ArrayInfo>(symbol_table_tree.get_entry(id_text)->extra_info).is_const;
     } else {
@@ -76,7 +76,7 @@ bool check_variable_assignable(TreeNode* node) {
                 && std::get<symbol::BasicInfo>(symbol_table_tree.get_entry(id_text)->extra_info).basic != symbol::TYPE_NULL;
     }
     if (!assignable) {
-        log("Cannot assign to " + id_text + ": a right value or a constant or a invalid type", line_number);
+        if (!suppress_log) log("Cannot assign to " + id_text + ": a right value or a constant or a invalid type", line_number);
         error_detected();
         return false;
     }
@@ -196,6 +196,30 @@ std::vector<BasicType> get_expression_list_type(TreeNode* node) {
         types.emplace_back(node->get_child(2)->get_type());
     }
     return types;
+}
+
+bool check_expression_variable(TreeNode* node) {
+    if (node->get_child(0)->get_token() != tree::T_SIMPLE_EXPRESSION
+        || node->get_child(0)->get_child(0)->get_token() != tree::T_TERM
+        || node->get_child(0)->get_child(0)->get_child(0)->get_token() != tree::T_FACTOR) {
+        return false;
+    }
+    auto factor = node->get_child(0)->get_child(0)->get_child(0);
+    if (factor->get_pid() == tree::factor__T__leftparen__expression__rightparen) {
+        return check_expression_variable(factor->get_child(1));
+    }
+    return factor->get_child(0)->get_token() == tree::T_VARIABLE && check_variable_assignable(factor->get_child(0), true);
+}
+
+std::vector<bool> check_expression_list_variable(TreeNode* node) {
+    std::vector<bool> assignable;
+    if (node->get_pid() == tree::expression_list__T__expression) { // expression
+        assignable.emplace_back(check_expression_variable(node->get_child(0)));
+    } else if (node->get_pid() == tree::expression_list__T__expression_list__comma__expression) { // expression_list
+        assignable = check_expression_list_variable(node->get_child(0));
+        assignable.emplace_back(check_expression_variable(node->get_child(2)));
+    }
+    return assignable;
 }
 
 void dfs_analyze_node(TreeNode* node) {
@@ -427,6 +451,7 @@ void dfs_analyze_node(TreeNode* node) {
                 break;
             }
             auto param_list = get_expression_list_type(node->get_child(2));
+            auto variable = check_expression_list_variable(node->get_child(2));
             if (param_list.size() != info.params.size()) {
                 log("Expected " + std::to_string(info.params.size()) + " parameters for function '" + id_text + "', found " + std::to_string(param_list.size()), line_number);
                 error_detected();
@@ -435,6 +460,11 @@ void dfs_analyze_node(TreeNode* node) {
             for (int i = 0; i < param_list.size(); ++i) {
                 if (!check_type_assignable(info.params[i].type, param_list[i])) {
                     log("Type mismatched for parameter " + std::to_string(i + 1) + " of procedure '" + id_text + "'", line_number);
+                    error_detected();
+                    continue;
+                }
+                if (info.params[i].is_referred && !variable[i]) {
+                    log("Expected variable parameter " + std::to_string(i + 1) + " of procedure '" + id_text + "'", line_number);
                     error_detected();
                 }
             }
@@ -580,9 +610,15 @@ void dfs_analyze_node(TreeNode* node) {
                 error_detected();
                 break;
             }
+            auto variable = check_expression_list_variable(params_node);
             for (int i = 0; i < param_list.size(); ++i) {
                 if (!check_type_assignable(info.params[i].type, param_list[i])) {
                     log("Type mismatched for parameter " + std::to_string(i + 1) + " of function '" + id_text + "'", line_number);
+                    error_detected();
+                    continue;
+                }
+                if (info.params[i].is_referred && !variable[i]) {
+                    log("Expected variable parameter " + std::to_string(i + 1) + " of function '" + id_text + "'", line_number);
                     error_detected();
                 }
             }
