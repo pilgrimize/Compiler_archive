@@ -53,25 +53,17 @@ struct BasicInfo {
     BasicType basic{};
     bool is_const = false;
     bool is_referred = false;
-//    bool is_initialized = false;
-//    std::string initialized_value;
     BasicInfo() = default;
     BasicInfo(BasicType basic, bool is_const, bool is_referred):
             basic(basic), is_const(is_const), is_referred(is_referred) {}
-//    BasicInfo(BasicType basic, bool is_const, bool is_initialized, std::string initialized_value):
-//            basic(basic), is_const(is_const), is_initialized(is_initialized), initialized_value(std::move(initialized_value)) {}
 };
 struct ArrayInfo {
     BasicType basic{};
     std::vector<std::pair<size_t,size_t>> dims;
-//    std::vector<std::vector<std::string>> initialized_values;
     bool is_const = false;
-//    bool is_initialized = false;
     ArrayInfo() = default;
     ArrayInfo(BasicType basic, std::vector<std::pair<size_t,size_t>> dims, bool is_const):
             basic(basic), dims(std::move(dims)), is_const(is_const) {}
-//    ArrayInfo(BasicType basic, std::vector<std::pair<size_t,size_t>> dims, std::vector<std::vector<std::string>> initialized_values, bool is_const, bool is_initialized):
-//            basic(basic), dims(std::move(dims)), initialized_values(std::move(initialized_values)), is_const(is_const), is_initialized(is_initialized) {}
 };
 struct RecordInfo {
     std::map<std::string, BasicType> fields;

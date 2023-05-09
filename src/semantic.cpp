@@ -359,7 +359,9 @@ void dfs_analyze_node(TreeNode* node) {
                 expression_node_a = node->get_child(3),
                 expression_node_b = node->get_child(5);
             if (!check_id(id_node, true, true)) break;
-            if (symbol::get_type_category(id_node->get_type()) != symbol::TYPE_CATEGORY_INT) {
+            auto id_type = std::get<symbol::BasicInfo>(symbol_table_tree.get_entry(id_node->get_text())->extra_info).basic;
+            if (symbol::get_type_category(id_type) != symbol::TYPE_CATEGORY_INT) {
+                log(tools::turn_token_text(id_node->get_token()) + std::to_string(id_node->get_type()), -1, ERROR);
                 log("Expected integer type for for-loop index, found others (" + id_node->get_text() + ")", id_node->get_position());
                 error_detected();
             } else if (symbol::get_type_category(expression_node_a->get_type()) != symbol::TYPE_CATEGORY_INT) {
@@ -423,7 +425,7 @@ void dfs_analyze_node(TreeNode* node) {
             }
             for (int i = 0; i < index_list.size(); ++i) {
                 if (symbol::get_type_category(index_list[i]->get_type()) != symbol::TYPE_CATEGORY_INT) {
-                    log("Expected integer type for index " + std::to_string(i) + " of array '" + id_text + "', found others", index_list[i]->get_position());
+                    log("Expected integer type for index " + std::to_string(i + 1) + " of array '" + id_text + "', found others", index_list[i]->get_position());
                     error_detected();
                 }
             }
