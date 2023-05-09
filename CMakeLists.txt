@@ -24,11 +24,35 @@ add_executable(pascals-to-c ${SRC} ${FLEX_scanner_OUTPUTS} ${BISON_parser_OUTPUT
 
 
 # test
+MACRO(SUBDIR_LIST result src_dir)
+    FILE(GLOB children RELATIVE ${src_dir} ${src_dir}/*)
+    SET(dirlist "")
+    FOREACH(child ${children})
+        IF(IS_DIRECTORY ${src_dir}/${child})
+            LIST(APPEND dirlist ${child})
+        ENDIF()
+    ENDFOREACH()
+    SET(${result} ${dirlist})
+ENDMACRO()
+
 enable_testing()
 
+find_program(DEBUG_SCRIPT NAMES debug.sh HINTS ${CMAKE_CURRENT_SOURCE_DIR}/test/ REQUIRED)
 find_program(TEST_SCRIPT NAMES test.sh HINTS ${CMAKE_CURRENT_SOURCE_DIR}/test/ REQUIRED)
 
+set(CASE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test/cases)
+
 add_test(
-        NAME final_test
-        COMMAND ${TEST_SCRIPT} $<TARGET_FILE:pascals-to-c> ${CMAKE_CURRENT_SOURCE_DIR}/test-case/case1.pas
+        NAME debug_test
+        COMMAND ${DEBUG_SCRIPT} $<TARGET_FILE:pascals-to-c> ${CASE_DIR}/case-type-test.pas
 )
+
+FOREACH(test_type final lexical syntax semantic codegen)
+    SUBDIR_LIST(${test_type}_src ${CASE_DIR}/${test_type})
+    FOREACH(subdir ${${test_type}_src})
+        add_test(
+                NAME ${test_type}_${subdir}
+                COMMAND ${TEST_SCRIPT} $<TARGET_FILE:pascals-to-c> ${subdir} ${CASE_DIR}/${test_type}/${subdir} ${CMAKE_CURRENT_BINARY_DIR}/test/${test_type}/${subdir}
+        )
+    ENDFOREACH()
+ENDFOREACH()

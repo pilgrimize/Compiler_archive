@@ -1,0 +1,3 @@
+ERROR Error: syntax error at line: 1, encountering unexpected word (: line 1
+FATAL Failed at lexical or syntactic analysis, abort.
+FATAL Compilation failed.
