@@ -84,9 +84,9 @@ subop "-"
 mulop "*"|"/"|"div"|"mod"|"and"
 relop "<"|">"|"<>"|"<="|">="
 notop "not"
+quateop "'"
 literal_char {quateop}({letter}|{digit}|{others}){quateop}
 literal_string {quateop}({letter}|{digit}|{others})*{quateop} 
-quateop "'"
 equalop "="
 assignop ":="
 blank [ \t\n]
@@ -104,7 +104,7 @@ digits ({digit})+
 optional_fraction "."{digits}
 num {digits}
 double_value {digits}{optional_fraction}
-others "@"|"#"|"$"|"%"|"^"|"&"|"*"|"-"|"+"|"="|"|"|"["|"]"|"{"|"}"|";"|":"|","|"<"|">"|"/"|"?"|"~"|" "
+others "@"|"#"|"$"|"%"|"^"|"&"|"*"|"-"|"+"|"="|"|"|"["|"]"|"{"|"}"|";"|":"|","|"<"|">"|"/"|"?"|"~"|" "|"!"|blank
 id ({letter}|"_")({letter}|{digit}|"_")*
 comment \{[^}]*\}
 
@@ -171,7 +171,6 @@ comment \{[^}]*\}
 {t_byte}        {log( std::string( "t_byte:") + yytext , yylineno, DEBUG);yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_BYTE,yytext ,yylineno )); return t_byte;}
 {t_shortint}    {log( std::string( "t_shortint:") + yytext , yylineno, DEBUG);yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_SHORTINT,yytext ,yylineno )); return t_shortint;}
 {t_string}      {log( std::string( "t_string:") + yytext , yylineno, DEBUG);yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_STRING,yytext ,yylineno )); return t_string;}
-{t_char}        {log( std::string( "t_char:") + yytext , yylineno, DEBUG);yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_CHAR,yytext ,yylineno )); return t_char;}
 
 {t_begin}       {log( std::string( "t_begin:") + yytext , yylineno, DEBUG);yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_BEGIN,yytext ,yylineno )); return t_begin;}
 {t_end}         {log( std::string( "t_end:") + yytext , yylineno, DEBUG);yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_END,yytext ,yylineno )); return t_end;}
@@ -186,7 +185,6 @@ comment \{[^}]*\}
 {t_repeat}      {log( std::string( "t_repeat:") + yytext , yylineno, DEBUG);yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_REPEAT,yytext ,yylineno )); return t_repeat;}
 {t_until}       {log( std::string( "t_until:") + yytext , yylineno, DEBUG);yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_UNTIL,yytext ,yylineno )); return t_until;}
 {t_case}        {log( std::string( "t_case:") + yytext , yylineno, DEBUG);yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_CASE,yytext ,yylineno )); return t_case;}
-{t_while}       {log( std::string( "t_while:") + yytext , yylineno, DEBUG);yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_WHILE,yytext ,yylineno )); return t_while;}
 {t_read}       {log( std::string( "t_read:") + yytext , yylineno, DEBUG);yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_READ,yytext ,yylineno )); return t_read;}
 {t_write}       {log( std::string( "t_write:") + yytext , yylineno, DEBUG);yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_WRITE,yytext ,yylineno )); return t_write;}
 

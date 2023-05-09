@@ -193,15 +193,15 @@ program_head : t_program id leftparen idlist rightparen { // pid = 2
         }
     /* | error id leftparen idlist rightparen { 
         // we fix the lack of 'program' at the beginning of the program_head'
-        log( "error on program_head fixed", $2->get_root()->get_line(), DEBUG); 
+        log( "error on program_head fixed1", $2->get_root()->get_line(), DEBUG); 
         tree::Tree* t_program_proxy = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_PROGRAM,"program" ,$2->get_root()->get_line() ));
-        $$ = tools::reduce({$2, $3, $4, $5}, $2->get_root()->get_line(),  tree::program_head__T__t_program__id_leftparen__idlist__rightparen , tree::T_PROGRAM_HEAD);
+        $$ = tools::reduce({t_program_proxy, $2, $3, $4, $5}, $2->get_root()->get_line(),  tree::program_head__T__t_program__id_leftparen__idlist__rightparen , tree::T_PROGRAM_HEAD);
         yyerrok; 
-        } */
+        }
     | error id { 
         // we fix the lack of 'program' at the beginning of the program_head'
-        log( "error on program_head fixed", $2->get_root()->get_line(), DEBUG); yyerrok; 
-        }
+        log( "error on program_head fixed2", $2->get_root()->get_line(), DEBUG); yyerrok; 
+        } */
     ;
 
 
@@ -301,6 +301,11 @@ const_value : num {  // pid=17
         $$ = tools::reduce({$1}, $1->get_root()->get_line(),  tree::const_value__T__literal_string
         , tree::T_CONST_VALUE);
         }
+    | literal_char{
+        log( "Use production: const_value -> literal_char", $1->get_root()->get_line(), DEBUG); 
+        $$ = tools::reduce({$1}, $1->get_root()->get_line(),  tree::const_value__T__literal_char
+        , tree::T_CONST_VALUE);
+    }
     | addop double_value {  // pid=21
         log( "Use production: const_value -> + double_value", $1->get_root()->get_line(), DEBUG); 
         $$ = tools::reduce({$1, $2}, $1->get_root()->get_line(),  tree::const_value__T__addop__double_value
@@ -449,6 +454,11 @@ subprogram_head :
 formal_parameter : leftparen parameter_list rightparen {  // pid=38
         log( "Use production: formal_parameter -> ( parameter_list )", $1->get_root()->get_line(), DEBUG);
         $$ = tools::reduce({$1, $2, $3}, $1->get_root()->get_line(),  tree::formal_parameter__T__leftparen__parameter_list__rightparen
+        , tree::T_FORMAL_PARAMETER);
+    }|
+    leftparen rightparen{
+        log( "Use production: formal_parameter -> ( )", $1->get_root()->get_line(), DEBUG);
+        $$ = tools::reduce({$1, $2}, $1->get_root()->get_line(),  tree::formal_parameter__T__leftparen__rightparen
         , tree::T_FORMAL_PARAMETER);
     };
 
@@ -634,6 +644,11 @@ procedure_call : id leftparen expression_list rightparen {  // pid=68
     | id { // pid=69
         log( "Use production: procedure_call -> id", $1->get_root()->get_line(), DEBUG);
         $$ = tools::reduce({$1}, $1->get_root()->get_line(),  tree::procedure_call__T__id
+        , tree::T_PROCEDURE_CALL);
+    }
+    | id leftparen rightparen{
+        log( "Use production: procedure_call -> id ( )", $1->get_root()->get_line(), DEBUG);
+        $$ = tools::reduce({$1, $2, $3}, $1->get_root()->get_line(),  tree::procedure_call__T__id__leftparen__rightparen
         , tree::T_PROCEDURE_CALL);
     };
 
