@@ -363,10 +363,10 @@ void dfs_analyze_node(TreeNode* node) {
                 log("Expected integer type for for-loop index, found others (" + id_node->get_text() + ")", id_node->get_position());
                 error_detected();
             } else if (symbol::get_type_category(expression_node_a->get_type()) != symbol::TYPE_CATEGORY_INT) {
-                log("Expected integer type for for-loop start, found others (" + node->get_child(3)->get_text() + ")", expression_node_a->get_position());
+                log("Expected integer type for for-loop start, found others (" + expression_node_a->get_text() + ")", expression_node_a->get_position());
                 error_detected();
             } else if (symbol::get_type_category(expression_node_b->get_type()) != symbol::TYPE_CATEGORY_INT) {
-                log("Expected integer type for for-loop end, found others (" + node->get_child(5)->get_text() + ")", expression_node_b->get_position());
+                log("Expected integer type for for-loop end, found others (" + expression_node_b->get_text() + ")", expression_node_b->get_position());
                 error_detected();
             }
             break;
@@ -509,7 +509,8 @@ void dfs_analyze_node(TreeNode* node) {
             auto category_a = symbol::get_type_category(node->get_child(0)->get_type());
             auto category_b = symbol::get_type_category(node->get_child(2)->get_type());
             if (!((category_a == symbol::TYPE_CATEGORY_INT || category_a == symbol::TYPE_CATEGORY_FLOAT) && (category_b == symbol::TYPE_CATEGORY_INT || category_b == symbol::TYPE_CATEGORY_FLOAT))) {
-                log("Expected integer or real type for comparison, found others (" + node->get_text() + ")", node->get_child(1)->get_position());
+                log("Expected integer or real type for comparison, found others ('" + node->get_child(0)->get_text()
+                    + "' " + node->get_child(1)->get_text() + " '" + node->get_child(2)->get_text() + "')", node->get_child(1)->get_position());
                 error_detected();
             }
             node->set_type(symbol::TYPE_BOOL);
@@ -520,7 +521,8 @@ void dfs_analyze_node(TreeNode* node) {
             auto category_b = symbol::get_type_category(node->get_child(2)->get_type());
             if (!((category_a == symbol::TYPE_CATEGORY_INT || category_a == symbol::TYPE_CATEGORY_FLOAT) && (category_b == symbol::TYPE_CATEGORY_INT || category_b == symbol::TYPE_CATEGORY_FLOAT))
                 && category_a != category_b) {
-                log("Expected same or comparable types for comparison, found others (" + node->get_text() + ")", node->get_child(1)->get_position());
+                log("Expected same or comparable types for comparison, found others ('" + node->get_child(0)->get_text()
+                    + "' " + node->get_child(1)->get_text() + " '" + node->get_child(2)->get_text() + "')", node->get_child(1)->get_position());
                 error_detected();
             }
             node->set_type(symbol::TYPE_BOOL);
@@ -531,7 +533,8 @@ void dfs_analyze_node(TreeNode* node) {
             auto category_a = symbol::get_type_category(node->get_child(0)->get_type());
             auto category_b = symbol::get_type_category(node->get_child(2)->get_type());
             if (!((category_a == symbol::TYPE_CATEGORY_INT || category_a == symbol::TYPE_CATEGORY_FLOAT) && (category_b == symbol::TYPE_CATEGORY_INT || category_b == symbol::TYPE_CATEGORY_FLOAT))) {
-                log("Expected integer or real type for arithmetic operation, found others (" + node->get_text() + ")", node->get_child(1)->get_position());
+                log("Expected integer or real type for arithmetic operation, found others ('" + node->get_child(0)->get_text()
+                    + "' " + node->get_child(1)->get_text() + " '" + node->get_child(2)->get_text() + "')", node->get_child(1)->get_position());
                 error_detected();
             }
             node->set_type(category_a == symbol::TYPE_CATEGORY_INT && category_b == symbol::TYPE_CATEGORY_INT ? symbol::TYPE_INT : symbol::TYPE_FLOAT);
@@ -543,19 +546,22 @@ void dfs_analyze_node(TreeNode* node) {
             auto category_b = symbol::get_type_category(node->get_child(2)->get_type());
             if (operator_text == "and") {
                 if (!((category_a == category_b) && (category_a == symbol::TYPE_CATEGORY_INT || category_a == symbol::TYPE_CATEGORY_BOOL))) {
-                    log("Expected both integer or boolean types for bit operation, found others (" + node->get_text() + ")", node->get_child(1)->get_position());
+                    log("Expected both integer or boolean types for bit operation, found others ('" + node->get_child(0)->get_text()
+                        + "' " + node->get_child(1)->get_text() + " '" + node->get_child(2)->get_text() + "')", node->get_child(1)->get_position());
                     error_detected();
                 }
                 node->set_type(category_a == symbol::TYPE_CATEGORY_INT ? symbol::TYPE_INT : symbol::TYPE_BOOL);
             } else if (operator_text == "mod"){
                 if (!(category_a == symbol::TYPE_CATEGORY_INT && category_b == symbol::TYPE_CATEGORY_INT)) {
-                    log("Expected integer types for mod operation, found others (" + node->get_text() + ")", node->get_child(1)->get_position());
+                    log("Expected integer types for mod operation, found others ('" + node->get_child(0)->get_text()
+                        + "' " + node->get_child(1)->get_text() + " '" + node->get_child(2)->get_text() + "')", node->get_child(1)->get_position());
                     error_detected();
                 }
                 node->set_type(symbol::TYPE_INT);
             } else {
                 if (!((category_a == symbol::TYPE_CATEGORY_INT || category_a == symbol::TYPE_CATEGORY_FLOAT) && (category_b == symbol::TYPE_CATEGORY_INT || category_b == symbol::TYPE_CATEGORY_FLOAT))) {
-                    log("Expected integer or real type for arithmetic operation, found others (" + node->get_text() + ")", node->get_child(1)->get_position());
+                    log("Expected integer or real type for arithmetic operation, found others ('" + node->get_child(0)->get_text()
+                        + "' " + node->get_child(1)->get_text() + " '" + node->get_child(2)->get_text() + "')", node->get_child(1)->get_position());
                     error_detected();
                 }
                 node->set_type(category_a == symbol::TYPE_CATEGORY_INT && category_b == symbol::TYPE_CATEGORY_INT ? symbol::TYPE_INT : symbol::TYPE_FLOAT);
@@ -566,7 +572,8 @@ void dfs_analyze_node(TreeNode* node) {
             auto category_a = symbol::get_type_category(node->get_child(0)->get_type());
             auto category_b = symbol::get_type_category(node->get_child(2)->get_type());
             if (!((category_a == category_b) && (category_a == symbol::TYPE_CATEGORY_INT || category_a == symbol::TYPE_CATEGORY_BOOL))) {
-                log("Expected both integer or boolean types for bit operation, found others (" + node->get_text() + ")", node->get_child(1)->get_position());
+                log("Expected both integer or boolean types for bit operation, found others ('" + node->get_child(0)->get_text()
+                    + "' " + node->get_child(1)->get_text() + " '" + node->get_child(2)->get_text() + "')", node->get_child(1)->get_position());
                 error_detected();
             }
             node->set_type(category_a == symbol::TYPE_CATEGORY_INT ? symbol::TYPE_INT : symbol::TYPE_BOOL);
@@ -632,7 +639,8 @@ void dfs_analyze_node(TreeNode* node) {
         case tree::factor__T__notop__factor: {
             auto type = node->get_child(1)->get_type();
             if (type != symbol::TYPE_INT && type != symbol::TYPE_BOOL) {
-                log("Expected integer or boolean type for not operation, found others (" + node->get_text() + ")", node->get_child(1)->get_position());
+                log("Expected integer or boolean type for not operation, found others (" + node->get_child(0)->get_text()
+                    + " '" + node->get_child(1)->get_text() + "')", node->get_child(1)->get_position());
                 error_detected();
             }
             node->set_type(type);
@@ -641,7 +649,8 @@ void dfs_analyze_node(TreeNode* node) {
         case tree::factor__T__subop__factor: {
             auto category = symbol::get_type_category(node->get_child(1)->get_type());
             if (!(category == symbol::TYPE_CATEGORY_INT || category == symbol::TYPE_CATEGORY_FLOAT)) {
-                log("Expected integer or real category for minus operation, found others (" + node->get_text() + ")", node->get_child(1)->get_position());
+                log("Expected integer or real category for minus operation, found others (" + node->get_child(0)->get_text()
+                    + " '" + node->get_child(1)->get_text() + "')", node->get_child(1)->get_position());
                 error_detected();
             }
             node->set_type(category == symbol::TYPE_CATEGORY_INT ? symbol::TYPE_INT : symbol::TYPE_FLOAT);
