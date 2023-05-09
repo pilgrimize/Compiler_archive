@@ -17,9 +17,9 @@ namespace tools{
         ss << num;
         return ss.str();
     }
-    tree::Tree* reduce(std::initializer_list<tree::Tree*> list, int line, tree::PID pid, tree::Token token , std::string text){
+    tree::Tree* reduce(std::initializer_list<tree::Tree*> list, tree::Position position, tree::PID pid, tree::Token token , std::string text){
         if(text == "") text = turn_token_text(token);
-        auto* tnode = new tree::TreeNode(pid, token, text, line);
+        auto* tnode = new tree::TreeNode(pid, token, text, position);
         tnode->set_pid(pid);
         for (auto it = list.begin(); it != list.end(); ++it) {
             tnode->childrenPush((*it)->get_root());
@@ -30,6 +30,8 @@ namespace tools{
     void print_ast(tree::TreeNode* x) {
         // every time first output x's token then print x's direct children's token and last print x's children respectively
         log(std::string("[present node]")+turn_token_text(x->get_token())+std::string(" , text: ")+x->get_text(), x->get_line(),DEBUG);
+        for(int i=0;i<x->get_comments().size();i++)
+            log(std::string("[comment]")+x->get_comments()[i],x->get_line(),DEBUG);
         log("[direct children]",-1,DEBUG);
         for (auto it = x->children_begin(); it != x->children_end(); ++it) {
             log( turn_token_text((*it)->get_token())+"   ",-1,DEBUG);

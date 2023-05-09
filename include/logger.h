@@ -2,6 +2,7 @@
 #define PASCALS_TO_C_LOGGER_H
 
 #include <fstream>
+#include "tree.h"
 
 namespace logger {
 
@@ -22,6 +23,8 @@ void set_logger(const std::string& output_file, const std::string& log_file, Log
 void output(const std::string& message, bool new_line = false);
 
 void log(const std::string& message, int line_number = -1, LogLevel level = ERROR);
+
+void log(const std::string& message, tree::Position position, LogLevel level= ERROR);
 
 }
 

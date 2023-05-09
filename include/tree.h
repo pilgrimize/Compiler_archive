@@ -232,6 +232,12 @@ enum Token {
 
 };
 
+typedef struct Position{
+        int first_line;
+        int first_column;
+        int last_line;
+        int last_column;
+    } Position;
 
 class TreeNode {
 private:
@@ -240,14 +246,16 @@ private:
     std::string text;  // for ID and Literal, empty for others
     std::vector<TreeNode*> children;
     symbol::BasicType type = symbol::TYPE_NULL;
-    int line;
+    Position position;
+    std::vector<std::string> comments;
 public:
     TreeNode() = default;
-    TreeNode(PID pid, Token token, std::string text, int line, std::vector<TreeNode*> children = {}) :
-            pid(pid), token(token), text(std::move(text)), line(line), children(std::move(children)) {}
+    TreeNode(PID pid, Token token, std::string text, Position position, std::vector<std::string> comments={} , std::vector<TreeNode*> children = {}) :
+            pid(pid), token(token), text(std::move(text)), position(position), comments(std::move(comments)), children(std::move(children)) {}
 
     Token get_token() const { return token; }
-    int get_line() const { return line; }
+    int get_line() const {return position.first_line; }
+    Position get_position() const { return position; }
     std::string get_text() const { return text; }
     TreeNode* get_child(int child_id) const { return children.at(child_id); }
     std::vector<TreeNode*>& get_children() { return children; }
@@ -259,6 +267,8 @@ public:
     void childrenPush(TreeNode* x) { children.push_back(x); }
     void set_pid(PID x) { pid = x; }
     TreeNode* get_child_by_token(Token child_token) const;
+
+    std::vector<std::string> get_comments() const { return comments; }
 };
 
 class Tree {
