@@ -52,7 +52,7 @@ void log(const std::string& message, tree::Position position, LogLevel level) {
     if (level >= log_level) {
         log_stream << log_level_to_string(level) << message;
         // if (line_number >= 0) {
-        log_stream << ": line " << position.first_line<< ": column " << position.first_column;
+        log_stream << ": line " << position.first_line<< ", column " << position.first_column;
         // }
         log_stream << std::endl;
     }
