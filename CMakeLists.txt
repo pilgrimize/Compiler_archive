@@ -26,9 +26,9 @@ add_executable(pascals-to-c ${SRC} ${FLEX_scanner_OUTPUTS} ${BISON_parser_OUTPUT
 # test
 enable_testing()
 
-add_executable(final_test ./test/final_test.cpp)
+find_program(TEST_SCRIPT NAMES test.sh HINTS ${CMAKE_CURRENT_SOURCE_DIR}/test/ REQUIRED)
 
 add_test(
         NAME final_test
-        COMMAND $<TARGET_FILE:final_test>
+        COMMAND ${TEST_SCRIPT} $<TARGET_FILE:pascals-to-c> ${CMAKE_CURRENT_SOURCE_DIR}/test-case/case1.pas
 )
