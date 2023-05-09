@@ -3,6 +3,7 @@
 
 #include "tree.h"
 #include "symbol.h"
+#include "logger.h"
 
 namespace generate {
 

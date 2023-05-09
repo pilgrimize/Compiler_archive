@@ -32,6 +32,13 @@
     #include "logger.h"
     using namespace logger;
     std::vector<std::string> comment_vector; 
+    
+    int word_count = 0;
+    int line_count = 0;
+    int char_count = 0;
+    int const_count = 0;
+    int id_count = 0;
+    int keyword_count = 0;
 %}
 
 t_program "program"
@@ -97,9 +104,14 @@ digits ({digit})+
 optional_fraction "."{digits}
 num {digits}
 double_value {digits}{optional_fraction}
-others "@"|"#"|"$"|"%"|"^"|"&"|"*"|"-"|"+"|"="|"|"|"["|"]"|"{"|"}"|";"|":"|","|"<"|">"|"/"|"?"|"~"|" "|"!"|blank
+others "@"|"#"|"$"|"%"|"^"|"&"|"*"|"-"|"+"|"="|"|"|"["|"]"|"{"|"}"|";"|":"|","|"<"|">"|"/"|"?"|"~"|" "|"!"|" "
 id ({letter}|"_")({letter}|{digit}|"_")*
 comment \{[^}]*\}
+
+unexpected_char_error [@`]
+unwrapped_string_error \'[^\n\']*
+
+%x BLOCK_COMMENT
 
 %%
 
@@ -190,6 +202,25 @@ comment \{[^}]*\}
                 comment_vector.clear(); 
                 return id;
                 }
+
+{unexpected_char_error} {log(std::string("Unexpected character: ")+yytext, yylineno, DEBUG);}
+{unwrapped_string_error} {
+                tree::Position position = {yylloc.first_line, yylloc.first_column, yylloc.last_line, yylloc.last_column};
+                log(std::string("Unwrapped string: ")+yytext + std::string(" and now it is patched."), position, ERROR);
+                std::string temp = yytext+'\'';
+                yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_LITERAL_STRING, yytext, position, comment_vector));
+                comment_vector.clear(); 
+                return literal_string;
+                }
+
+<INITIAL>{
+    "{" {BEGIN BLOCK_COMMENT; char_count += yyleng;}
+}
+
+<BLOCK_COMMENT>{
+    <<EOF>> {log("Unfinished block comment", yylineno, ERROR); return 0;}
+    "{" {BEGIN INITIAL; char_count += yyleng;}
+}
 
 %%
 // {literal}       {log( std::string( "literal:") + yytext , yylineno, DEBUG); return literal;}
