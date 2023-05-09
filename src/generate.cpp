@@ -6,6 +6,8 @@
 namespace generate {
 using symbol::symbol_table_tree;
 
+bool generate_by_pid(tree::TreeNode* node);
+
 enum ID_LIST_TYPE{
     FUNCTION_DEFINITION,
     FUNCTION_CALL,
@@ -17,28 +19,55 @@ enum ID_TYPE{
     NON_BRACKET
 };
 std::string query_basic_type(const std::string name){
+    // std::cerr << symbol_table_tree.get_current_node()->get_entry(name)->type << std::endl;
     if(symbol_table_tree.get_current_node()->get_entry(name)->type == symbol::TYPE_BASIC){
         switch (std::get<symbol::BasicInfo>(symbol_table_tree.get_current_node()->get_entry(name)->extra_info).basic){
             case symbol::TYPE_INT:
                 return "int";
+            case symbol::TYPE_SINGLE:
             case symbol::TYPE_FLOAT:
                 return "float ";
             case symbol::TYPE_CHAR:
                 return "char ";
             case symbol::TYPE_BOOL:
                 return "bool ";
+            case symbol::TYPE_STRING:
+                return "std::string ";
+            case symbol::TYPE_DOUBLE:
+                return "double ";
+            case symbol::TYPE_SHORTINT:
+                return "short int ";
+            case symbol::TYPE_LONGINT:
+                return "long ";
+            case symbol::TYPE_BYTE:
+                return "char ";
+            default:
+                return "ERROR query_basic_type";
         }
     }
     if(symbol_table_tree.get_current_node()->get_entry(name)->type == symbol::TYPE_ARRAY){
         switch (std::get<symbol::ArrayInfo>(symbol_table_tree.get_current_node()->get_entry(name)->extra_info).basic){
             case symbol::TYPE_INT:
                 return "int";
+            case symbol::TYPE_SINGLE:
             case symbol::TYPE_FLOAT:
-                return "float";
+                return "float ";
             case symbol::TYPE_CHAR:
-                return "char";
+                return "char ";
             case symbol::TYPE_BOOL:
-                return "bool";
+                return "bool ";
+            case symbol::TYPE_STRING:
+                return "std::string ";
+            case symbol::TYPE_DOUBLE:
+                return "double ";
+            case symbol::TYPE_SHORTINT:
+                return "short int ";
+            case symbol::TYPE_LONGINT:
+                return "long ";
+            case symbol::TYPE_BYTE:
+                return "char ";
+            default:
+                return "ERROR query_basic_type";
         }
     }
     if(symbol_table_tree.get_current_node()->get_entry(name)->type == symbol::TYPE_FUNCTION){
@@ -58,25 +87,55 @@ std::string query_basic_type(const std::string name){
     // }
 }
 
+void varpart_process(tree::TreeNode* node){
+    std::string array_name = node->get_child(0)->get_text();
+    std::vector<int> bias;
+    std::vector<tree::TreeNode*> expr;
+    for(auto per_dim: std::get<symbol::ArrayInfo>(symbol_table_tree.get_entry(array_name)->extra_info).dims){
+        bias.push_back(per_dim.first);
+    }
+    node = node->get_child(1)->get_child(1);    //expression_list
+    while(node->get_pid() != tree::expression_list__T__expression){
+        expr.push_back(node->get_child(2));
+        node = node->get_child(0);
+    }
+    expr.push_back(node->get_child(0));
+    std::reverse(expr.begin(), expr.end());
+    assert(bias.size() == expr.size());
+    for(int i = 0; i < bias.size(); ++i){
+        logger::output( "[");
+        generate_by_pid(expr[i]);
+        logger::output( "-(" +std::to_string(bias[i]) + ")]");
+    }
+}
+
 void id_process(tree::TreeNode* node,ID_TYPE type){//to do: change the dims and reference
-    switch(symbol_table_tree.get_current_node()->get_entry(node->get_text())->type){
+    assert(symbol_table_tree.search_entry(node->get_text()) != symbol::SymbolTableTree::SearchResult::NOT_FOUND);
+    //logger::output( symbol_table_tree.get_entry(node->get_text())->type + std::endl
+    switch(symbol_table_tree.get_entry(node->get_text())->type){
+
         case symbol::TYPE_BASIC:
             if(type == NON_BRACKET){
+                //std::cerr<<"!text= "<<node->get_text() <<symbol_table_tree.get_entry(node->get_text())->type<<std::endl;
                 if(symbol_table_tree.get_scope_name() == node->get_text()){
-                    std::cout << "_";
+                    logger::output( "_");
                 }
-                std::cout << node->get_text();
+                if(std::get<symbol::BasicInfo>(symbol_table_tree.get_entry(node->get_text())->extra_info).is_referred){
+                    logger::output( "*");
+                }
+                logger::output( node->get_text());
             }
             else{
-                if(std::get<symbol::BasicInfo>(symbol_table_tree.get_current_node()->get_entry(node->get_text())->extra_info).is_referred)
-                    std::cout << "*";
-                std::cout << node->get_text();
+               
+                if(std::get<symbol::BasicInfo>(symbol_table_tree.get_entry(node->get_text())->extra_info).is_referred)
+                    logger::output( "*");
+                logger::output( node->get_text());
             }
             break;
         case symbol::TYPE_ARRAY:
-            std::cout << node->get_text();
-            for(auto per_dim: std::get<symbol::ArrayInfo>(symbol_table_tree.get_current_node()->get_entry(node->get_text())->extra_info).dims){
-                std::cout << "[" << per_dim.second + 1 << "]";
+            logger::output( node->get_text());
+            for(auto per_dim: std::get<symbol::ArrayInfo>(symbol_table_tree.get_entry(node->get_text())->extra_info).dims){
+                logger::output( (std::string)"[" +std::to_string(per_dim.second - per_dim.first + 1)+ "]");
             }
             break;
         case symbol::TYPE_RECORD:
@@ -84,14 +143,16 @@ void id_process(tree::TreeNode* node,ID_TYPE type){//to do: change the dims and 
         case symbol::TYPE_FUNCTION:
             if(type == NON_BRACKET){
                 if(symbol_table_tree.get_scope_name() != node->get_text()){
-                    std::cout << node->get_text() << "()";
+                    logger::output( node->get_text() + (std::string)"()");
                 }
                 else {
-                    std::cout << "_" << node->get_text();
+                    logger::output( "_" + node->get_text());
                 }
             }
-            else{std::cout << node->get_text(); }
+            else{logger::output( node->get_text());}
             break;
+        default:
+            logger::log("ERROR!");
     }
 }
 
@@ -109,10 +170,10 @@ void idlist_process(tree::TreeNode* node, ID_LIST_TYPE type){
         case FUNCTION_DEFINITION:
             for (auto it = varible_list.begin(); it != varible_list.end(); ){
                 auto varible = *it;
-                std::cout << query_basic_type(varible->get_text()) << " ";
+                logger::output( query_basic_type(varible->get_text()) + " ");
                 id_process(varible,NON_BRACKET);
                 ++it;
-                if(it!=varible_list.end())std::cout << ", ";
+                if(it!=varible_list.end())logger::output( ", ");
             }
             break;
         // case FUNCTION_CALL:
@@ -120,11 +181,11 @@ void idlist_process(tree::TreeNode* node, ID_LIST_TYPE type){
         //         auto varible = *it;
         //         if(symbol_table_tree.get_current_node()->get_entry(varible->get_text())->type == symbol::ComplexType::TYPE_BASIC){
         //             if(std::get<symbol::BasicInfo>(symbol_table_tree.get_current_node()->get_entry(varible->get_text())->extra_info).is_referred)
-        //                 std::cout << "&";
+        //                 logger::output( "&";
         //         }
         //         id_process(varible,NON_BRACKET);
         //         ++it;
-        //         if(it!=varible_list.end())std::cout << ", ";
+        //         if(it!=varible_list.end())logger::output( ", ";
         //     }    
         //     break;
         case PROGRAM_BODY:
@@ -132,135 +193,185 @@ void idlist_process(tree::TreeNode* node, ID_LIST_TYPE type){
                 auto varible = *it;
                 id_process(varible,NON_BRACKET);
                 ++it;
-                if(it!=varible_list.end())std::cout << ", ";
+                if(it!=varible_list.end())logger::output( ", ");
             }    
             break;
         default:
-            std::cout << "ERROR: no type info!" << std::endl;
+            logger::log("ERROR: no type info!");
     }
 }
 
+void function_call_para(tree::TreeNode* node, tree::TreeNode* func_node){
+    std::vector<tree::TreeNode*> expr;
+    while(node->get_pid() == tree::expression_list__T__expression_list__comma__expression){
+        expr.push_back(node->get_child(2));
+        node = node->get_child(0);
+    }
+    expr.push_back(node->get_child(0));
+    std::reverse(expr.begin(), expr.end());
+    //std::cerr << symbol_table_tree.get_current_node()->get_entry(func_node->get_text())->type;
+    std::vector<symbol::Param> *paralist;
+    if(symbol_table_tree.get_scope_name() != func_node->get_text())
+        paralist = &(std::get<symbol::FunctionInfo>(symbol_table_tree.get_current_node()->get_entry(func_node->get_text())->extra_info).params);
+    else
+        paralist = &(std::get<symbol::FunctionInfo>(symbol_table_tree.get_current_node()->get_parent()->get_entry(func_node->get_text())->extra_info).params);
+    assert(paralist->size() == expr.size());
+    for(int i=0;i<expr.size();++i){
+        if((*paralist)[i].is_referred){
+            logger::output( "&");
+        }
+        generate_by_pid(expr[i]);
+        if(i!=expr.size()-1)logger::output(", ");
+    }
+
+}
+// void params_process(tree::TreeNode* node, tree::TreeNode* func_node){
+//     std::vector<tree::TreeNode*> params;
+//     node = node->get_child(1);
+
+//     while(node->get_pid() == tree::parameter_list__T__parameter_list__semicolon__parameter){
+//         params.push_back(node->get_child(2));
+//         node = node->get_child(0);
+//     }
+//     params.push_back(node->get_child(0));
+//     std::reverse(params.begin(), params.end());
+//     std::cout<<"params size: "<<params.size()<<std::endl;
+//     std::cerr<<"current node"<< symbol_table_tree.get_current_node()<<"func node" <<func_node->get_text()<<std::endl;
+//     std::vector<symbol::Param> *paralist = &(std::get<symbol::FunctionInfo>(symbol_table_tree.get_current_node()->get_entry(func_node->get_text())->extra_info).params);
+//     assert(paralist->size() == params.size());
+
+//     // for(int i=0;i<params.size();++i){
+//     //     if((*paralist)[i].is_referred){
+//     //         logger::output( "*");
+//     //     }
+//     //     //generate_by_pid(params[i]);
+//     // }
+
+// }
+
 int indent = 0;
-void enter_and_tab(){
-    std::cout << std::endl;
-    for(int i=0;i<indent;++i)std::cout << "\t";
+void input_tab(bool enter){
+    if(enter)logger::output( "",true);
+    for(int i=0;i<indent;++i)logger::output( "\t");
 }
 // TODO: 1.id 2.symbol_table_tree.get_current_node() 3 tab and new line
 // Generate C code, should always return true given a valid tree and symbol table
 bool generate_by_pid(tree::TreeNode* node) {
     if (node == nullptr) return true;
-    //std::cout << "/*  " << node->get_token() << "  */";
     switch (node->get_token()) {    //pid 1
         case tree::T_PROGRAM_STRUCT: {
             for(int i=0;i+1<(node->get_child(2)->get_children()).size();++i){
                 generate_by_pid(node->get_child(2)->get_child(i));
             }
-            std::cout << "int main(){";
+            logger::output( "int main(){");
             indent++;
-            enter_and_tab();
+            input_tab(true);
             //to do:freopen
             // if(node->get_child(0)->get_pid() == 2){
             //     auto main_para = node->get_child(0)->get_child(3);
             // }
             generate_by_pid(*(node->get_child(2)->get_children().rbegin()));
-            std::cout << "return 0;";
+            logger::output( "return 0;");
             indent--;
-            enter_and_tab();
-            std::cout << "}"<<std::endl;
+            input_tab(true);
+            logger::output( "}",true);
             break;
         }
         case tree::T_CONST_DECLARATIONS:{   //pid 14
             generate_by_pid(node->get_child(1));
-            std::cout << ";";
-            enter_and_tab();
+            //do not change below 2
+            logger::output((std::string)";");
+            input_tab(true);
             break;
         }
         case tree::T_CONST_DECLARATION:{    //pid 15~16
             switch (node->get_pid()){
                 case tree::const_declaration__T__id__equalop__const_value:
-                    std::cout << "const ";
+                    logger::output( "const ");
                     switch (std::get<symbol::BasicInfo>(symbol_table_tree.get_current_node()->get_entry(node->get_child(0)->get_text())->extra_info).basic){
                         case symbol::TYPE_INT:
-                            std::cout << "int ";
+                            logger::output( "int ");
                             break;
                         case symbol::TYPE_FLOAT:
-                            std::cout << "float ";
+                            logger::output( "float ");
                             break;
                         case symbol::TYPE_CHAR:
-                            std::cout << "char ";
+                            logger::output( "char ");
                             break;
                         case symbol::TYPE_BOOL:
-                            std::cout << "bool ";
+                            logger::output( "bool ");
                             break;
                     }
                     id_process(node->get_child(0),NON_BRACKET);
-                    std::cout << "=";
+                    logger::output( "=");
                     generate_by_pid(node->get_child(2));
-                    enter_and_tab();
+                    //input_tab(true);
                     break;
                 case tree::const_declaration__T__const_declaration__semicolon__id__equalop__const_value:
                     generate_by_pid(node->get_child(0));
-                    std::cout << "const ";
+                    logger::output((std::string)";");
+                    input_tab(true);
+                    logger::output( "const ");
                     switch (std::get<symbol::BasicInfo>(symbol_table_tree.get_current_node()->get_entry(node->get_child(2)->get_text())->extra_info).basic){
                         case symbol::TYPE_INT:
-                            std::cout << "int ";
+                            logger::output( "int ");
                             break;
                         case symbol::TYPE_FLOAT:
-                            std::cout << "float ";
+                            logger::output( "float ");
                             break;
                         case symbol::TYPE_CHAR:
-                            std::cout << "char ";
+                            logger::output( "char ");
                             break;
                         case symbol::TYPE_BOOL:
-                            std::cout << "bool ";
+                            logger::output( "bool ");
                             break;
                     }
                     id_process(node->get_child(2),NON_BRACKET);
-                    std::cout << "=";
+                    logger::output( "=");
                     generate_by_pid(node->get_child(4));
-                    enter_and_tab();
                     break;
             }
             break;
         }
         case tree::T_CONST_VALUE:{      //pid 17~20
             switch (node->get_pid()){
-                case tree::const_value__T__num:   
-                    generate_by_pid(node->get_child(0));
-                    break;
-                case tree::const_value__T__literal_string:
+                case tree::const_value__T__num:
+                case tree::const_value__T__literal_char:
+                case tree::const_value__T__double_value:
                     generate_by_pid(node->get_child(0));
                     break;
                 case tree::const_value__T__addop__num:
-                    std::cout << "+";
+                    logger::output( "+");
                     generate_by_pid(node->get_child(1));
                     break;
                 case tree::const_value__T__subop__num:
-                    std::cout << "-";
+                    logger::output( "-");
                     generate_by_pid(node->get_child(0));
                     break;
+                default:
+                    std::cerr << "CONST_VALUE:" << node->get_pid() << std::endl; 
             }
             break;
         }
         case tree::T_VAR_DECLARATIONS:{     //pid:21
             generate_by_pid(node->get_child(1));
-            std::cout << ";";
-            enter_and_tab();
+            logger::output((std::string)";");
+            input_tab(true);
             break;
         }
         case tree::T_VAR_DECLARATION:{  //pid: 22~23
             switch (node->get_pid()){
                 case tree::var_declaration__T__idlist__colon__type:
                     generate_by_pid(node->get_child(2));
-                    std::cout << " ";
+                    logger::output( " ");
                     idlist_process(node->get_child(0), PROGRAM_BODY);
                     break;
                 case tree::var_declaration__T__var_declaration__semicolon__idlist__colon__type:
                     generate_by_pid(node->get_child(0));
-                    std::cout << ";";
-                    enter_and_tab();
+                    logger::output((std::string)";");
+                    input_tab(true);
                     generate_by_pid(node->get_child(4));
-                    std::cout << " ";
+                    logger::output( " ");
                     idlist_process(node->get_child(2), PROGRAM_BODY);
                     break;
             }
@@ -286,14 +397,15 @@ bool generate_by_pid(tree::TreeNode* node) {
             switch (node->get_pid()){
                 case tree::subprogram_declarations__T__subprogram__semicolon:
                     generate_by_pid(node->get_child(0));
-                    //std::cout << ";";
-                    enter_and_tab();
+                    input_tab(true);
                     break;
                 case tree::subprogram_declarations__T__subprogram_declarations__subprogram__semicolon:
                     generate_by_pid(node->get_child(0));
                     generate_by_pid(node->get_child(1));
-                    // std::cout << ";";
-                    enter_and_tab();
+                    input_tab(true);
+                    break;
+                default:
+                    std::cerr << "T_SUBPROGRAM_DECLARATIONS:" << node->get_pid() << std::endl;
                     break;
             }
             break;
@@ -302,71 +414,72 @@ bool generate_by_pid(tree::TreeNode* node) {
             symbol_table_tree.next_scope();
             if(node->get_child(0)->get_pid() == tree::subprogram_head__T__t_function__id__formal_parameter__colon__basic_type
                                                     ||node->get_child(0)->get_pid() == tree::subprogram_head__T__t_function__id__colon__basic_type){
-                
                 std::string func_name = node->get_child(0)->get_child(1)->get_text();
-                //std::cout << func_name;
                 generate_by_pid(node->get_child(0));
-                std::cout << "{";
+                logger::output( "{");
                 indent++;
-                enter_and_tab();
-                //to do: add definition of returnvalue
-                // 
-                std::cout << query_basic_type(func_name) << " _" << func_name << ";";
-                enter_and_tab();
+                input_tab(true);
+                logger::output( query_basic_type(func_name) + " _" + func_name + ";");
+                input_tab(true);
                 generate_by_pid(node->get_child(2));
-                enter_and_tab();
-                //to do: return value
-                std::cout << "return _" << func_name << ";";
-                enter_and_tab();
-                std::cout << "\b\b\b\b\b\b\b\b}";
+                logger::output( "return _" + func_name + ";");
+                input_tab(true);
+                logger::output( "\b\b\b\b\b\b\b\b"+(std::string)"}");
                 indent--;
-                enter_and_tab();
+                input_tab(true);
             }
             else{
                 generate_by_pid(node->get_child(0));
-                std::cout << "{";
+                logger::output( "{");
                 indent++;
-                enter_and_tab();
+                input_tab(true);
                 generate_by_pid(node->get_child(2));
                 indent--;
-                enter_and_tab();
-                std::cout << "}";
-                enter_and_tab();
+                //input_tab(true);
+                logger::output((std::string)"\b\b\b\b\b\b\b\b" +"}");
+                
             }
             symbol_table_tree.pop_scope();
             break;
         }
         case tree::T_SUBPROGRAM_HEAD:{      //pid: 34~37
-            //symbol_table_tree.next_scope();
             switch (node->get_pid()){
                 case tree::subprogram_head__T__t_function__id__formal_parameter__colon__basic_type:
-                    std::cout << query_basic_type(node->get_child(1)->get_text()) << " ";
+                    logger::output( query_basic_type(node->get_child(1)->get_text()) + " ");
                     id_process(node->get_child(1),BRACKET);
                     generate_by_pid(node->get_child(2));
+
                     break;
                 case tree::subprogram_head__T__t_procedure__id__formal_parameter:
-                    std::cout << "void ";
-                    id_process(node->get_child(1),BRACKET);
+                    logger::output( "void ");
+                    logger::output( node->get_child(1)->get_text());
                     generate_by_pid(node->get_child(2));
                     break;
                 case tree::subprogram_head__T__t_function__id__colon__basic_type:
-                    std::cout << query_basic_type(node->get_child(1)->get_text()) << " ";
+                    logger::output( query_basic_type(node->get_child(1)->get_text()) + (std::string)" ");
                     id_process(node->get_child(1),BRACKET);
-                    std::cout << "()";
+                    logger::output( "()");
                     break;
                 case tree::subprogram_head__T__t_procedure__id:
-                    std::cout << "void ";
-                    std::cout << node->get_child(1)->get_text();
-                    std::cout << "()";
+                    logger::output( "void ");
+                    logger::output( node->get_child(1)->get_text());
+                    logger::output( "()");
                     break;
             }
             break;
         }
         case tree::T_FORMAL_PARAMETER:{     //pid: 38
-            std::cout << "(";
-            generate_by_pid(node->get_child(1));
-            std::cout << ")";
-            break;
+            switch (node->get_pid()){
+                case tree::formal_parameter__T__leftparen__parameter_list__rightparen:
+                    logger::output( "(");
+                    generate_by_pid(node->get_child(1));
+                    logger::output( ")");
+                    break;
+                case tree::formal_parameter__T__leftparen__rightparen:
+                    logger::output( "()");
+                default:
+                    break;
+            }
         }
         case tree::T_PARAMETER_LIST:{   //pid: 39~40
             switch (node->get_pid()){
@@ -375,7 +488,7 @@ bool generate_by_pid(tree::TreeNode* node) {
                     break;
                 case tree::parameter_list__T__parameter_list__semicolon__parameter:
                     generate_by_pid(node->get_child(0));
-                    std::cout << ",";
+                    logger::output( ",");
                     generate_by_pid(node->get_child(2));
                     break;
             }
@@ -427,107 +540,109 @@ bool generate_by_pid(tree::TreeNode* node) {
             switch (node->get_pid()){
                 case tree::statement__T__variable__assignop__expression:        //fall through!
                     generate_by_pid(node->get_child(0));
-                    std::cout << "=";
+                    logger::output( "=");                    
                     generate_by_pid(node->get_child(2));
-                    std::cout << ";";
-                    enter_and_tab();
+                    logger::output((std::string) ";");
+                    input_tab(true);
                     break;
                 case tree::statement__T__procedure_call:  
                     generate_by_pid(node->get_child(0));
+                    // logger::output((std::string)"6"+";");
+                    // input_tab(true);
                     break;      
                 case tree::statement__T__compound_statement:
                     generate_by_pid(node->get_child(0));
                     break;
                 case tree::statement__T__t_if__expression__t_then__statement:
-                    std::cout << "if (";
+                    logger::output( "if(");
                     generate_by_pid(node->get_child(1));
-                    std::cout << "){";
+                    logger::output( "){");
                     indent++;
-                    enter_and_tab();
+                    input_tab(true);
                     generate_by_pid(node->get_child(3));
-                    std::cout << "\b\b\b\b\b\b\b\b}";
                     indent--;
+                    logger::output((std::string) "\b\b\b\b\b\b\b\b"+"}");
+                    input_tab(true);
                     break;
                 case tree::statement__T__t_if__expression__t_then__statement__else_part:
-                    std::cout << "if (";
+                    logger::output( "if (");
                     generate_by_pid(node->get_child(1));
-                    std::cout << "){";
+                    logger::output( "){");
                     indent++;
-                    enter_and_tab();
+                    input_tab(true);
                     generate_by_pid(node->get_child(3));
-                    std::cout << "\b\b\b\b\b\b\b\b}";
+                    logger::output( (std::string)"\b\b\b\b\b\b\b\b"+ (std::string)"}");
                     indent--;
-                    enter_and_tab();
+                    input_tab(true);
                     generate_by_pid(node->get_child(4));
                     break;
                 case tree::statement__T__t_while__T__expression__t_do__statement:
-                    std::cout << "while(";
+                    logger::output( "while(");
                     generate_by_pid(node->get_child(1));
-                    std::cout << "){";
+                    logger::output( "){");
                     indent++;
-                    enter_and_tab();
-                    //std::cout << node->get_child(3)->get_pid();
+                    input_tab(true);
                     generate_by_pid(node->get_child(3));
-                    std::cout << "\b\b\b\b\b\b\b\b}";
+                    logger::output( "\b\b\b\b\b\b\b\b"+ (std::string)"}");
                     indent--;
-                    enter_and_tab();
+                    input_tab(true);
                     break;
                 case tree::statement__T__t_repeat__statement__t_until__expression:
-                    std::cout << "do{";
+                case tree::statement__T__t_repeat__statement_list__t_until__expression:
+                    logger::output( "do{");
                     indent++;
-                    enter_and_tab();
+                    input_tab(true);
                     generate_by_pid(node->get_child(1));
-                    std::cout << "}while(!(";
+                    logger::output( "\b\b\b\b\b\b\b\b");
+                    logger::output((std::string) "}"+"while"+"("+"!"+"(");
                     generate_by_pid(node->get_child(3));
-                    std::cout << "));";
+                    logger::output( "));");
                     indent--;
-                    enter_and_tab();
+                    input_tab(true);
                     break;
                 case tree::statement__T__t_for__id__assignop__expression__t_to__expression__t_do__statement:    
-                    std::cout << "for(";
+                    logger::output( "for(");
                     id_process(node->get_child(1), NON_BRACKET);
-                    std::cout << "=";
+                    logger::output( "=");
                     generate_by_pid(node->get_child(3));
-                    std::cout << "; ";
-                    generate_by_pid(node->get_child(1));
-                    if(node->get_pid() == 59)std::cout << "<=";
-                    else std::cout << ">=";
+                    logger::output( "; ");
+                    id_process(node->get_child(1), NON_BRACKET);
+                    logger::output( "<=");
                     generate_by_pid(node->get_child(5));
-                    std::cout << "; ";
-                    if(node->get_pid() == 59)std::cout << "++";
-                    else std::cout << "--";
-                    generate_by_pid(node->get_child(1));
-                    std::cout << "){";
+                    logger::output( "; ");
+                    logger::output( "++");
+                    id_process(node->get_child(1), NON_BRACKET);
+                    logger::output( "){");
                     indent++;
-                    enter_and_tab();
+                    input_tab(true);
+                    assert(node->get_children().size() > 7);
                     generate_by_pid(node->get_child(7));
-                    std::cout << "}";
+                    logger::output( "\b\b\b\b\b\b\b\b"+ (std::string)"}");
                     indent--;
-                    enter_and_tab();
+                    input_tab(true);
                     break;
                 case tree::statement__T__t_for__id__assignop__expression__t_downto__expression__t_do__statement:
-                    std::cout << "for(";
+                    logger::output((std::string) "for"+"(");
                     id_process(node->get_child(1), NON_BRACKET);
-                    std::cout << "=";
+                    logger::output( "=");
                     generate_by_pid(node->get_child(3));
-                    std::cout << "; ";
-                    generate_by_pid(node->get_child(1));
-                    if(node->get_pid() == tree::statement__T__t_for__id__assignop__expression__t_to__expression__t_do__statement)std::cout << "<=";
-                    else std::cout << ">=";
+                    logger::output( "; ");
+                    id_process(node->get_child(1), NON_BRACKET);
+                    logger::output((std::string) ">"+"=");
                     generate_by_pid(node->get_child(5));
-                    std::cout << "; ";
-                    if(node->get_pid() == tree::statement__T__t_for__id__assignop__expression__t_to__expression__t_do__statement)std::cout << "++";
-                    else std::cout << "--";
-                    generate_by_pid(node->get_child(1));
-                    std::cout << "){";
+                    logger::output( "; ");
+                    logger::output( "--");
+                    id_process(node->get_child(1), NON_BRACKET);
+                    logger::output((std::string) ")"+"{");
                     indent++;
-                    enter_and_tab();
+                    input_tab(true);
                     generate_by_pid(node->get_child(7));
-                    std::cout << "}";
+                    logger::output( (std::string)"\b\b\b\b\b\b\b\b"+"}");
                     indent--;
-                    enter_and_tab();
+                    input_tab(true);
                     break;
                 case tree::statement__T__t_read__leftparen__variable_list__rightparen:    //fall through!
+                case tree::statement__T__t_readln__leftparen__variable_list__rightparen:
                     varible_list.clear();
                     now = node->get_child(2);
                     while (now->get_pid() != tree::variable_list__T__variable){
@@ -536,34 +651,77 @@ bool generate_by_pid(tree::TreeNode* node) {
                     }
                     varible_list.push_back(now->get_child(0));
                     std::reverse(varible_list.begin(), varible_list.end());
-                    std::cout << "scanf(\"";
+                    logger::output( "scanf(\"");
                     for (auto now_var : varible_list){
-                        switch (std::get<symbol::BasicInfo>(symbol_table_tree.get_current_node()->get_entry(now_var->get_child(0)->get_text())->extra_info).basic){
+                        if(symbol_table_tree.get_current_node()->get_entry(now_var->get_child(0)->get_text())->type == symbol::TYPE_BASIC){
+                            switch (std::get<symbol::BasicInfo>(symbol_table_tree.get_entry(now_var->get_child(0)->get_text())->extra_info).basic){
+                            case symbol::TYPE_SHORTINT:
+                                logger::output( "%hd");
+                                break;
                             case symbol::TYPE_INT:
-                                std::cout << "%d";
+                                logger::output( "%d");
+                                break;
+                            case symbol::TYPE_LONGINT:
+                                logger::output( "%ld");
                                 break;
                             case symbol::TYPE_CHAR:
-                                std::cout << "%c";
+                                logger::output( "%c");
                                 break;
+                            case symbol::TYPE_SINGLE:
                             case symbol::TYPE_FLOAT:
-                                std::cout << "%f";
+                                logger::output( "%f");
+                                break;
+                            case symbol::TYPE_DOUBLE:
+                                logger::output( "%lf");
+                                break;
+                            case symbol::TYPE_STRING:
+                                logger::output( "%s");
                                 break;
                             default:
-                                std::cout << "%d";
+                                logger::output( "%d");
                                 break;
+                            }
+                        }
+                        else if(symbol_table_tree.get_current_node()->get_entry(now_var->get_child(0)->get_text())->type == symbol::TYPE_ARRAY){
+                            switch (std::get<symbol::ArrayInfo>(symbol_table_tree.get_entry(now_var->get_child(0)->get_text())->extra_info).basic){
+                            case symbol::TYPE_SHORTINT:
+                                logger::output( "%hd");
+                                break;
+                            case symbol::TYPE_INT:
+                                logger::output( "%d");
+                                break;
+                            case symbol::TYPE_LONGINT:
+                                logger::output( "%ld");
+                                break;
+                            case symbol::TYPE_CHAR:
+                                logger::output( "%c");
+                                break;
+                            case symbol::TYPE_SINGLE:
+                            case symbol::TYPE_FLOAT:
+                                logger::output( "%f");
+                                break;
+                            case symbol::TYPE_DOUBLE:
+                                logger::output( "%lf");
+                                break;
+                            case symbol::TYPE_STRING:
+                                logger::output( "%s");
+                                break;
+                            default:
+                                logger::output( "%d");
+                                break;
+                            }                            
                         }
                     }
-                    std::cout << "\"";
+                    logger::output( "\"");
                     for (auto now_var : varible_list){
-                        std::cout << ", &";
+                        logger::output( ", &");
                         generate_by_pid(now_var);
                     }
-                    std::cout << ");";
-                    enter_and_tab();
+                    logger::output( ");");
+                    input_tab(true);
                     break;
                 case tree::statement__T__t_write__leftparen__expression_list__rightparen:
                 case tree::statement__T__t_writeln__leftparen__expression_list__rightparen:
-                    //std::vector<tree::TreeNode*> varible_list;
                     varible_list.clear();
                     now = node->get_child(2);
                     while (now->get_pid() != tree::expression_list__T__expression){
@@ -573,34 +731,49 @@ bool generate_by_pid(tree::TreeNode* node) {
                     }
                     varible_list.push_back(now->get_child(0));
                     std::reverse(varible_list.begin(), varible_list.end());
-                    std::cout << "printf(\"";
+                    logger::output( "printf(\"");
                     for (auto now_var : varible_list){
                         switch (now_var->get_type()){
+                            case symbol::TYPE_SHORTINT:
+                                logger::output( "%hd");
+                                break;
                             case symbol::TYPE_INT:
-                                std::cout << " %d";
+                                logger::output( "%d");
+                                break;
+                            case symbol::TYPE_LONGINT:
+                                logger::output( "%ld");
                                 break;
                             case symbol::TYPE_CHAR:
-                                std::cout << " %c";
+                                logger::output( "%c");
                                 break;
+                            case symbol::TYPE_SINGLE:
                             case symbol::TYPE_FLOAT:
-                                std::cout << " %f";
+                                logger::output( "%f");
+                                break;
+                            case symbol::TYPE_DOUBLE:
+                                logger::output( "%lf");
                                 break;
                             case symbol::TYPE_STRING:
-                                std::cout << " %s";
+                                logger::output( "%s");
                                 break;
                             default:
-                                std::cout << " %d";
+                                logger::output( "%d");
                                 break;
                         }
                     }
-                    if(node->get_pid() == tree::statement__T__t_writeln__leftparen__expression_list__rightparen)std::cout << "\\n";
-                    std::cout << "\"";
+                    if(node->get_pid() == tree::statement__T__t_writeln__leftparen__expression_list__rightparen)
+                        logger::output( "\\n");
+                    logger::output( "\"");
                     for (auto now_var : varible_list){
-                        std::cout << ", ";
+                        logger::output( ", ");
                         generate_by_pid(now_var);
                     }
-                    std::cout << ");";
-                    enter_and_tab();
+                    logger::output( ");");
+                    input_tab(true);
+                    break;
+                default:
+                    std::cerr << "T_STATEMENT ERROR " <<node->get_pid() << std::endl;
+                    //logger::log("T_STATEMENT ERROR");
                     break;
             }
             break;
@@ -612,7 +785,7 @@ bool generate_by_pid(tree::TreeNode* node) {
                     break;
                 case tree::variable_list__T__variable_list__comma__variable:
                     generate_by_pid(node->get_child(1));
-                    std::cout << ", ";
+                    logger::output( ", ");
                     generate_by_pid(node->get_child(2));
                     break;
             }
@@ -624,42 +797,38 @@ bool generate_by_pid(tree::TreeNode* node) {
                     id_process(node->get_child(0), NON_BRACKET);
                     break;
                 case tree::variable__T__id__id_varpart:
-                    id_process(node->get_child(0), BRACKET);
-                    generate_by_pid(node->get_child(1));
+                    logger::output( node->get_child(0)->get_text());
+                    varpart_process(node);
+                    break;
             }
             break;
         }
-        case tree::T_ID_VARPART:    //pid 67
-            std::cout << "[";
-            generate_by_pid(node->get_child(1));
-            std::cout << "]";
-            break;
         case tree::T_PROCEDURE_CALL:    //pid 68~69
             switch (node->get_pid()){
                 case tree::procedure_call__T__id__leftparen__expression_list__rightparen:
                     id_process(node->get_child(0), BRACKET);
-                    std::cout << "(";
-                    generate_by_pid(node->get_child(2));
-                    std::cout << ")";
+                    logger::output( "(");
+                    function_call_para(node->get_child(2), node->get_child(0));
+                    logger::output( ")");
+                    logger::output(";");
+                    input_tab(true);
                     break;
                 case tree::procedure_call__T__id:
                     id_process(node->get_child(0), NON_BRACKET);
-                    std::cout << ";";
-                    enter_and_tab();
                     break;
             }
             break;
         case tree::T_ELSE_PART:     //pid 70~71
             switch (node->get_pid()){
                 case tree::else_part__T__t_else__statement:
-                    std::cout << "else{";
+                    logger::output( "else{");
                     indent++;
-                    enter_and_tab();
+                    input_tab(true);
                     generate_by_pid(node->get_child(1));
                     indent--;
-                    std::cout << "\b\b\b\b\b\b\b\b}";
+                    logger::output( "\b\b\b\b\b\b\b\b"+(std::string)"}");
                     
-                    // enter_and_tab();
+                    input_tab(true);
                     break;
                 case tree::else_part__T__t_else:
                     //do nothing
@@ -670,7 +839,7 @@ bool generate_by_pid(tree::TreeNode* node) {
             switch (node->get_pid()){
                 case tree::expression_list__T__expression_list__comma__expression:
                     generate_by_pid(node->get_child(0));
-                    std::cout << ", ";
+                    logger::output( ", ");
                     generate_by_pid(node->get_child(2));
                     break;
                 case tree::expression_list__T__expression:
@@ -680,22 +849,32 @@ bool generate_by_pid(tree::TreeNode* node) {
             break;
         }
         case tree::T_EQUALOP:
-            std::cout << "=";
+            logger::output( "=");
             break;
         case tree::T_RELOP:
-            std::cout << node->get_text();
+            if(node->get_text() == "<>")
+                logger::output("!=");
+            else 
+                logger::output(node->get_text());
             break;
         case tree::T_SUBOP:
-            std::cout << "-";
+            logger::output( "-");
             break;
         case tree::T_ADDOP:
-            std::cout << "+";
+            logger::output( "+");
             break;
         case tree::T_MULOP:
-            std::cout << "*";
+            if(node->get_text() == "mod")logger::output( "%");
+            else if(node->get_text() == "*")logger::output( "*");
+            else if(node->get_text() == "div")logger::output( "/");
+            else if(node->get_text() == "and")logger::output( "&");
+            else if(node->get_text() == "/")logger::output( "/");
+            else {
+                logger::log("ERROR: MULOP: " + node->get_text());
+            }
             break;
         case tree::T_OR_OP:
-            std::cout << "||";
+            logger::output( "|");
             break;
         case tree::T_EXPRESSION:{
             switch (node->get_pid()){   //pid 74~76
@@ -725,8 +904,10 @@ bool generate_by_pid(tree::TreeNode* node) {
                     generate_by_pid(node->get_child(2));                    
                     break;
                 case tree::simple_expression__T__literal_string:
-                    //to do
+                    logger::output( "\"" + node->get_child(0)->get_text().substr(1, node->get_child(0)->get_text().size()-2) + "\"");
                     break;
+                default:
+                    logger::log("ERROR SIMPLE EXPRESSION:"+ node->get_pid());
             }
             break;
         }
@@ -740,83 +921,108 @@ bool generate_by_pid(tree::TreeNode* node) {
                     generate_by_pid(node->get_child(1));
                     generate_by_pid(node->get_child(2));   
                     break; 
+                default:
+                    logger::log("ERROR T_TERM:"+ node->get_pid()); 
             }
             break;
         }
         case tree::T_FACTOR:{       //pid 83~88
             switch (node->get_pid()){
                 case tree::factor__T__leftparen__expression__rightparen:
-                    std::cout << "(";
+                    logger::output( "(");
                     generate_by_pid(node->get_child(1));
-                    std::cout << ")";
+                    logger::output( ")");
                     break;
                 case tree::factor__T__variable:    //fall through!
                     generate_by_pid(node->get_child(0));
                     break;
                 case tree::factor__T__num: 
-                    std::cout << node->get_child(0)->get_text();
+                    logger::output( node->get_child(0)->get_text());
                     break;
                 case tree::factor__T__id__leftparen__expression_list__rightparen:
                     id_process(node->get_child(0), BRACKET);
-                    std::cout << "(";
-                    generate_by_pid(node->get_child(2));
-                    std::cout << ")";
+                    logger::output( "(");
+                    function_call_para(node->get_child(2), node->get_child(0));
+                    logger::output( ")");
                     break;
+                case tree::factor__T__id__leftparen__rightparen:
+                    id_process(node->get_child(0), BRACKET);
+                    logger::output( "()");           
+                    break;     
                 case tree::factor__T__notop__factor:
-                    std::cout << "!(";
+                    logger::output( "!(");
                     generate_by_pid(node->get_child(1));
-                    std::cout << ")";
+                    logger::output( ")");
                     break;
                 case tree::factor__T__subop__factor:
-                    std::cout << "-(";
+                    logger::output( "-(");
                     generate_by_pid(node->get_child(1));
-                    std::cout << ")";
+                    logger::output( ")");
                     break;
+                case tree::factor__T__bool_value:
+                    logger::output( node->get_child(0)->get_text());
+                    break;
+                case tree::factor__T__double_value:
+                    logger::output( node->get_child(0)->get_text());
+                    break;
+                default:
+                    logger::log("ERROR T_FACTOR:"+node->get_pid());
             }
             break;
         }
+        case tree::T_DOUBLE_VALUE:
+            logger::output(node->get_text());
+            break;
         case tree::T_INTEGER:
-            std::cout << "int";
+            logger::output( "int");
             break;       
         case tree::T_CHAR:
-            std::cout << "char";
+            logger::output( "char");
             break;         
         case tree::T_BOOLEAN:
-            std::cout << "bool";
+            logger::output( "bool");
             break; 
         case tree::T_DOUBLE:
-            std::cout << "double";
+            logger::output( "double");
             break;               
         case tree::T_QUATEOP:
-            std::cout << "==";
+            logger::output( "==");
             break;
         case tree::T_LITERAL_INT:
-            std::cout << "int";
+            logger::output( "int");
             break;
         case tree::T_LITERAL_BOOL:
-            std::cout << "bool";
+            logger::output( "bool");
             break;
         case tree::T_STRING:
-            std::cout << "std::string";
+            logger::output( "std::string");
             break;
         case tree::T_LONGINT:
-            std::cout << "long int";
+            logger::output( "long int");
             break;
         case tree::T_LITERAL_CHAR:
-            std::cout << node->get_text();
+            logger::output( node->get_text());
+            break;
+        case tree::T_SINGLE:
+            logger::output( "float");
+            break;
+        case tree::T_BYTE:
+            logger::output( "char");
             break;
         default:
-            std::cout << "ERROR: " << node->get_token() << std::endl;
+            //logger::log( "ERROR: " +node->get_token());
+            std::cerr << "ERROR TOKEN:" << node->get_token() << std::endl;
             break;
     }
     return true;
 }
 bool generate_code(){
-    std::cout << "#include <stdio.h>" << std::endl;
-    std::cout << "#include <stdlib.h>" << std::endl;
-    std::cout << "#include <stdbool.h>" << std::endl;
+    logger::output( "#include <stdio.h>",true);
+    logger::output( "#include <stdlib.h>" ,true);
+    logger::output( "#include <stdbool.h>" ,true);
     // assert(symbol_table_tree.root == symbol_table_tree.current_node);
     return generate_by_pid(tree::ast->get_root());
+    return true;
 }
 
 }
