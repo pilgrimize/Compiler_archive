@@ -106,9 +106,6 @@ struct SymbolTableEntry {
             type(ComplexType::TYPE_FUNCTION), extra_info(FunctionInfo(ret_type, std::move(params))) {}
 };
 
-// Compare if entry_a and entry_b have the same type
-bool compare_type(const std::shared_ptr<symbol::SymbolTableEntry>& entry_a, const std::shared_ptr<symbol::SymbolTableEntry>& entry_b);
-
 class SymbolTableNode {
 private:
     std::shared_ptr<SymbolTableNode> parent;
@@ -123,7 +120,6 @@ public:
             parent(std::move(parent)), scope_name(std::move(scope_name)) {}
 
     std::shared_ptr<SymbolTableNode> get_parent() const { return parent; }
-    std::vector<std::shared_ptr<SymbolTableNode>> get_children() const { return children; }
     void add_child(const std::shared_ptr<SymbolTableNode>& child) { children.emplace_back(child); }
     bool has_entry(const std::string& name) const { return entries.find(name) != entries.end(); }
     std::shared_ptr<SymbolTableEntry> get_entry(const std::string& name) const { return entries.at(name); }

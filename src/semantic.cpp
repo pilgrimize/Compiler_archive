@@ -3,7 +3,6 @@
 #include "tools.h"
 #include <algorithm>
 #include <iostream>
-#include <ranges>
 #include <set>
 
 namespace semantic {
