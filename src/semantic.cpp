@@ -3,6 +3,7 @@
 #include "tools.h"
 #include <algorithm>
 #include <iostream>
+#include <ranges>
 #include <set>
 
 namespace semantic {
@@ -60,11 +61,6 @@ BasicType get_basic_id_type(TreeNode* node) {
     return std::get<symbol::BasicInfo>(symbol_table_tree.get_entry(node->get_text())->extra_info).basic;
 }
 
-// Get if a id is a constant, guaranteed to be a basic type
-bool is_id_constant(TreeNode* node) {
-    return std::get<symbol::BasicInfo>(symbol_table_tree.get_entry(node->get_text())->extra_info).is_const;
-}
-
 bool check_variable_assignable(TreeNode* node, bool suppress_log = false) {
     // a variable can be assigned if it is not a constant and it is not a function call
     auto id_text = node->get_child(0)->get_text();
@@ -76,7 +72,7 @@ bool check_variable_assignable(TreeNode* node, bool suppress_log = false) {
                 && std::get<symbol::BasicInfo>(symbol_table_tree.get_entry(id_text)->extra_info).basic != symbol::TYPE_NULL;
     }
     if (!assignable) {
-        if (!suppress_log) log("Cannot assign to " + id_text + ": a right value or a constant or a invalid type", line_number);
+        if (!suppress_log) log("Cannot assign to '" + id_text + "': a right value or a constant or a invalid type", line_number);
         error_detected();
         return false;
     }
@@ -84,12 +80,18 @@ bool check_variable_assignable(TreeNode* node, bool suppress_log = false) {
 }
 
 bool check_variable_list_assignable(TreeNode* node) {
-    auto variable_node = node->get_child(node->get_pid() == tree::variable_list__T__variable ? 0 : 2);
-    if (!check_variable_assignable(variable_node)) return false;
-    if (node->get_pid() == tree::variable_list__T__variable_list__comma__variable) {
-        return check_variable_list_assignable(node->get_child(0));
+    std::vector<TreeNode*> variable_list;
+    while (node->get_pid() == tree::variable_list__T__variable_list__comma__variable) {
+        variable_list.emplace_back(node->get_child(2));
+        node = node->get_child(0);
     }
-    return true;
+    variable_list.emplace_back(node->get_child(0));
+    std::reverse(variable_list.begin(), variable_list.end());
+    bool assignable = true;
+    for (auto & it : variable_list) {
+        assignable &= check_variable_assignable(it);
+    }
+    return assignable;
 }
 
 BasicType get_const_type(TreeNode* node) {
