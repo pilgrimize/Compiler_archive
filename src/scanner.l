@@ -86,7 +86,7 @@ relop "<"|">"|"<>"|"<="|">="
 notop "not"
 quateop "'"
 literal_char \'[^\n\']\'
-literal_string \'[^\n\"]*\'
+literal_string \'[^\n\']*\'
 equalop "="
 assignop ":="
 blank [ \t\n]
@@ -202,11 +202,11 @@ unwrapped_string_error \'[^\n\']*
                 return id;
                 }
 
-{unexpected_char_error} {log(std::string("Unexpected character: ")+yytext, yylineno, DEBUG);}
+{unexpected_char_error} {log(std::string("Unexpected character: ")+yytext+ std::string(" and now it is patched"), yylineno, ERROR);}
 {unwrapped_string_error} {
                 tree::Position position = {yylloc.first_line, yylloc.first_column, yylloc.last_line, yylloc.last_column};
-                log(std::string("Unwrapped string: ")+yytext + std::string(" and now it is patched."), position, ERROR);
                 std::string temp = yytext+'\'';
+                log(std::string("Unwrapped string: ")+temp + std::string(" and now it is patched."), position, ERROR);
                 yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_LITERAL_STRING, yytext, position, comment_vector));
                 comment_vector.clear(); 
                 return literal_string;
