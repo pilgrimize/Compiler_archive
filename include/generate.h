@@ -4,6 +4,8 @@
 #include "tree.h"
 #include "symbol.h"
 #include "logger.h"
+#include <algorithm>
+#include <vector>
 
 namespace generate {
 

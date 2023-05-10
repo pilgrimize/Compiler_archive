@@ -37,7 +37,7 @@ std::string query_basic_type(const std::string name){
             case symbol::TYPE_BOOL:
                 return "bool ";
             case symbol::TYPE_STRING:
-                return "std::string ";
+                return "char *";
             case symbol::TYPE_DOUBLE:
                 return "double ";
             case symbol::TYPE_SHORTINT:
@@ -208,7 +208,7 @@ void function_call_para(tree::TreeNode* node, tree::TreeNode* func_node){
         paralist = &(std::get<symbol::FunctionInfo>(symbol_table_tree.get_current_node()->get_parent()->get_entry(func_node->get_text())->extra_info).params);
     assert(paralist->size() == expr.size());
     for(int i=0;i<expr.size();++i){
-        if((*paralist)[i].is_referred&&(*paralist)[i].type!=symbol::TYPE_STRING){
+        if((*paralist)[i].is_referred){
             logger::output( "&");
         }
         generate_by_pid(expr[i]);
@@ -223,6 +223,23 @@ void input_tab(bool enter, int indentoffset = 0){
     for(int i=0;i<indent+indentoffset ;++i)logger::output( "    ");
 }
 
+void free_string(){
+    for(auto variable: symbol_table_tree.get_current_node()->get_entries()){
+        if(variable.second->type == symbol::TYPE_BASIC){
+            if(std::get<symbol::BasicInfo>(variable.second->extra_info).basic == symbol::TYPE_STRING){
+                if(symbol_table_tree.get_current_node()->has_entry(variable.first)&& 
+                        symbol_table_tree.get_current_node()->get_entry(variable.first)->type == symbol::TYPE_BASIC
+                        && !std::get<symbol::BasicInfo>(symbol_table_tree.get_current_node()->get_entry(variable.first)->extra_info).is_referred)
+                {
+                    logger::output( "free(" + variable.first + ");");
+                    input_tab(true);
+                }      
+            }
+        }
+        //break;
+    }
+}
+
 bool generate_by_pid(tree::TreeNode* node) {
     if (node == nullptr) return true;
     switch (node->get_token()) {  
@@ -235,6 +252,7 @@ bool generate_by_pid(tree::TreeNode* node) {
             input_tab(true);
             generate_by_pid(*(node->get_child(2)->get_children().rbegin()));
             input_tab(true);
+            free_string();
             logger::output( "return 0;");
             indent--;
             input_tab(true);
@@ -392,6 +410,7 @@ bool generate_by_pid(tree::TreeNode* node) {
                 input_tab(true);
                 generate_by_pid(node->get_child(2));
                 input_tab(true);
+                free_string();
                 logger::output( "return _" + func_name + ";");
                 indent--;
                 input_tab(true);
@@ -405,6 +424,7 @@ bool generate_by_pid(tree::TreeNode* node) {
                 indent++;
                 input_tab(true);
                 generate_by_pid(node->get_child(2));
+                free_string();
                 indent--;
                 input_tab(true);
                 logger::output((std::string)"}");
@@ -486,9 +506,10 @@ bool generate_by_pid(tree::TreeNode* node) {
         }
         case tree::T_COMPOUND_STATEMENT:{  
             switch (node->get_pid()){
+                case tree::compound_statement__T__t_begin__statement_list__semicolon__t_end://fall
                 case tree::compound_statement__T__t_begin__statement_list__t_end:
                     generate_by_pid(node->get_child(1));
-                    break;
+                    break;            
                 case tree::compound_statement__T__t_begin__t_end:
                     break;
             }
@@ -949,7 +970,7 @@ bool generate_by_pid(tree::TreeNode* node) {
                 case tree::factor__T__id__leftparen__expression_list__rightparen:
                     id_process(node->get_child(0), BRACKET);
                     generate_by_pid(node->get_child(1));
-                    generate_by_pid(node->get_child(2));
+                    function_call_para(node->get_child(2), node->get_child(0));
                     generate_by_pid(node->get_child(3));
                     break;
                 case tree::factor__T__id__leftparen__rightparen:

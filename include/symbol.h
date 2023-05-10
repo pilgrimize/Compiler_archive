@@ -121,6 +121,7 @@ public:
         traverse_sequence = children;
         std::reverse(traverse_sequence.begin(), traverse_sequence.end());
     }
+    std::map<std::string, std::shared_ptr<SymbolTableEntry>> get_entries() const { return entries; }
     std::shared_ptr<SymbolTableNode> next_child() {
         if (traverse_sequence.empty()) initialize_traverse_sequence();
         auto next_child = traverse_sequence.back();
