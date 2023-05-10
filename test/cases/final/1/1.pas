@@ -1,6 +1,6 @@
-program{hi} hello(input,output);{hello}
-var {out}x:integer;{enter}{xff}
+program Hello;
+const n = +{asd - adsf}3.321;
+var i,j ,k ,l,r:integer;
 begin
-    x := 1
-    {x:=3}
+  writeln ('Hello, world!')
 end.
