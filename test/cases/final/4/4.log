@@ -1,0 +1,14 @@
+INFO Lexical and syntactic analysis passed.
+INFO Semantic analysis...
+ERROR Redefinition of 'a': line 3, column 2
+ERROR 'a' is not an array: line 9, column 10
+ERROR 'a' is not an array: line 12, column 10
+ERROR 'a' is not an array: line 14, column 10
+ERROR Undefined identifier 'prohod': line 17, column 5
+ERROR Expected integer or real type for arithmetic operation, found others ('a' + '1'): line 23, column 11
+ERROR Undefined identifier 'aa': line 24, column 9
+ERROR Expected same or comparable types for comparison, found others ('a' = '10'): line 25, column 11
+ERROR Undefined identifier 'P': line 28, column 5
+ERROR Type mismatched for parameter 3 of procedure 'quick': line 31, column 12
+FATAL Failed at semantic analysis, abort.
+FATAL Compilation failed.

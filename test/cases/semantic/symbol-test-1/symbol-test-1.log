@@ -1,0 +1,8 @@
+INFO Lexical and syntactic analysis passed.
+INFO Semantic analysis...
+ERROR Redefinition of 'test': line 5, column 3
+ERROR Redefinition of 'input': line 4, column 3
+ERROR Redefinition of 'output': line 4, column 10
+ERROR Redefinition of 'i': line 3, column 9
+FATAL Failed at semantic analysis, abort.
+FATAL Compilation failed.

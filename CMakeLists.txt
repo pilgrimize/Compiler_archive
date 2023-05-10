@@ -44,15 +44,16 @@ set(CASE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test/cases)
 
 add_test(
         NAME debug_test
-        COMMAND ${DEBUG_SCRIPT} $<TARGET_FILE:pascals-to-c> ${CASE_DIR}/temp.pas
+        COMMAND ${DEBUG_SCRIPT} $<TARGET_FILE:pascals-to-c> ${CASE_DIR}/case-if-else.pas
 )
 
 FOREACH(test_type final lexical syntax semantic codegen)
     SUBDIR_LIST(${test_type}_src ${CASE_DIR}/${test_type})
     FOREACH(subdir ${${test_type}_src})
         add_test(
-                NAME ${test_type}_${subdir}
-                COMMAND ${TEST_SCRIPT} $<TARGET_FILE:pascals-to-c> ${subdir} ${CASE_DIR}/${test_type}/${subdir} ${CMAKE_CURRENT_BINARY_DIR}/test/${test_type}/${subdir}
+                NAME ${test_type}-${subdir}
+                COMMAND ${TEST_SCRIPT} $<TARGET_FILE:pascals-to-c> ${subdir} ${CASE_DIR}/${test_type}/${subdir}
+                    ${CASE_DIR}/${test_type}/${subdir} ${CMAKE_CURRENT_BINARY_DIR}/test/${test_type}/${subdir}
         )
     ENDFOREACH()
 ENDFOREACH()
