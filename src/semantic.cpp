@@ -516,17 +516,7 @@ void dfs_analyze_node(TreeNode* node) {
             node->set_type(symbol::TYPE_STRING);
             break;
         }
-        case tree::expression__T__simple_expression__relop__simple_expression: {
-            auto category_a = symbol::get_type_category(node->get_child(0)->get_type());
-            auto category_b = symbol::get_type_category(node->get_child(2)->get_type());
-            if (!((category_a == symbol::TYPE_CATEGORY_INT || category_a == symbol::TYPE_CATEGORY_FLOAT) && (category_b == symbol::TYPE_CATEGORY_INT || category_b == symbol::TYPE_CATEGORY_FLOAT))) {
-                log("Expected integer or real type for comparison, found others ('" + node->get_child(0)->get_text()
-                    + "' " + node->get_child(1)->get_text() + " '" + node->get_child(2)->get_text() + "')", node->get_child(1)->get_position());
-                error_detected();
-            }
-            node->set_type(symbol::TYPE_BOOL);
-            break;
-        }
+        case tree::expression__T__simple_expression__relop__simple_expression:
         case tree::expression__T__simple_expression__equalop__simple_expression: {
             auto category_a = symbol::get_type_category(node->get_child(0)->get_type());
             auto category_b = symbol::get_type_category(node->get_child(2)->get_type());

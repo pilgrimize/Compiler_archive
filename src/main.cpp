@@ -44,7 +44,7 @@ bool code_generation() {
 
 int parse_args(int argc, char *argv[]) {
     std::string input_file, output_file, log_file;
-    LogLevel log_level = DEBUG;
+    LogLevel log_level = INFO;
     int c;
     while (true) {
         static struct option long_options[] = {

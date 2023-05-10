@@ -2,6 +2,6 @@ INFO Lexical and syntactic analysis passed.
 INFO Semantic analysis...
 ERROR Redefinition of 'b': line 2, column 7
 ERROR Cannot assign to 'b': a right value or a constant or a invalid type: line 5, column 2
-ERROR Expected integer or real type for comparison, found others ('a' < 'b'): line 6, column 10
+ERROR Expected same or comparable types for comparison, found others ('a' < 'b'): line 6, column 10
 FATAL Failed at semantic analysis, abort.
 FATAL Compilation failed.
