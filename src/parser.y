@@ -1074,7 +1074,7 @@ expression_list : expression_list comma expression {  // pid=72
         , tree::T_EXPRESSION_LIST, $1->get_root()->get_text());
     };
 
-expression : simple_expression {  // pid=74
+expression : simple_expression {  
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $1->get_root()->get_position().last_line, $1->get_root()->get_position().last_column };
         log( "Use production: expression -> simple_expression", pos, DEBUG);
         $$ = tools::reduce({$1}, pos,  tree::expression__T__simple_expression
@@ -1107,13 +1107,13 @@ simple_expression : term {  // pid=77
     }
     | simple_expression subop term {  // pid=79
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
-        log( "Use production: simple_expression -> term addop term", pos, DEBUG);
+        log( "Use production: simple_expression -> term subop term", pos, DEBUG);
         $$ = tools::reduce({$1, $2, $3}, pos,  tree::simple_expression__T__term__subop__term
         , tree::T_SIMPLE_EXPRESSION, $1->get_root()->get_text()+" "+$2->get_root()->get_text()+" "+$3->get_root()->get_text());
     }
     | simple_expression or_op term {  // pid=80
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
-        log( "Use production: simple_expression -> term addop term", pos, DEBUG);
+        log( "Use production: simple_expression -> term orop term", pos, DEBUG);
         $$ = tools::reduce({$1, $2, $3}, pos,  tree::simple_expression__T__term__or_op__term
         , tree::T_SIMPLE_EXPRESSION, $1->get_root()->get_text()+" "+$2->get_root()->get_text()+" "+$3->get_root()->get_text());
     }

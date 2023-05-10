@@ -1,6 +1,10 @@
 program Hello;
-const n = +{asd - adsf}3.321;
-var i,j ,k ,l,r:integer;
+const i=True;
+var a,gcd,b:integer;
 begin
-  writeln ('Hello, world!');
+	if b=0 then begin 
+		a:=1
+	end
+	else gcd := 1;
+  writeln ('Hello, world!')
 end.
