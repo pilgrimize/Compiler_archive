@@ -1,0 +1,22 @@
+ERROR Error: syntax error at line: 1, encountering unexpected word 234: line 1
+ERROR Error: syntax error at line: 3, encountering unexpected word b: line 3
+ERROR error that lack of comma is fixed and use production: idlist -> idlist id: line 3, column 5
+ERROR Error: syntax error at line: 3, encountering unexpected word c: line 3
+ERROR error that lack of comma is fixed and use production: idlist -> idlist id: line 3, column 5
+ERROR Error: syntax error at line: 3, encountering unexpected word d: line 3
+ERROR error that lack of comma is fixed and use production: idlist -> idlist id: line 3, column 5
+ERROR Error: syntax error at line: 3, encountering unexpected word e: line 3
+ERROR error that lack of comma is fixed and use production: idlist -> idlist id: line 3, column 5
+ERROR Error: syntax error at line: 3, encountering unexpected word f: line 3
+ERROR error that lack of comma is fixed and use production: idlist -> idlist id: line 3, column 5
+ERROR Error: syntax error at line: 3, encountering unexpected word test: line 3
+ERROR error that lack of comma is fixed and use production: idlist -> idlist id: line 3, column 5
+ERROR Error: syntax error at line: 3, encountering unexpected word r: line 3
+ERROR error that lack of comma is fixed and use production: idlist -> idlist id: line 3, column 5
+ERROR Error: syntax error at line: 3, encountering unexpected word s: line 3
+ERROR error that lack of comma is fixed and use production: idlist -> idlist id: line 3, column 5
+INFO Lexical and syntactic analysis passed.
+INFO Semantic analysis...
+INFO Semantic analysis passed.
+INFO Code generation passed.
+INFO Compilation passed.

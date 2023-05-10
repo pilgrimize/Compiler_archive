@@ -1,0 +1,15 @@
+ERROR Error: syntax error at line: 1, encountering unexpected word 234: line 1
+ERROR Error: syntax error at line: 11, encountering unexpected word begin: line 11
+ERROR error is fixed and Use production: statement -> if expression then statement: line 11, column 5
+ERROR Error: syntax error at line: 15, encountering unexpected word begin: line 15
+ERROR error is fixed and Use production: statement -> while expression do statement: line 15, column 5
+ERROR Error: syntax error at line: 23, encountering unexpected word until: line 23
+ERROR error is fixed and Use production: statement -> repeat statement_list until expression: line 21, column 5
+ERROR Error: syntax error at line: 27, encountering unexpected word 1: line 27
+ERROR error is fixed and Use production: statement -> repeat statement_list until expression: line 25, column 5
+ERROR Error: syntax error at line: 29, encountering unexpected word +: line 29
+INFO Lexical and syntactic analysis passed.
+INFO Semantic analysis...
+INFO Semantic analysis passed.
+INFO Code generation passed.
+INFO Compilation passed.
