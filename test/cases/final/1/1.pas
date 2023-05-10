@@ -1,5 +1,6 @@
 program Hello;
-const i=True;
+const i=2;
+j = - 2;
 var a,gcd,b:integer;
 begin
 	if b=0 then begin 

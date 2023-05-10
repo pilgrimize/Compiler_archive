@@ -309,7 +309,8 @@ bool generate_by_pid(tree::TreeNode* node) {
                             break;
                     }
                     id_process(node->get_child(2),NON_BRACKET);
-                    generate_by_pid(node->get_child(3));
+                    outputexplaination(node->get_child(3));
+                    logger::output("=");                   
                     generate_by_pid(node->get_child(4));
                     break;
             }
