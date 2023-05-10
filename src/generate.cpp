@@ -180,10 +180,10 @@ void idlist_process(tree::TreeNode* node, ID_LIST_TYPE type){
             for (auto it = varible_list.begin(); it != varible_list.end(); ){
                 auto varible = *it;
                 id_process(varible,NON_BRACKET);
-                if(symbol_table_tree.get_entry(varible->get_text())->type == symbol::TYPE_BASIC){// == symbol::TYPE_STRING){
-                    if(std::get<symbol::BasicInfo>(symbol_table_tree.get_entry(varible->get_text())->extra_info).basic == symbol::TYPE_STRING)
-                        logger::output( " = (char *)malloc(sizeof(char) * STRING_SIZE)");
-                }
+                // if(symbol_table_tree.get_entry(varible->get_text())->type == symbol::TYPE_BASIC){// == symbol::TYPE_STRING){
+                //     if(std::get<symbol::BasicInfo>(symbol_table_tree.get_entry(varible->get_text())->extra_info).basic == symbol::TYPE_STRING)
+                //         logger::output( " = (char *)malloc(sizeof(char) * STRING_SIZE)");
+                // }
                 //std::cerr << varible->get_type() << varible->get_pid() << varible->get_text();
                 ++it;
                 if(it!=varible_list.end())logger::output( ", ");
@@ -224,6 +224,23 @@ void input_tab(bool enter, int indentoffset = 0){
     for(int i=0;i<indent+indentoffset ;++i)logger::output( "    ");
 }
 
+void malloc_string(){
+    for(auto variable: symbol_table_tree.get_current_node()->get_entries()){
+        if(variable.second->type == symbol::TYPE_BASIC){
+            if(std::get<symbol::BasicInfo>(variable.second->extra_info).basic == symbol::TYPE_STRING){
+                if(symbol_table_tree.get_current_node()->has_entry(variable.first)&& 
+                        symbol_table_tree.get_current_node()->get_entry(variable.first)->type == symbol::TYPE_BASIC
+                        && !std::get<symbol::BasicInfo>(symbol_table_tree.get_current_node()->get_entry(variable.first)->extra_info).is_referred)
+                {
+                    logger::output(variable.first + " = (char *)malloc(sizeof(char) * STRING_SIZE)");
+                    input_tab(true);
+                }      
+            }
+        }
+        //break;
+    }
+}
+
 void free_string(){
     for(auto variable: symbol_table_tree.get_current_node()->get_entries()){
         if(variable.second->type == symbol::TYPE_BASIC){
@@ -251,6 +268,7 @@ bool generate_by_pid(tree::TreeNode* node) {
             logger::output( "int main(){");
             indent++;
             input_tab(true);
+            malloc_string();
             generate_by_pid(*(node->get_child(2)->get_children().rbegin()));
             input_tab(true);
             free_string();
@@ -406,6 +424,7 @@ bool generate_by_pid(tree::TreeNode* node) {
             if(node->get_child(0)->get_pid() == tree::subprogram_head__T__t_function__id__formal_parameter__colon__basic_type
                                                     ||node->get_child(0)->get_pid() == tree::subprogram_head__T__t_function__id__colon__basic_type){
                 outputexplaination(node->get_child(0)->get_child(0));
+                malloc_string();
                 std::string func_name = node->get_child(0)->get_child(1)->get_text();
                 generate_by_pid(node->get_child(0));
                 logger::output( "{");
@@ -428,6 +447,7 @@ bool generate_by_pid(tree::TreeNode* node) {
                 logger::output( "{");
                 indent++;
                 input_tab(true);
+                malloc_string();
                 generate_by_pid(node->get_child(2));
                 free_string();
                 indent--;
