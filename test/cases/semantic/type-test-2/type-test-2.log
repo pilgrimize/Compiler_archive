@@ -1,0 +1,11 @@
+INFO Lexical and syntactic analysis passed.
+INFO Semantic analysis...
+ERROR Expected integer or real type for arithmetic operation, found others ('input' + 'output'): line 9, column 14
+ERROR Expected integer or real type for arithmetic operation, found others ('u' + 'v'): line 13, column 10
+ERROR Expected integer types for mod operation, found others ('x' mod 'p [ i ]'): line 15, column 10
+ERROR Expected integer type for index 1 of array 'p', found others: line 16, column 10
+ERROR Expected integer or real type for comparison, found others ('u' > 'v'): line 19, column 10
+ERROR Expected integer or real type for comparison, found others ('u' <> 'v'): line 20, column 10
+ERROR Expected integer or real category for minus operation, found others (- 'u'): line 22, column 23
+FATAL Failed at semantic analysis, abort.
+FATAL Compilation failed.

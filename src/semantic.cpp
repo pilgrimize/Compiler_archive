@@ -261,23 +261,6 @@ void dfs_analyze_node(TreeNode* node) {
             symbol_table_tree.add_entry(text, entry);
             break;
         }
-        case tree::var_declaration__T__idlist__colon__type: // var declaration
-            delta = 0;
-        case tree::var_declaration__T__var_declaration__semicolon__idlist__colon__type: {
-            // var declaration
-            if (delta < 0) delta = 2;
-            auto id_list = get_id_node_list(node->get_child(delta + 0));
-            auto entry = get_type(node->get_child(delta + 2));
-            for (auto& id_node : id_list) {
-                if (symbol_table_tree.search_entry(id_node->get_text()) == SymbolTableTree::FOUND) {
-                    log("Redefinition of '" + id_node->get_text() + "'", id_node->get_position());
-                    error_detected();
-                    continue;
-                }
-                symbol_table_tree.add_entry(id_node->get_text(), entry);
-            }
-            break;
-        }
         case tree::subprogram_head__T__t_function__id__formal_parameter__colon__basic_type:
         case tree::subprogram_head__T__t_procedure__id__formal_parameter:
         case tree::subprogram_head__T__t_function__id__colon__basic_type:
@@ -321,6 +304,29 @@ void dfs_analyze_node(TreeNode* node) {
 
     line_number = node->get_line();
     log("Exiting node: " + tools::turn_token_text(node->get_token()), node->get_position(), DEBUG);
+
+    switch (node->get_pid()) {
+        case tree::var_declaration__T__idlist__colon__type: // var declaration
+            delta = 0;
+        case tree::var_declaration__T__var_declaration__semicolon__idlist__colon__type: {
+            // var declaration
+            if (delta < 0) delta = 2;
+            auto id_list = get_id_node_list(node->get_child(delta + 0));
+            auto entry = get_type(node->get_child(delta + 2));
+            for (auto &id_node: id_list) {
+                if (symbol_table_tree.search_entry(id_node->get_text()) == SymbolTableTree::FOUND) {
+                    log("Redefinition of '" + id_node->get_text() + "'", id_node->get_position());
+                    error_detected();
+                    continue;
+                }
+                symbol_table_tree.add_entry(id_node->get_text(), entry);
+            }
+            break;
+        }
+        default:
+            break;
+    }
+
     if (corrupted_lines.contains(line_number)) return;
 
     // Exit the node
@@ -402,6 +408,9 @@ void dfs_analyze_node(TreeNode* node) {
                         error_detected();
                     }
                     node->set_type(info.ret_type);
+                } else if (entry->type == symbol::TYPE_ARRAY) {
+                    log("Invalid usage of array '" + id_text + "' as a basic type", node->get_child(0)->get_position());
+                    error_detected();
                 }
             }
             break;
