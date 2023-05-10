@@ -12,18 +12,19 @@ long int k;
 double l;
 char m;
 double s;
-char* str = (char *)malloc(sizeof(char) * STRING_SIZE);
+char* str;
 char char_array[11];
 void MySmallProcedure(){
     const char ch='a';
     /*here is test for global variable*/printf("%lf%c%lf%s\n", l, m, s, str);
 }
 void MyProcedure(int i, int j,char  *a, char  *b,char * *s,double  *d){
+    t = (char *)malloc(sizeof(char) * STRING_SIZE)
     const float pi=3.1415926;
     const float phi=2.718281828;
     int p, q;
     char r, g;
-    char* t = (char *)malloc(sizeof(char) * STRING_SIZE);
+    char* t;
     double temp_d;
     printf("%s\n", "This is a function");
     printf("%d%d%c%c\n", i, j, *a, *b);
@@ -49,6 +50,7 @@ void MyProcedure(int i, int j,char  *a, char  *b,char * *s,double  *d){
     
 }
 int main(){
+    str = (char *)malloc(sizeof(char) * STRING_SIZE)
     /*below are the test for function*/printf("%s\n", "begin to test");
     MySmallProcedure();
     MyProcedure(i, j, &m, &b[3-(3)], &str, &s);

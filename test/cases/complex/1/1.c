@@ -4,9 +4,10 @@
 #define STRING_SIZE 1000
 int x, y;
 double z, w;
-char* str = (char *)malloc(sizeof(char) * STRING_SIZE);
+char* str;
 char c;
 int main(){
+    str = (char *)malloc(sizeof(char) * STRING_SIZE)
     scanf("%d%d%lf%lf", &x, &y, &z, &w);
     str="12345$#@&";
     c='c';
@@ -17,7 +18,7 @@ int main(){
         w=(0.2-x)*2+(x%10)/2+0.4*((2+3-24.3123)*((31.324-234.12)/(23.1-23.4)));
     }
     printf("%f\n", (x-y)/z*w/2.0+1.334-3.231);
-    printf("%d%s%d%lf%lf%s\n", x, "temp", y, w, z, "temp");
+    printf("%d%s\n", x, "temp',y,w,z,'temp");
     printf("%s\n", "hello world!");
     printf("%s\n", "for test 123 $%*&*@#!");
     free(str);

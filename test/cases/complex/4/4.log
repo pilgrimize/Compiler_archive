@@ -1,5 +1,3 @@
-INFO Lexical and syntactic analysis passed.
-INFO Semantic analysis...
-INFO Semantic analysis passed.
-INFO Code generation passed.
-INFO Compilation passed.
+ERROR Error: syntax error at line: 76, encountering unexpected word ): line 76
+FATAL Failed at lexical or syntactic analysis, abort.
+FATAL Compilation failed.
