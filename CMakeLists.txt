@@ -44,7 +44,7 @@ set(CASE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test/cases)
 
 add_test(
         NAME debug_test
-        COMMAND ${DEBUG_SCRIPT} $<TARGET_FILE:pascals-to-c> ${CASE_DIR}/case-type-test.pas
+        COMMAND ${DEBUG_SCRIPT} $<TARGET_FILE:pascals-to-c> ${CASE_DIR}/temp.pas
 )
 
 FOREACH(test_type final lexical syntax semantic codegen)
