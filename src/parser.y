@@ -298,20 +298,20 @@ const_declarations :
 
 const_declaration : id equalop const_value {  // pid=15
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
-        log( "Use production: const_declaration -> id = constant", pos, DEBUG); 
+        log( "Use production: const_declaration -> id = const_value", pos, DEBUG); 
         $$ = tools::reduce({$1, $2, $3}, pos,  tree::const_declaration__T__id__equalop__const_value
         , tree::T_CONST_DECLARATION);
     }
     | id error equalop const_value {
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };
-        log( "error that lack of equalop is fixed and use production: const_declaration -> id = constant", pos, ERROR);
+        log( "error that lack of equalop is fixed and use production: const_declaration -> id = const_value", pos, ERROR);
         $$ = tools::reduce({$1, $3, $4}, pos,  tree::const_declaration__T__id__equalop__const_value
         , tree::T_CONST_DECLARATION);
         yyerrok;
     }
     | id error const_value {
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
-        log( "error that lack of equalop is fixed and use production: const_declaration -> id = constant", pos, ERROR);
+        log( "error that lack of equalop is fixed and use production: const_declaration -> id = const_value", pos, ERROR);
         tree::Tree* tnode = new tree::Tree(new tree::TreeNode(tree::leaf_pid, tree::T_EQUALOP, "=", pos));
         $$ = tools::reduce({$1, tnode, $3}, pos,  tree::const_declaration__T__id__equalop__const_value
         , tree::T_CONST_DECLARATION);
@@ -319,7 +319,7 @@ const_declaration : id equalop const_value {  // pid=15
     }
     | const_declaration semicolon id equalop const_value {  // pid=16
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $5->get_root()->get_position().last_line, $5->get_root()->get_position().last_column };
-        log( "Use production: const_declaration -> const_declaration , id = constant", pos, DEBUG); 
+        log( "Use production: const_declaration -> const_declaration , id = const_value", pos, DEBUG); 
         $$ = tools::reduce({$1, $2, $3, $4, $5}, pos,  tree::const_declaration__T__const_declaration__semicolon__id__equalop__const_value
         , tree::T_CONST_DECLARATION);
         }
@@ -1074,7 +1074,7 @@ expression_list : expression_list comma expression {  // pid=72
         , tree::T_EXPRESSION_LIST, $1->get_root()->get_text());
     };
 
-expression : simple_expression {  // pid=74
+expression : simple_expression {
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $1->get_root()->get_position().last_line, $1->get_root()->get_position().last_column };
         log( "Use production: expression -> simple_expression", pos, DEBUG);
         $$ = tools::reduce({$1}, pos,  tree::expression__T__simple_expression
@@ -1107,13 +1107,13 @@ simple_expression : term {  // pid=77
     }
     | simple_expression subop term {  // pid=79
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
-        log( "Use production: simple_expression -> term addop term", pos, DEBUG);
+        log( "Use production: simple_expression -> term subop term", pos, DEBUG);
         $$ = tools::reduce({$1, $2, $3}, pos,  tree::simple_expression__T__term__subop__term
         , tree::T_SIMPLE_EXPRESSION, $1->get_root()->get_text()+" "+$2->get_root()->get_text()+" "+$3->get_root()->get_text());
     }
     | simple_expression or_op term {  // pid=80
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
-        log( "Use production: simple_expression -> term addop term", pos, DEBUG);
+        log( "Use production: simple_expression -> term orop term", pos, DEBUG);
         $$ = tools::reduce({$1, $2, $3}, pos,  tree::simple_expression__T__term__or_op__term
         , tree::T_SIMPLE_EXPRESSION, $1->get_root()->get_text()+" "+$2->get_root()->get_text()+" "+$3->get_root()->get_text());
     }

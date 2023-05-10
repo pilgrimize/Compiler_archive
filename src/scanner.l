@@ -72,7 +72,7 @@ t_case "case"
 t_writeln "writeln"
 t_readln "readln"
 t_single "single"
-t_double "double"
+t_double "double"|"real"
 t_shortint "shortint"
 t_longint "longint"
 t_byte "byte"
@@ -204,6 +204,7 @@ unwrapped_string_error \'[^\n\']*
                 }
 
 {unexpected_char_error} {log(std::string("Unexpected character: ")+yytext, yylineno, DEBUG);}
+{others} {log(std::string("Unexpected character: ")+yytext, yylineno, DEBUG);}
 {unwrapped_string_error} {
                 tree::Position position = {yylloc.first_line, yylloc.first_column, yylloc.last_line, yylloc.last_column};
                 log(std::string("Unwrapped string: ")+yytext + std::string(" and now it is patched."), position, ERROR);
