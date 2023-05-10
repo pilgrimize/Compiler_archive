@@ -217,8 +217,8 @@ unwrapped_string_error \'[^\n\']*
 }
 
 <BLOCK_COMMENT>{
-    <<EOF>> {log("Unfinished block comment", yylineno, ERROR); return 0;}
-    "{" {BEGIN INITIAL; char_count += yyleng;}
+    <<EOF>> {log("Unfinished block comment", yylineno, ERROR); return 1;}
+    "}" {BEGIN INITIAL; char_count += yyleng;}
 }
 
 %%
