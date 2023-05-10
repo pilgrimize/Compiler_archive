@@ -20,7 +20,7 @@ enum ID_TYPE{
 };
 void outputexplaination(tree::TreeNode* node){
     for(auto explain:node->get_comments()){
-        logger::output("/*"+explain+"*/");
+        logger::output("/*"+explain.substr(1,explain.length()-2)+"*/");
     }
 
 }
@@ -112,6 +112,7 @@ void varpart_process(tree::TreeNode* node){
 }
 
 void id_process(tree::TreeNode* node,ID_TYPE type){
+    outputexplaination(node);
     assert(symbol_table_tree.search_entry(node->get_text()) != symbol::SymbolTableTree::SearchResult::NOT_FOUND);
     switch(symbol_table_tree.get_entry(node->get_text())->type){
         case symbol::TYPE_BASIC:
@@ -401,6 +402,7 @@ bool generate_by_pid(tree::TreeNode* node) {
             symbol_table_tree.next_scope();
             if(node->get_child(0)->get_pid() == tree::subprogram_head__T__t_function__id__formal_parameter__colon__basic_type
                                                     ||node->get_child(0)->get_pid() == tree::subprogram_head__T__t_function__id__colon__basic_type){
+                outputexplaination(node->get_child(0)->get_child(0));
                 std::string func_name = node->get_child(0)->get_child(1)->get_text();
                 generate_by_pid(node->get_child(0));
                 logger::output( "{");

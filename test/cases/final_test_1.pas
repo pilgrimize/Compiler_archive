@@ -17,5 +17,5 @@ begin
     writeln((x-y)/z*w/2.0+1.334-3.231);
     writeln(x,'temp',y,w,z,'temp');
     writeln('hello world!');
-    writeln('for test 123 $%*&*@#!')
+    writeln('for test 123 $%*&*@#!');
 end.
