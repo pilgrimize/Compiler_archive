@@ -38,7 +38,8 @@ ENDMACRO()
 enable_testing()
 
 find_program(DEBUG_SCRIPT NAMES debug.sh HINTS ${CMAKE_CURRENT_SOURCE_DIR}/test/ REQUIRED)
-find_program(TEST_SCRIPT NAMES test.sh HINTS ${CMAKE_CURRENT_SOURCE_DIR}/test/ REQUIRED)
+find_program(UNIT_TEST_SCRIPT NAMES unit_test.sh HINTS ${CMAKE_CURRENT_SOURCE_DIR}/test/ REQUIRED)
+find_program(FINAL_TEST_SCRIPT NAMES final_test.sh HINTS ${CMAKE_CURRENT_SOURCE_DIR}/test/ REQUIRED)
 
 set(CASE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test/cases)
 
@@ -47,13 +48,22 @@ add_test(
         COMMAND ${DEBUG_SCRIPT} $<TARGET_FILE:pascals-to-c> ${CASE_DIR}/case-if-else.pas
 )
 
-FOREACH(test_type final lexical syntax semantic codegen)
+FOREACH(test_type lexical syntax semantic codegen complex)
     SUBDIR_LIST(${test_type}_src ${CASE_DIR}/${test_type})
     FOREACH(subdir ${${test_type}_src})
         add_test(
                 NAME ${test_type}-${subdir}
-                COMMAND ${TEST_SCRIPT} $<TARGET_FILE:pascals-to-c> ${subdir} ${CASE_DIR}/${test_type}/${subdir}
+                COMMAND ${UNIT_TEST_SCRIPT} $<TARGET_FILE:pascals-to-c> ${subdir} ${CASE_DIR}/${test_type}/${subdir}
                     ${CMAKE_CURRENT_BINARY_DIR}/test/${test_type}/${subdir} ${CASE_DIR}/${test_type}/${subdir}
         )
     ENDFOREACH()
+ENDFOREACH()
+
+SUBDIR_LIST(final_src ${CASE_DIR}/final)
+FOREACH(subdir ${final_src})
+    add_test(
+            NAME final-${subdir}
+            COMMAND ${FINAL_TEST_SCRIPT} $<TARGET_FILE:pascals-to-c> ${subdir} ${CASE_DIR}/final/${subdir}
+                ${CASE_DIR}/final/${subdir} ${CMAKE_CURRENT_BINARY_DIR}/test/final/${subdir}
+    )
 ENDFOREACH()

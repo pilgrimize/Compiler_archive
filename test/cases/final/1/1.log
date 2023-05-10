@@ -1,5 +1,0 @@
-ERROR Error: syntax error at line: 2, encountering unexpected word True: line 2
-ERROR error that lack of equalop is fixed and use production: const_declaration -> id = const_value: line 2, column 7
-ERROR Error: syntax error at line: 5, encountering unexpected word then: line 5
-FATAL Failed at lexical or syntactic analysis, abort.
-FATAL Compilation failed.
