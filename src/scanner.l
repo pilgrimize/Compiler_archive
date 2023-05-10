@@ -85,8 +85,8 @@ mulop "*"|"/"|"div"|"mod"|"and"
 relop "<"|">"|"<>"|"<="|">="
 notop "not"
 quateop "'"
-literal_char {quateop}({letter}|{digit}|{others}){quateop}
-literal_string {quateop}({letter}|{digit}|{others})*{quateop} 
+literal_char \'[^\n\']\'
+literal_string \'[^\n\"]*\'
 equalop "="
 assignop ":="
 blank [ \t\n]
@@ -104,11 +104,10 @@ digits ({digit})+
 optional_fraction "."{digits}
 num {digits}
 double_value [0-9]*\.[0-9]+([Ee][+-]?[0-9]+)?
-others "@"|"#"|"$"|"%"|"^"|"&"|"*"|"-"|"+"|"="|"|"|"["|"]"|"{"|"}"|";"|":"|","|"<"|">"|"/"|"?"|"~"|" "|"!"|" "
 id ({letter}|"_")({letter}|{digit}|"_")*
 comment \{[^}]*\}
 
-unexpected_char_error [@`]
+unexpected_char_error [@`%^&#$~?!]
 unwrapped_string_error \'[^\n\']*
 
 %x BLOCK_COMMENT
@@ -204,7 +203,6 @@ unwrapped_string_error \'[^\n\']*
                 }
 
 {unexpected_char_error} {log(std::string("Unexpected character: ")+yytext, yylineno, DEBUG);}
-{others} {log(std::string("Unexpected character: ")+yytext, yylineno, DEBUG);}
 {unwrapped_string_error} {
                 tree::Position position = {yylloc.first_line, yylloc.first_column, yylloc.last_line, yylloc.last_column};
                 log(std::string("Unwrapped string: ")+yytext + std::string(" and now it is patched."), position, ERROR);
