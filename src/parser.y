@@ -126,7 +126,6 @@
 %%
 
 /* This is an example of defining productions with error handling */
-/* TODO: Define productions */
 
 /*
 programstruct -> program_head ； program_body .
@@ -1203,8 +1202,8 @@ factor : leftparen expression rightparen {  // pid=83
 /* Error log, should not be modified at present */
 void yyerror(char *s) {
     if (strlen(yytext) == 0) {
-        log( std::string("Error: " )+ std::string("end of file: ") +std::string("missing operand or block end"), yylineno);
+        log( std::string("End of file: ") +std::string("missing operand or block end"), yylineno);
     } else {
-        log( std::string("Error: ") + std::string(s) + std::string(" at line: ") + std::to_string(yylineno) + std::string(", encountering unexpected word ") + yytext, yylineno );
+        log( std::string(s) + std::string(", encountering unexpected word ") + yytext, yylineno );
     }
 }

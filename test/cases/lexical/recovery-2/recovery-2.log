@@ -1,0 +1,10 @@
+ERROR Unexpected character: $ and now it is patched: line 5
+ERROR Unexpected character: $ and now it is patched: line 5
+ERROR Unexpected character: ` and now it is patched: line 8
+ERROR Unexpected character: ` and now it is patched: line 8
+ERROR Unexpected character: @ and now it is patched: line 9
+ERROR Unexpected character: @ and now it is patched: line 9
+ERROR Unwrapped string: 'unwrapped string' and now it is patched.: line 13, column 1
+ERROR syntax error, encountering unexpected word 'unwrapped string: line 13
+FATAL Failed at lexical or syntactic analysis, abort.
+FATAL Compilation failed.

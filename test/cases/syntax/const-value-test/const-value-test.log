@@ -1,9 +1,9 @@
-ERROR Error: syntax error at line: 2, encountering unexpected word test: line 2
+ERROR syntax error, encountering unexpected word test: line 2
 ERROR error is fixed and use production: const_value -> +  num: line 2, column 19
 ERROR error that lack of equalop is fixed and use production: const_declaration -> id = const_value: line 2, column 7
-ERROR Error: syntax error at line: 3, encountering unexpected word last: line 3
+ERROR syntax error, encountering unexpected word last: line 3
 ERROR error is fixed and use production: const_value -> -  num: line 3, column 5
-ERROR Error: syntax error at line: 4, encountering unexpected word last: line 4
+ERROR syntax error, encountering unexpected word last: line 4
 ERROR error is fixed and use production: const_value -> - double_value: line 4, column 5
 INFO Lexical and syntactic analysis passed.
 INFO Semantic analysis...

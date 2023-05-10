@@ -205,7 +205,7 @@ unwrapped_string_error \'[^\n\']*
 {unexpected_char_error} {log(std::string("Unexpected character: ")+yytext+ std::string(" and now it is patched"), yylineno, ERROR);}
 {unwrapped_string_error} {
                 tree::Position position = {yylloc.first_line, yylloc.first_column, yylloc.last_line, yylloc.last_column};
-                std::string temp = yytext+'\'';
+                std::string temp = std::string(yytext) + '\'';
                 log(std::string("Unwrapped string: ")+temp + std::string(" and now it is patched."), position, ERROR);
                 yylval.token_Tree = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_LITERAL_STRING, yytext, position, comment_vector));
                 comment_vector.clear(); 
@@ -217,8 +217,8 @@ unwrapped_string_error \'[^\n\']*
 }
 
 <BLOCK_COMMENT>{
-    <<EOF>> {log("Unfinished block comment", yylineno, ERROR); return 0;}
-    "{" {BEGIN INITIAL; char_count += yyleng;}
+    <<EOF>> {log("Unfinished block comment, auto discarded", yylineno, ERROR); return 0;}
+    "}" {BEGIN INITIAL; char_count += yyleng;}
 }
 
 %%

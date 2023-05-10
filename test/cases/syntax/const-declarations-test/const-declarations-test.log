@@ -1,4 +1,4 @@
-ERROR Error: syntax error at line: 2, encountering unexpected word test: line 2
+ERROR syntax error, encountering unexpected word test: line 2
 ERROR error that lack of equalop is fixed and use production: const_declaration -> id = const_value: line 2, column 7
 INFO Lexical and syntactic analysis passed.
 INFO Semantic analysis...

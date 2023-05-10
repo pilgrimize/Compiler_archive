@@ -1,0 +1,11 @@
+ERROR Unexpected character: $ and now it is patched: line 8
+ERROR Unexpected character: $ and now it is patched: line 8
+ERROR Unexpected character: ^ and now it is patched: line 13
+ERROR Unfinished block comment, auto discarded: line 17
+INFO Lexical and syntactic analysis passed.
+INFO Semantic analysis...
+ERROR Redefinition of 'd': line 4, column 15
+ERROR Undefined identifier 's': line 8, column 11
+ERROR Undefined identifier 'k': line 13, column 15
+FATAL Failed at semantic analysis, abort.
+FATAL Compilation failed.

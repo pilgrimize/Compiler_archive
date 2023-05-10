@@ -1,4 +1,4 @@
-ERROR Error: syntax error at line: 3, encountering unexpected word test: line 3
+ERROR syntax error, encountering unexpected word test: line 3
 ERROR error is fixed and use production: var_declaration -> id_list : type: line 3, column 5
 INFO Lexical and syntactic analysis passed.
 INFO Semantic analysis...

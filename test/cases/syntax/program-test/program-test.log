@@ -1,4 +1,4 @@
-ERROR Error: syntax error at line: 1, encountering unexpected word 234: line 1
+ERROR syntax error, encountering unexpected word 234: line 1
 INFO Lexical and syntactic analysis passed.
 INFO Semantic analysis...
 INFO Semantic analysis passed.
