@@ -28,10 +28,10 @@ int main(){
         }
     do{
         printf("%s\n", "Hello, world!");
-    }while(!a!=b);
+    }while(!(a!=b));
     do{
         printf("%s\n", "Hello, world!");
-    }while(!1>a);
+    }while(!(1>a));
     scanf("%d%d", &a, &b);
     printf("%s\n", "Hello, world!");
     return 0;
