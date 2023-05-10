@@ -8,6 +8,7 @@
     // extern "C"
     // {
     extern int yylex();
+    extern int IsYaccError;
     extern int yylineno;
     extern char *yytext;
     void yyerror(char *s);
@@ -203,19 +204,12 @@ program_head : t_program id leftparen idlist rightparen { // pid = 2
         log( "Use production: program_head -> program id", pos, DEBUG); 
         $$ = tools::reduce({$1, $2}, pos,  tree:: program_head__T__t_program__id, tree::T_PROGRAM_HEAD);
         }
-    /* | error id leftparen idlist rightparen { 
-        // we fix the lack of 'program' at the beginning of the program_head'
-        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $2->get_root()->get_position().last_line, $2->get_root()->get_position().last_column };
-        log( "error on program_head fixed1", $2->get_root()->get_line(), DEBUG); 
-        tree::Tree* t_program_proxy = new tree::Tree(new tree::TreeNode(tree::leaf_pid,tree::T_PROGRAM,"program" ,$2->get_root()->get_line() ));
-        $$ = tools::reduce({t_program_proxy, $2, $3, $4, $5}, $2->get_root()->get_line(),  tree::program_head__T__t_program__id_leftparen__idlist__rightparen , tree::T_PROGRAM_HEAD);
-        yyerrok; 
-        }
-    | error id { 
-        // we fix the lack of 'program' at the beginning of the program_head'
-        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $2->get_root()->get_position().last_line, $2->get_root()->get_position().last_column };
-        log( "error on program_head fixed2", $2->get_root()->get_line(), DEBUG); yyerrok; 
-        } */
+    | t_program error id{
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
+        log( "error fixed and Use production: program_head -> program id", pos, DEBUG); 
+        $$ = tools::reduce({$1, $3}, pos,  tree::program_head__T__t_program__id, tree::T_PROGRAM_HEAD);
+        yyerrok;
+    }
     ;
 
 
@@ -284,6 +278,14 @@ idlist : id {  // pid=12
         $$ = tools::reduce({$1, $2, $3}, pos,  tree::idlist__T__idlist__comma__id
         , tree::T_IDLIST);
         }
+    | idlist error id {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
+        log( "error that lack of comma is fixed and use production: idlist -> idlist id", pos, ERROR);
+        tree::Tree* tnode = new tree::Tree(new tree::TreeNode(tree::leaf_pid, tree::T_COMMA, ",", pos));
+        $$ = tools::reduce({$1, tnode, $3}, pos,  tree::idlist__T__idlist__comma__id
+        , tree::T_IDLIST);
+        yyerrok;
+        }
     ;
 
 const_declarations :
@@ -299,6 +301,21 @@ const_declaration : id equalop const_value {  // pid=15
         log( "Use production: const_declaration -> id = constant", pos, DEBUG); 
         $$ = tools::reduce({$1, $2, $3}, pos,  tree::const_declaration__T__id__equalop__const_value
         , tree::T_CONST_DECLARATION);
+    }
+    | id error equalop const_value {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };
+        log( "error that lack of equalop is fixed and use production: const_declaration -> id = constant", pos, ERROR);
+        $$ = tools::reduce({$1, $3, $4}, pos,  tree::const_declaration__T__id__equalop__const_value
+        , tree::T_CONST_DECLARATION);
+        yyerrok;
+    }
+    | id error const_value {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
+        log( "error that lack of equalop is fixed and use production: const_declaration -> id = constant", pos, ERROR);
+        tree::Tree* tnode = new tree::Tree(new tree::TreeNode(tree::leaf_pid, tree::T_EQUALOP, "=", pos));
+        $$ = tools::reduce({$1, tnode, $3}, pos,  tree::const_declaration__T__id__equalop__const_value
+        , tree::T_CONST_DECLARATION);
+        yyerrok;
     }
     | const_declaration semicolon id equalop const_value {  // pid=16
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $5->get_root()->get_position().last_line, $5->get_root()->get_position().last_column };
@@ -320,11 +337,25 @@ const_value : num {  // pid=17
         $$ = tools::reduce({$1, $2}, pos,  tree::const_value__T__addop__num
         , tree::T_CONST_VALUE);
         }
+    | addop error num {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
+        log( "error is fixed and use production: const_value -> +  num", pos, ERROR);
+        $$ = tools::reduce({$1, $3}, pos,  tree::const_value__T__addop__num
+        , tree::T_CONST_VALUE);
+        yyerrok;
+        }
     | subop num {  // pid=19
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $2->get_root()->get_position().last_line, $2->get_root()->get_position().last_column };
         log( "Use production: const_value -> - num", pos, DEBUG); 
         $$ = tools::reduce({$1, $2}, pos,  tree::const_value__T__subop__num
         , tree::T_CONST_VALUE);
+        }
+    | subop error num {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
+        log( "error is fixed and use production: const_value -> -  num", pos, ERROR);
+        $$ = tools::reduce({$1, $3}, pos,  tree::const_value__T__subop__num
+        , tree::T_CONST_VALUE);
+        yyerrok;
         }
     | literal_string {  // pid=20
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $1->get_root()->get_position().last_line, $1->get_root()->get_position().last_column };
@@ -344,11 +375,25 @@ const_value : num {  // pid=17
         $$ = tools::reduce({$1, $2}, pos,  tree::const_value__T__addop__double_value
         , tree::T_CONST_VALUE);
         }
+    | addop error double_value {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
+        log( "error is fixed and use production: const_value -> +  double_value", pos, ERROR);
+        $$ = tools::reduce({$1, $3}, pos,  tree::const_value__T__subop__double_value
+        , tree::T_CONST_VALUE);
+        yyerrok;
+        }
     | subop double_value {  // pid=22
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $2->get_root()->get_position().last_line, $2->get_root()->get_position().last_column };
         log( "Use production: const_value -> - double_value", pos, DEBUG); 
         $$ = tools::reduce({$1, $2}, pos,  tree::const_value__T__subop__double_value
         , tree::T_CONST_VALUE);
+        }
+    | subop error double_value {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
+        log( "error is fixed and use production: const_value -> - double_value", pos, ERROR);
+        $$ = tools::reduce({$1, $3}, pos,  tree::const_value__T__subop__double_value
+        , tree::T_CONST_VALUE);
+        yyerrok;
         }
     | double_value {  // pid=23
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $1->get_root()->get_position().last_line, $1->get_root()->get_position().last_column };
@@ -374,6 +419,21 @@ var_declaration : idlist colon type {  // pid=22
         $$ = tools::reduce({$1, $2, $3}, pos,  tree::var_declaration__T__idlist__colon__type
         , tree::T_VAR_DECLARATION);
     }
+    | idlist colon error type{
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };
+        log( "error is fixed and use production: var_declaration -> id_list : type", pos, ERROR);
+        $$ = tools::reduce({$1, $2, $4}, pos,  tree::var_declaration__T__idlist__colon__type
+        , tree::T_VAR_DECLARATION);
+        yyerrok;
+    }
+    | idlist error type{
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
+        log( "error that lack of colon fixed and use production: var_declaration -> id_list : type", pos, ERROR);
+        tree::Tree* tnode = new tree::Tree(new tree::TreeNode(tree::leaf_pid, tree::T_COLON, ":", pos));
+        $$ = tools::reduce({$1, tnode, $3}, pos,  tree::var_declaration__T__idlist__colon__type
+        , tree::T_VAR_DECLARATION);
+        yyerrok;
+    }
     | var_declaration semicolon idlist colon type {  // pid=23
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $5->get_root()->get_position().last_line, $5->get_root()->get_position().last_column };
         log( "Use production: var_declaration -> var_declaration ; id_list : type", pos, DEBUG);
@@ -393,6 +453,41 @@ type : basic_type {  // pid=24
         log( "Use production: type -> array [ num ] of basic_type", pos, DEBUG);
         $$ = tools::reduce({$1, $2, $3, $4, $5, $6}, pos,  tree::type__T__t_array__leftbracket__period__rightbracket__t_of__basic_type
         , tree::T_TYPE);
+    }
+    | t_array leftbracket error period rightbracket t_of basic_type {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $7->get_root()->get_position().last_line, $7->get_root()->get_position().last_column };
+        log( "error that lack of num fixed and use production: type -> array [ period ] of basic_type", pos, ERROR);
+        $$ = tools::reduce({$1, $2, $4, $5, $6, $7}, pos,  tree::type__T__t_array__leftbracket__period__rightbracket__t_of__basic_type
+        , tree::T_TYPE);
+        yyerrok;
+    }
+    | t_array error leftbracket period rightbracket t_of basic_type{
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $7->get_root()->get_position().last_line, $7->get_root()->get_position().last_column };
+        log( "error that lack of leftbracket fixed and use production: type -> array [ num ] of basic_type", pos, ERROR);
+        $$ = tools::reduce({$1, $3, $4, $5, $6, $7}, pos,  tree::type__T__t_array__leftbracket__period__rightbracket__t_of__basic_type
+        , tree::T_TYPE);
+        yyerrok;
+    }
+    | t_array leftbracket period error rightbracket t_of basic_type{
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $7->get_root()->get_position().last_line, $7->get_root()->get_position().last_column };
+        log( "error that lack of rightbracket fixed and use production: type -> array [ num of basic_type", pos, ERROR);
+        $$ = tools::reduce({$1, $2, $3, $5, $6, $7}, pos,  tree::type__T__t_array__leftbracket__period__rightbracket__t_of__basic_type
+        , tree::T_TYPE);
+        yyerrok;
+    }
+    | t_array leftbracket period rightbracket error t_of basic_type{
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $7->get_root()->get_position().last_line, $7->get_root()->get_position().last_column };
+        log( "error that lack of t_of fixed and use production: type -> array [ num ] of basic_type", pos, ERROR);
+        $$ = tools::reduce({$1, $2, $3, $4, $6, $7}, pos,  tree::type__T__t_array__leftbracket__period__rightbracket__t_of__basic_type
+        , tree::T_TYPE);
+        yyerrok;
+    }
+    | t_array leftbracket period rightbracket t_of error basic_type{
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $7->get_root()->get_position().last_line, $7->get_root()->get_position().last_column };
+        log( "error that lack of basic_type fixed and use production: type -> array [ num ] of basic_type", pos, ERROR);
+        $$ = tools::reduce({$1, $2, $3, $4, $5, $7}, pos,  tree::type__T__t_array__leftbracket__period__rightbracket__t_of__basic_type
+        , tree::T_TYPE);
+        yyerrok;
     }
     ;
     
@@ -448,9 +543,24 @@ basic_type : t_integer {  // pid=26
     
 period : num t_dot num {  // pid=29
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
-        log( "Use production: period -> num . num", pos, DEBUG);
+        log( "Use production: period -> num .. num", pos, DEBUG);
         $$ = tools::reduce({$1, $2, $3}, pos,  tree::period__T__num__t_dot__num
         , tree::T_PERIOD);
+    }
+    | num error num {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
+        log( "Use production: period -> num .. num", pos, DEBUG);
+        tree::Tree* tnode = new tree::Tree(new tree::TreeNode(tree::leaf_pid, tree::T_DOT, "..", pos));
+        $$ = tools::reduce({$1, tnode, $3}, pos,  tree::period__T__num__t_dot__num
+        , tree::T_PERIOD);
+        yyerrok;
+    }
+    | num t_dot error num {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };
+        log( "Use production: period -> num .. num", pos, DEBUG);
+        $$ = tools::reduce({$1, $2, $4}, pos,  tree::period__T__num__t_dot__num
+        , tree::T_PERIOD);
+        yyerrok;
     }
     | period comma num t_dot num {  // pid=30
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $5->get_root()->get_position().last_line, $5->get_root()->get_position().last_column };
@@ -466,6 +576,13 @@ subprogram_declarations : subprogram semicolon {  // pid=31
         $$ = tools::reduce({$1, $2}, pos,  tree::subprogram_declarations__T__subprogram__semicolon
         , tree::T_SUBPROGRAM_DECLARATIONS);
     } 
+    | subprogram error semicolon{
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
+        log( "error is fixed and Use production: subprogram_declarations -> subprogram_declarations subprogram_declaration ;", pos, DEBUG);
+        $$ = tools::reduce({$1, $3}, pos,  tree::subprogram_declarations__T__subprogram__semicolon
+        , tree::T_SUBPROGRAM_DECLARATIONS);
+        yyerrok;
+    }
     | subprogram_declarations subprogram semicolon {  // pid=32
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
         log( "Use production: subprogram_declarations -> subprogram_declaration ;", pos, DEBUG);
@@ -489,11 +606,33 @@ subprogram_head :
         $$ = tools::reduce({$1, $2, $3, $4, $5}, pos,  tree::subprogram_head__T__t_function__id__formal_parameter__colon__basic_type
         , tree::T_SUBPROGRAM_HEAD);
     }
+    | t_function id formal_parameter error basic_type{
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $5->get_root()->get_position().last_line, $5->get_root()->get_position().last_column };
+        log( "error is fixed and Use production: subprogram_head -> function id formal_parameter : basic_type", pos, DEBUG);
+        tree::Tree* tnode = new tree::Tree(new tree::TreeNode(tree::leaf_pid, tree::T_COLON, ":", pos));
+        $$ = tools::reduce({$1, $2, $3, tnode, $5}, pos,  tree::subprogram_head__T__t_function__id__formal_parameter__colon__basic_type
+        , tree::T_SUBPROGRAM_HEAD);
+        yyerrok;
+    }
+    | t_function id formal_parameter error colon basic_type {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $6->get_root()->get_position().last_line, $6->get_root()->get_position().last_column };
+        log( "error is fixed and Use production: subprogram_head -> function id formal_parameter : basic_type", pos, DEBUG);
+        $$ = tools::reduce({$1, $2, $3, $5, $6}, pos,  tree::subprogram_head__T__t_function__id__formal_parameter__colon__basic_type
+        , tree::T_SUBPROGRAM_HEAD);
+        yyerrok;
+    }
     | t_procedure id formal_parameter {  // pid=35
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
         log( "Use production: subprogram_head -> procedure id formal_parameter", pos, DEBUG);
         $$ = tools::reduce({$1, $2, $3}, pos,  tree::subprogram_head__T__t_procedure__id__formal_parameter
         , tree::T_SUBPROGRAM_HEAD);
+    }
+    | t_procedure id error formal_parameter {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };
+        log( "error is fixed and Use production: subprogram_head -> procedure id formal_parameter", pos, DEBUG);
+        $$ = tools::reduce({$1, $2, $4}, pos,  tree::subprogram_head__T__t_procedure__id__formal_parameter
+        , tree::T_SUBPROGRAM_HEAD);
+        yyerrok;
     }
     | t_function id colon basic_type {  // pid=36
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };
@@ -513,8 +652,15 @@ formal_parameter : leftparen parameter_list rightparen {  // pid=38
         log( "Use production: formal_parameter -> ( parameter_list )", pos, DEBUG);
         $$ = tools::reduce({$1, $2, $3}, pos,  tree::formal_parameter__T__leftparen__parameter_list__rightparen
         , tree::T_FORMAL_PARAMETER);
-    }|
-    leftparen rightparen{
+    }
+    | leftparen parameter_list error rightparen {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };
+        log( "error is fixed and Use production: formal_parameter -> ( parameter_list )", pos, DEBUG);
+        $$ = tools::reduce({$1, $2, $4}, pos,  tree::formal_parameter__T__leftparen__parameter_list__rightparen
+        , tree::T_FORMAL_PARAMETER);
+        yyerrok;
+    }
+    |leftparen rightparen{
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $2->get_root()->get_position().last_line, $2->get_root()->get_position().last_column };
         log( "Use production: formal_parameter -> ( )", pos, DEBUG);
         $$ = tools::reduce({$1, $2}, pos,  tree::formal_parameter__T__leftparen__rightparen
@@ -560,7 +706,23 @@ value_parameter : idlist colon basic_type {  // pid=44
         log( "Use production: value_parameter -> idlist : basic_type", pos, DEBUG);
         $$ = tools::reduce({$1, $2, $3}, pos,  tree::value_parameter__T__idlist__colon__basic_type
         , tree::T_VALUE_PARAMETER);
-    };
+    }
+    | idlist error basic_type{
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
+        log( "error is fixed and Use production: value_parameter -> idlist : basic_type", pos, DEBUG);
+        tree::Tree* tnode = new tree::Tree(new tree::TreeNode(tree::leaf_pid, tree::T_COLON, ":", pos));
+        $$ = tools::reduce({$1, tnode, $3}, pos,  tree::value_parameter__T__idlist__colon__basic_type
+        , tree::T_VALUE_PARAMETER);
+        yyerrok;
+    }
+    | idlist error colon basic_type{
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };
+        log( "error is fixed and Use production: value_parameter -> idlist : basic_type", pos, DEBUG);
+        $$ = tools::reduce({$1, $3, $4}, pos,  tree::value_parameter__T__idlist__colon__basic_type
+        , tree::T_VALUE_PARAMETER);
+        yyerrok;
+    }
+    ;
 
 subprogram_body : compound_statement {  // pid=45
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $1->get_root()->get_position().last_line, $1->get_root()->get_position().last_column };
@@ -574,11 +736,25 @@ subprogram_body : compound_statement {  // pid=45
         $$ = tools::reduce({$1, $2}, pos,  tree::subprogram_body__T__const_declarations__compound_statement
         , tree::T_SUBPROGRAM_BODY);
     }
+    | const_declarations error compound_statement{
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
+        log( "error is fixed and Use production: subprogram_body -> const_declaration compound_statement", pos, ERROR);
+        $$ = tools::reduce({$1, $3}, pos,  tree::subprogram_body__T__const_declarations__compound_statement
+        , tree::T_SUBPROGRAM_BODY);
+        yyerrok;
+    }
     | var_declarations compound_statement{    // pid=47
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $2->get_root()->get_position().last_line, $2->get_root()->get_position().last_column };
         log( "Use production: subprogram_body -> var_declarations compound_statement", pos, DEBUG);
         $$ = tools::reduce({$1, $2}, pos,  tree::subprogram_body__T__var_declarations__compound_statement
         , tree::T_SUBPROGRAM_BODY);
+    }
+    | var_declarations error compound_statement{
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
+        log( "error is fixed and Use production: subprogram_body -> var_declarations compound_statement", pos, ERROR);
+        $$ = tools::reduce({$1, $3}, pos,  tree::subprogram_body__T__var_declarations__compound_statement
+        , tree::T_SUBPROGRAM_BODY);
+        yyerrok;
     }
     | const_declarations var_declarations compound_statement{
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
@@ -586,12 +762,32 @@ subprogram_body : compound_statement {  // pid=45
         $$ = tools::reduce({$1, $2, $3}, pos,  tree::subprogram_body__T__const_declarations__var_declarations__compound_statement
         , tree::T_SUBPROGRAM_BODY);
     }
+    | const_declarations error var_declarations compound_statement {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };
+        log( "error is fixed and Use production: subprogram_body -> const_declarations var_declarations compound_statement", pos, ERROR);
+        $$ = tools::reduce({$1, $3, $4}, pos,  tree::subprogram_body__T__const_declarations__var_declarations__compound_statement
+        , tree::T_SUBPROGRAM_BODY);
+        yyerrok;
+    }
+    | const_declarations var_declarations error compound_statement {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };
+        log( "error is fixed and Use production: subprogram_body -> const_declarations var_declarations compound_statement", pos, ERROR);
+        $$ = tools::reduce({$1, $2, $4}, pos,  tree::subprogram_body__T__const_declarations__var_declarations__compound_statement
+        , tree::T_SUBPROGRAM_BODY);
+        yyerrok;
+    }
     ;
 
 compound_statement : t_begin statement_list t_end {  // pid=48
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
         log( "Use production: compound_statement -> begin statement_list end", pos, DEBUG);
         $$ = tools::reduce({$1, $2, $3}, pos,  tree::compound_statement__T__t_begin__statement_list__t_end
+        , tree::T_COMPOUND_STATEMENT);
+    }
+    | t_begin statement_list semicolon t_end{
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };
+        log( "Use production: compound_statement -> begin statement_list ; end", pos, DEBUG);
+        $$ = tools::reduce({$1, $2, $3, $4}, pos,  tree::compound_statement__T__t_begin__statement_list__semicolon__t_end
         , tree::T_COMPOUND_STATEMENT);
     }
     | t_begin t_end{    // pid=49
@@ -618,6 +814,14 @@ statement : variable assignop expression {  // pid=52
         $$ = tools::reduce({$1, $2, $3}, pos,  tree::statement__T__variable__assignop__expression
         , tree::T_STATEMENT);
     }
+    | variable error expression {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
+        log( "error is fixed and Use production: statement -> variable assignop expression", pos, ERROR);
+        tree::Tree* tnode = new tree::Tree(new tree::TreeNode(tree::leaf_pid, tree::T_ASSIGNOP, ":=", pos));
+        $$ = tools::reduce({$1, tnode, $3}, pos,  tree::statement__T__variable__assignop__expression
+        , tree::T_STATEMENT);
+        yyerrok;
+    }
     | procedure_call {  // pid=54
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $1->get_root()->get_position().last_line, $1->get_root()->get_position().last_column };
         log( "Use production: statement -> procedure_call", pos, DEBUG);
@@ -637,11 +841,34 @@ statement : variable assignop expression {  // pid=52
         $$ = tools::reduce({$1, $2, $3, $4}, pos,  tree::statement__T__t_if__expression__t_then__statement
         , tree::T_STATEMENT);
     }
+    | t_if expression error statement {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };
+        log( "error is fixed and Use production: statement -> if expression then statement", pos, ERROR);
+        tree::Tree* tnode = new tree::Tree(new tree::TreeNode(tree::leaf_pid, tree::T_THEN, "then", pos));
+        $$ = tools::reduce({$1, $2, tnode, $4}, pos,  tree::statement__T__t_if__expression__t_then__statement
+        , tree::T_STATEMENT);
+        yyerrok;
+    }
     | t_if expression t_then statement else_part  {  // pid=56
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $5->get_root()->get_position().last_line, $5->get_root()->get_position().last_column };
         log( "Use production: statement -> if expression then statement else_part", pos, DEBUG);
         $$ = tools::reduce({$1, $2, $3, $4, $5}, pos,  tree::statement__T__t_if__expression__t_then__statement__else_part
         , tree::T_STATEMENT);
+    }
+    | t_if expression error statement else_part {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $5->get_root()->get_position().last_line, $5->get_root()->get_position().last_column };
+        log( "error is fixed and Use production: statement -> if expression then statement else_part", pos, ERROR);
+        tree::Tree* tnode = new tree::Tree(new tree::TreeNode(tree::leaf_pid, tree::T_THEN, "then", pos));
+        $$ = tools::reduce({$1, $2, tnode, $4, $5}, pos,  tree::statement__T__t_if__expression__t_then__statement__else_part
+        , tree::T_STATEMENT);
+        yyerrok;
+    }
+    | t_if expression error t_then statement else_part {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $6->get_root()->get_position().last_line, $6->get_root()->get_position().last_column };
+        log( "error is fixed and Use production: statement -> if expression then statement else_part", pos, ERROR);
+        $$ = tools::reduce({$1, $2, $4, $5, $6}, pos,  tree::statement__T__t_if__expression__t_then__statement__else_part
+        , tree::T_STATEMENT);
+        yyerrok;
     }
     | t_while expression t_do statement {  // pid=57
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };
@@ -649,11 +876,41 @@ statement : variable assignop expression {  // pid=52
         $$ = tools::reduce({$1, $2, $3, $4}, pos,  tree::statement__T__t_while__T__expression__t_do__statement
         , tree::T_STATEMENT);
     }
+    | t_while expression error t_do statement {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $5->get_root()->get_position().last_line, $5->get_root()->get_position().last_column };
+        log( "error is fixed and Use production: statement -> while expression do statement", pos, ERROR);
+        $$ = tools::reduce({$1, $2, $4, $5}, pos,  tree::statement__T__t_while__T__expression__t_do__statement
+        , tree::T_STATEMENT);
+        yyerrok;
+    }
+    | t_while expression error statement {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };
+        log( "error is fixed and Use production: statement -> while expression do statement", pos, ERROR);
+        tree::Tree* tnode = new tree::Tree(new tree::TreeNode(tree::leaf_pid, tree::T_DO, "do", pos));
+        $$ = tools::reduce({$1, $2, tnode, $4}, pos,  tree::statement__T__t_while__T__expression__t_do__statement
+        , tree::T_STATEMENT);
+        yyerrok;
+    }
     | t_repeat statement_list t_until expression {  // pid=58
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };
         log( "Use production: statement -> repeat statement_list until expression", pos, DEBUG);
         $$ = tools::reduce({$1, $2, $3, $4}, pos,  tree::statement__T__t_repeat__statement_list__t_until__expression
         , tree::T_STATEMENT);
+    }
+    | t_repeat statement_list error t_until expression {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $5->get_root()->get_position().last_line, $5->get_root()->get_position().last_column };
+        log( "error is fixed and Use production: statement -> repeat statement_list until expression", pos, ERROR);
+        $$ = tools::reduce({$1, $2, $4, $5}, pos,  tree::statement__T__t_repeat__statement_list__t_until__expression
+        , tree::T_STATEMENT);
+        yyerrok;
+    }
+    | t_repeat statement_list error expression {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };
+        log( "error is fixed and Use production: statement -> repeat statement_list until expression", pos, ERROR);
+        tree::Tree* tnode = new tree::Tree(new tree::TreeNode(tree::leaf_pid, tree::T_UNTIL, "until", pos));
+        $$ = tools::reduce({$1, $2, tnode, $4}, pos,  tree::statement__T__t_repeat__statement_list__t_until__expression
+        , tree::T_STATEMENT);
+        yyerrok;
     }
     | t_for id assignop expression t_to expression t_do statement {  // pid=59
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $8->get_root()->get_position().last_line, $8->get_root()->get_position().last_column };
@@ -678,6 +935,21 @@ statement : variable assignop expression {  // pid=52
         log( "Use production: statement -> readln ( idlist )", pos, DEBUG);
         $$ = tools::reduce({$1, $2, $3, $4}, pos,  tree::statement__T__t_readln__leftparen__variable_list__rightparen
         , tree::T_STATEMENT);
+    }
+    | t_readln error leftparen variable_list rightparen {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $5->get_root()->get_position().last_line, $5->get_root()->get_position().last_column };
+        log( "error is fixed and Use production: statement -> readln ( idlist )", pos, DEBUG);
+        $$ = tools::reduce({$1, $3, $4, $5}, pos,  tree::statement__T__t_readln__leftparen__variable_list__rightparen
+        , tree::T_STATEMENT);
+        yyerrok;
+    }
+    | t_readln error variable_list rightparen {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };
+        log( "error is fixed and Use production: statement -> readln ( idlist )", pos, DEBUG);
+        tree::Tree* tnode = new tree::Tree(new tree::TreeNode(tree::leaf_pid, tree::T_LEFTPAREN, "(", pos));
+        $$ = tools::reduce({$1, tnode, $3, $4}, pos,  tree::statement__T__t_readln__leftparen__variable_list__rightparen
+        , tree::T_STATEMENT);
+        yyerrok;
     }
     | t_write leftparen expression_list rightparen {  // pid=62
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };
@@ -705,6 +977,21 @@ variable_list : variable {  // pid=63
         $$ = tools::reduce({$1, $2, $3}, pos,  tree::variable_list__T__variable_list__comma__variable
         , tree::T_VARIABLE_LIST);
     }
+    | variable_list error comma variable {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };
+        log( "error is fixed and Use production: variable_list -> variable_list , variable", pos, DEBUG);
+        $$ = tools::reduce({$1, $3, $4}, pos,  tree::variable_list__T__variable_list__comma__variable
+        , tree::T_VARIABLE_LIST);
+        yyerrok;
+    }
+    | variable_list error variable {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
+        log( "error is fixed and Use production: variable_list -> variable_list , variable", pos, DEBUG);
+        tree::Tree* tnode = new tree::Tree(new tree::TreeNode(tree::leaf_pid, tree::T_COMMA, ",", pos));
+        $$ = tools::reduce({$1, tnode, $3}, pos,  tree::variable_list__T__variable_list__comma__variable
+        , tree::T_VARIABLE_LIST);
+        yyerrok;
+    }
     ;
 
 variable : id {  // pid=65
@@ -718,7 +1005,15 @@ variable : id {  // pid=65
         log( "Use production: variable -> id id_varpart", pos, DEBUG);
         $$ = tools::reduce({$1, $2}, pos,  tree::variable__T__id__id_varpart
         , tree::T_VARIABLE, $1->get_root()->get_text()+' '+$2->get_root()->get_text());
-    };
+    }
+    | id error id_varpart {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
+        log( "error is fixed and Use production: variable -> id id_varpart", pos, DEBUG);
+        $$ = tools::reduce({$1, $3}, pos,  tree::variable__T__id__id_varpart
+        , tree::T_VARIABLE, $1->get_root()->get_text()+' '+$3->get_root()->get_text());
+        yyerrok;
+    }
+    ;
 
 id_varpart : leftbracket expression_list rightbracket {  // pid=67
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
@@ -726,6 +1021,14 @@ id_varpart : leftbracket expression_list rightbracket {  // pid=67
         $$ = tools::reduce({$1, $2, $3}, pos,  tree::id_varpart__T__leftbracket__expression_list__rightbracket
         , tree::T_ID_VARPART, $1->get_root()->get_text()+' '+$2->get_root()->get_text()+' '+$3->get_root()->get_text());
     }
+    | leftbracket expression_list error rightbracket {
+        tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };
+        log( "error is fixed and Use production: id_varpart -> [ expression ]", pos, DEBUG);
+        $$ = tools::reduce({$1, $2, $4}, pos,  tree::id_varpart__T__leftbracket__expression_list__rightbracket
+        , tree::T_ID_VARPART, $1->get_root()->get_text()+' '+$2->get_root()->get_text()+' '+$4->get_root()->get_text());
+        yyerrok;
+    }
+    ;
 
 procedure_call : id leftparen expression_list rightparen {  // pid=68
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };

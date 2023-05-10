@@ -94,7 +94,7 @@ leftparen  "("
 rightparen ")"
 leftbracket "["
 rightbracket "]"
-semicolon ";"
+semicolon [";"]+
 comma ","
 colon ":"
 dot "."
@@ -103,7 +103,7 @@ digit [0-9]
 digits ({digit})+
 optional_fraction "."{digits}
 num {digits}
-double_value {digits}{optional_fraction}
+double_value [0-9]*\.[0-9]+([Ee][+-]?[0-9]+)?
 others "@"|"#"|"$"|"%"|"^"|"&"|"*"|"-"|"+"|"="|"|"|"["|"]"|"{"|"}"|";"|":"|","|"<"|">"|"/"|"?"|"~"|" "|"!"|" "
 id ({letter}|"_")({letter}|{digit}|"_")*
 comment \{[^}]*\}

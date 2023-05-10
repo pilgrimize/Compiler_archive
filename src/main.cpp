@@ -8,6 +8,9 @@
 
 using namespace logger;
 
+int IsYaccError = 0;
+int DoGenerate = 0;
+
 bool lex_yacc() {
     if (!yyparse()) {
         tools::print_ast(tree::ast->get_root());
@@ -90,7 +93,7 @@ int parse_args(int argc, char *argv[]) {
     }
     set_logger(output_file, log_file, log_level);
 
-    if (lex_yacc() && semantic_analysis() && code_generation()) {
+    if (lex_yacc() && (!IsYaccError) && semantic_analysis() && code_generation()) {
         log("Compilation passed.", -1, INFO);
         return 0;
     } else {

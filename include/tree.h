@@ -123,7 +123,9 @@ enum PID{
     factor__T__id__leftparen__rightparen,
     const_value__T__literal_char,
     procedure_call__T__id__leftparen__rightparen,
-    formal_parameter__T__leftparen__rightparen
+    formal_parameter__T__leftparen__rightparen,
+    idlist__T__idlist__id,
+    compound_statement__T__t_begin__statement_list__semicolon__t_end
 
 };
 enum Token {
