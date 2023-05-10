@@ -597,9 +597,9 @@ bool generate_by_pid(tree::TreeNode* node) {
                     generate_by_pid(node->get_child(1));
                     indent--;
                     input_tab(true);
-                    logger::output((std::string) "}"+"while"+"("+"!");
+                    logger::output((std::string) "}"+"while"+"("+"!"+"(");
                     generate_by_pid(node->get_child(3));
-                    logger::output( ");");
+                    logger::output((std::string)  ")"+");");
                     generate_by_pid(node->get_child(2));
                     //input_tab(true);
                     break;
