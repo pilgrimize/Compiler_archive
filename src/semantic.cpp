@@ -128,17 +128,17 @@ std::vector<TreeNode*> get_id_node_list(TreeNode* node) {
     return id_list;
 }
 
-std::vector<std::pair<size_t, size_t>> get_dims(TreeNode* node) {
-    std::vector<std::pair<size_t, size_t>> dims;
+std::vector<std::pair<int, int>> get_dims(TreeNode* node) {
+    std::vector<std::pair<int, int>> dims;
     if (node->get_pid() == tree::period__T__num__t_dot__num) { // dim
         dims.emplace_back(
-                std::stoul(node->get_child(0)->get_text()),
-                std::stoul(node->get_child(2)->get_text()));
+                std::stol(node->get_child(0)->get_text()),
+                std::stol(node->get_child(2)->get_text()));
     } else if (node->get_pid() == tree::period__T__period__comma__num__t_dot__num) { // dim_list
         dims = get_dims(node->get_child(0));
         dims.emplace_back(
-                std::stoul(node->get_child(2)->get_text()),
-                std::stoul(node->get_child(4)->get_text()));
+                std::stol(node->get_child(2)->get_text()),
+                std::stol(node->get_child(4)->get_text()));
     }
     return dims;
 }

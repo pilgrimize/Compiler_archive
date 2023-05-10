@@ -59,10 +59,10 @@ struct BasicInfo {
 };
 struct ArrayInfo {
     BasicType basic{};
-    std::vector<std::pair<size_t,size_t>> dims;
+    std::vector<std::pair<int,int>> dims;
     bool is_const = false;
     ArrayInfo() = default;
-    ArrayInfo(BasicType basic, std::vector<std::pair<size_t,size_t>> dims, bool is_const):
+    ArrayInfo(BasicType basic, std::vector<std::pair<int,int>> dims, bool is_const):
             basic(basic), dims(std::move(dims)), is_const(is_const) {}
 };
 struct RecordInfo {
@@ -90,7 +90,7 @@ struct SymbolTableEntry {
             type(type), extra_info(std::move(extra_info)) {}
     explicit SymbolTableEntry(BasicType type, bool is_const = false, bool is_referred = false):
             type(ComplexType::TYPE_BASIC), extra_info(BasicInfo(type, is_const, is_referred)) {}
-    SymbolTableEntry(BasicType type, std::vector<std::pair<size_t,size_t>> dims, bool is_const = false):
+    SymbolTableEntry(BasicType type, std::vector<std::pair<int,int>> dims, bool is_const = false):
             type(ComplexType::TYPE_ARRAY), extra_info(ArrayInfo(type, std::move(dims), is_const)) {}
     explicit SymbolTableEntry(std::map<std::string, BasicType> fields):
             type(ComplexType::TYPE_RECORD), extra_info(RecordInfo(std::move(fields))) {}
