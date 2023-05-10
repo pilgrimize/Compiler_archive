@@ -450,41 +450,41 @@ type : basic_type {  // pid=24
     }
     | t_array leftbracket period rightbracket t_of basic_type {  // pid=25
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $6->get_root()->get_position().last_line, $6->get_root()->get_position().last_column };
-        log( "Use production: type -> array [ num ] of basic_type", pos, DEBUG);
+        log( "Use production: type -> array [ period ] of basic_type", pos, DEBUG);
         $$ = tools::reduce({$1, $2, $3, $4, $5, $6}, pos,  tree::type__T__t_array__leftbracket__period__rightbracket__t_of__basic_type
         , tree::T_TYPE);
     }
     | t_array leftbracket error period rightbracket t_of basic_type {
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $7->get_root()->get_position().last_line, $7->get_root()->get_position().last_column };
-        log( "error that lack of num fixed and use production: type -> array [ period ] of basic_type", pos, ERROR);
+        log( "error is fiexed and use production: type -> array [ period ] of basic_type", pos, ERROR);
         $$ = tools::reduce({$1, $2, $4, $5, $6, $7}, pos,  tree::type__T__t_array__leftbracket__period__rightbracket__t_of__basic_type
         , tree::T_TYPE);
         yyerrok;
     }
     | t_array error leftbracket period rightbracket t_of basic_type{
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $7->get_root()->get_position().last_line, $7->get_root()->get_position().last_column };
-        log( "error that lack of leftbracket fixed and use production: type -> array [ num ] of basic_type", pos, ERROR);
+        log( "error is fixed and use production: type -> array [ period ] of basic_type", pos, ERROR);
         $$ = tools::reduce({$1, $3, $4, $5, $6, $7}, pos,  tree::type__T__t_array__leftbracket__period__rightbracket__t_of__basic_type
         , tree::T_TYPE);
         yyerrok;
     }
     | t_array leftbracket period error rightbracket t_of basic_type{
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $7->get_root()->get_position().last_line, $7->get_root()->get_position().last_column };
-        log( "error that lack of rightbracket fixed and use production: type -> array [ num of basic_type", pos, ERROR);
+        log( "error is fixed and use production: type -> array [ period ] of basic_type", pos, ERROR);
         $$ = tools::reduce({$1, $2, $3, $5, $6, $7}, pos,  tree::type__T__t_array__leftbracket__period__rightbracket__t_of__basic_type
         , tree::T_TYPE);
         yyerrok;
     }
     | t_array leftbracket period rightbracket error t_of basic_type{
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $7->get_root()->get_position().last_line, $7->get_root()->get_position().last_column };
-        log( "error that lack of t_of fixed and use production: type -> array [ num ] of basic_type", pos, ERROR);
+        log( "error is fixed and use production: type -> array [ period ] of basic_type", pos, ERROR);
         $$ = tools::reduce({$1, $2, $3, $4, $6, $7}, pos,  tree::type__T__t_array__leftbracket__period__rightbracket__t_of__basic_type
         , tree::T_TYPE);
         yyerrok;
     }
     | t_array leftbracket period rightbracket t_of error basic_type{
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $7->get_root()->get_position().last_line, $7->get_root()->get_position().last_column };
-        log( "error that lack of basic_type fixed and use production: type -> array [ num ] of basic_type", pos, ERROR);
+        log( "error is fixed and use production: type -> array [ period ] of basic_type", pos, ERROR);
         $$ = tools::reduce({$1, $2, $3, $4, $5, $7}, pos,  tree::type__T__t_array__leftbracket__period__rightbracket__t_of__basic_type
         , tree::T_TYPE);
         yyerrok;
@@ -549,7 +549,7 @@ period : num t_dot num {  // pid=29
     }
     | num error num {
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
-        log( "Use production: period -> num .. num", pos, DEBUG);
+        log( "error is fixed and Use production: period -> num .. num", pos, DEBUG);
         tree::Tree* tnode = new tree::Tree(new tree::TreeNode(tree::leaf_pid, tree::T_DOT, "..", pos));
         $$ = tools::reduce({$1, tnode, $3}, pos,  tree::period__T__num__t_dot__num
         , tree::T_PERIOD);
@@ -557,7 +557,7 @@ period : num t_dot num {  // pid=29
     }
     | num t_dot error num {
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };
-        log( "Use production: period -> num .. num", pos, DEBUG);
+        log( "error is fixed Use production: period -> num .. num", pos, DEBUG);
         $$ = tools::reduce({$1, $2, $4}, pos,  tree::period__T__num__t_dot__num
         , tree::T_PERIOD);
         yyerrok;
