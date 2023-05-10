@@ -285,7 +285,8 @@ bool generate_by_pid(tree::TreeNode* node) {
                             break;
                     }
                     id_process(node->get_child(0),NON_BRACKET);
-                    generate_by_pid(node->get_child(1));
+                    logger::output("=");
+                    outputexplaination(node->get_child(1));
                     generate_by_pid(node->get_child(2));
                     break;
                 case tree::const_declaration__T__const_declaration__semicolon__id__equalop__const_value:
@@ -319,6 +320,7 @@ bool generate_by_pid(tree::TreeNode* node) {
                 case tree::const_value__T__num:
                 case tree::const_value__T__literal_char:
                 case tree::const_value__T__double_value:
+                    //std::cerr << node->get_child(0)->get_pid();
                     generate_by_pid(node->get_child(0));
                     break;
                 case tree::const_value__T__addop__num:
@@ -1025,12 +1027,14 @@ bool generate_by_pid(tree::TreeNode* node) {
             logger::output( "==");
             break;
         case tree::T_LITERAL_INT:
-            outputexplaination(node);
-            logger::output( "int");
-            break;
         case tree::T_LITERAL_BOOL:
+        case tree::T_LITERAL_CHAR:
             outputexplaination(node);
-            logger::output( "bool");
+            logger::output( node->get_text());
+            break;
+        case tree::T_LITERAL_STRING:
+            outputexplaination(node);
+            logger::output("\""+node->get_text().substr(1, node->get_text().size()-2)+"\"");
             break;
         case tree::T_STRING:
             outputexplaination(node);
@@ -1039,10 +1043,6 @@ bool generate_by_pid(tree::TreeNode* node) {
         case tree::T_LONGINT:
             outputexplaination(node);
             logger::output( "long int");
-            break;
-        case tree::T_LITERAL_CHAR:
-            outputexplaination(node);
-            logger::output( node->get_text());
             break;
         case tree::T_SINGLE:
             outputexplaination(node);

@@ -53,7 +53,7 @@ FOREACH(test_type final lexical syntax semantic codegen)
         add_test(
                 NAME ${test_type}-${subdir}
                 COMMAND ${TEST_SCRIPT} $<TARGET_FILE:pascals-to-c> ${subdir} ${CASE_DIR}/${test_type}/${subdir}
-                    ${CASE_DIR}/${test_type}/${subdir} ${CMAKE_CURRENT_BINARY_DIR}/test/${test_type}/${subdir}
+                    ${CMAKE_CURRENT_BINARY_DIR}/test/${test_type}/${subdir} ${CASE_DIR}/${test_type}/${subdir}
         )
     ENDFOREACH()
 ENDFOREACH()

@@ -1,0 +1,9 @@
+INFO Lexical and syntactic analysis passed.
+INFO Semantic analysis...
+ERROR Dimension mismatched for array 'a': line 7, column 3
+ERROR Dimension mismatched for array 'a': line 9, column 3
+ERROR Expected integer type for index 1 of array 'a', found others: line 10, column 5
+ERROR Expected integer type for index 2 of array 'a', found others: line 10, column 8
+ERROR Invalid usage of array 'a' as a basic type: line 13, column 3
+FATAL Failed at semantic analysis, abort.
+FATAL Compilation failed.

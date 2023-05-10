@@ -1,0 +1,8 @@
+INFO Lexical and syntactic analysis passed.
+INFO Semantic analysis...
+ERROR Type mismatched for assigning 's' to 'p': line 11, column 5
+ERROR Type mismatched for assigning 'c' to 'a': line 13, column 5
+ERROR Type mismatched for assigning 's' to 'c': line 14, column 5
+ERROR Type mismatched for assigning '0.1' to 'b': line 18, column 5
+FATAL Failed at semantic analysis, abort.
+FATAL Compilation failed.

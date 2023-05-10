@@ -1,0 +1,9 @@
+INFO Lexical and syntactic analysis passed.
+INFO Semantic analysis...
+ERROR Redefinition of 'F': line 6, column 7
+ERROR Expected 2 parameters for function 'F', found 1: line 9, column 12
+ERROR Type mismatched for parameter 1 of function 'F': line 10, column 10
+ERROR Type mismatched for parameter 1 of function 'F': line 13, column 10
+ERROR 'F' is not a procedure: line 21, column 3
+FATAL Failed at semantic analysis, abort.
+FATAL Compilation failed.
