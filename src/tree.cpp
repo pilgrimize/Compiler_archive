@@ -13,10 +13,4 @@ TreeNode* TreeNode::get_child_by_token(Token child_token) const {
     return nullptr;
 }
 
-// TODO: implement this function
-// Convert CST to AST, should always return true given a valid CST
-bool cst_to_ast(const Tree& cst) {
-    return true;
-}
-
 }

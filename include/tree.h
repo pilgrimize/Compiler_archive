@@ -10,7 +10,6 @@
 
 namespace tree {
 
-// TODO: add more tokens
 enum PID{
     leaf_pid,
     programstruct__T__programhead_semicolon__programbody_dot,
@@ -285,9 +284,6 @@ public:
 };
 
 extern Tree* ast;
-
-// Convert CST to AST, should always return true given a valid CST
-bool cst_to_ast(const Tree& cst);
 
 }
 
