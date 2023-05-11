@@ -1,4 +1,5 @@
 ERROR syntax error, encountering unexpected word 234: line 1
+ERROR error fixed and Use production: program_head -> program id: line 1, column 1
 ERROR Unexpected character: % and now it is patched: line 11
 ERROR Unexpected character: % and now it is patched: line 11
 ERROR syntax error, encountering unexpected word begin: line 11
@@ -12,6 +13,7 @@ ERROR syntax error, encountering unexpected word 1: line 27
 ERROR error is fixed and Use production: statement -> repeat statement_list until expression: line 25, column 5
 ERROR Unexpected character: & and now it is patched: line 29
 ERROR syntax error, encountering unexpected word +: line 29
+ERROR error is fixed and Use production: variable_list -> variable_list , variable: line 29, column 15
 INFO Lexical and syntactic analysis passed.
 INFO Semantic analysis...
 INFO Semantic analysis passed.

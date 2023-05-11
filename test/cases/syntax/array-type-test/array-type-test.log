@@ -1,3 +1,13 @@
-ERROR syntax error, encountering unexpected word rogram: line 1
-FATAL Failed at lexical or syntactic analysis, abort.
-FATAL Compilation failed.
+ERROR syntax error, encountering unexpected word test: line 4
+ERROR error is fixed and use production: type -> array [ period ] of basic_type: line 4, column 3
+ERROR syntax error, encountering unexpected word test: line 5
+ERROR error is fixed and use production: type -> array [ period ] of basic_type: line 5, column 3
+ERROR syntax error, encountering unexpected word test: line 6
+ERROR error is fixed and Use production: period -> num .. num: line 6, column 10
+ERROR syntax error, encountering unexpected word test: line 7
+ERROR error is fixed and Use production: period -> num .. num: line 7, column 11
+INFO Lexical and syntactic analysis passed.
+INFO Semantic analysis...
+INFO Semantic analysis passed.
+INFO Code generation passed.
+INFO Compilation passed.

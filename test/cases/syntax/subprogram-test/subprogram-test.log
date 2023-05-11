@@ -1,15 +1,21 @@
 ERROR syntax error, encountering unexpected word test: line 5
 ERROR syntax error, encountering unexpected word test: line 5
+ERROR error is fixed and Use production: formal_parameter -> ( parameter_list ): line 5, column 28
+ERROR error is fixed and Use production: subprogram_head -> procedure id formal_parameter: line 5, column 1
 ERROR syntax error, encountering unexpected word test: line 9
 ERROR syntax error, encountering unexpected word test: line 11
+ERROR error is fixed and Use production: formal_parameter -> ( parameter_list ): line 11, column 20
 ERROR syntax error, encountering unexpected word test: line 11
+ERROR error is fixed and Use production: subprogram_head -> function id formal_parameter : basic_type: line 11, column 1
 ERROR syntax error, encountering unexpected word 233: line 12
 ERROR Unexpected character: & and now it is patched: line 12
 ERROR Unexpected character: ^ and now it is patched: line 12
 ERROR syntax error, encountering unexpected word 92: line 14
 ERROR error is fixed and Use production: subprogram_body -> const_declaration compound_statement: line 12, column 1
 ERROR syntax error, encountering unexpected word test: line 18
+ERROR error is fixed and Use production: formal_parameter -> ( parameter_list ): line 18, column 17
 ERROR syntax error, encountering unexpected word test: line 18
+ERROR error is fixed and Use production: subprogram_head -> function id formal_parameter : basic_type: line 18, column 1
 ERROR syntax error, encountering unexpected word *: line 19
 ERROR Unexpected character: & and now it is patched: line 19
 ERROR error is fixed and Use production: subprogram_body -> const_declaration compound_statement: line 19, column 1

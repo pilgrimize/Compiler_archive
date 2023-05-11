@@ -205,7 +205,7 @@ program_head : t_program id leftparen idlist rightparen { // pid = 2
         }
     | t_program error id{
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
-        log( "error fixed and Use production: program_head -> program id", pos, DEBUG); 
+        log( "error fixed and Use production: program_head -> program id", pos, ERROR);
         $$ = tools::reduce({$1, $3}, pos,  tree::program_head__T__t_program__id, tree::T_PROGRAM_HEAD);
         yyerrok;
     }
@@ -548,7 +548,7 @@ period : num t_dot num {  // pid=29
     }
     | num error num {
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
-        log( "error is fixed and Use production: period -> num .. num", pos, DEBUG);
+        log( "error is fixed and Use production: period -> num .. num", pos, ERROR);
         tree::Tree* tnode = new tree::Tree(new tree::TreeNode(tree::leaf_pid, tree::T_DOT, "..", pos));
         $$ = tools::reduce({$1, tnode, $3}, pos,  tree::period__T__num__t_dot__num
         , tree::T_PERIOD);
@@ -556,7 +556,7 @@ period : num t_dot num {  // pid=29
     }
     | num t_dot error num {
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };
-        log( "error is fixed Use production: period -> num .. num", pos, DEBUG);
+        log( "error is fixed Use production: period -> num .. num", pos, ERROR);
         $$ = tools::reduce({$1, $2, $4}, pos,  tree::period__T__num__t_dot__num
         , tree::T_PERIOD);
         yyerrok;
@@ -607,7 +607,7 @@ subprogram_head :
     }
     | t_function id formal_parameter error basic_type{
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $5->get_root()->get_position().last_line, $5->get_root()->get_position().last_column };
-        log( "error is fixed and Use production: subprogram_head -> function id formal_parameter : basic_type", pos, DEBUG);
+        log( "error is fixed and Use production: subprogram_head -> function id formal_parameter : basic_type", pos, ERROR);
         tree::Tree* tnode = new tree::Tree(new tree::TreeNode(tree::leaf_pid, tree::T_COLON, ":", pos));
         $$ = tools::reduce({$1, $2, $3, tnode, $5}, pos,  tree::subprogram_head__T__t_function__id__formal_parameter__colon__basic_type
         , tree::T_SUBPROGRAM_HEAD);
@@ -615,7 +615,7 @@ subprogram_head :
     }
     | t_function id formal_parameter error colon basic_type {
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $6->get_root()->get_position().last_line, $6->get_root()->get_position().last_column };
-        log( "error is fixed and Use production: subprogram_head -> function id formal_parameter : basic_type", pos, DEBUG);
+        log( "error is fixed and Use production: subprogram_head -> function id formal_parameter : basic_type", pos, ERROR);
         $$ = tools::reduce({$1, $2, $3, $5, $6}, pos,  tree::subprogram_head__T__t_function__id__formal_parameter__colon__basic_type
         , tree::T_SUBPROGRAM_HEAD);
         yyerrok;
@@ -628,7 +628,7 @@ subprogram_head :
     }
     | t_procedure id error formal_parameter {
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };
-        log( "error is fixed and Use production: subprogram_head -> procedure id formal_parameter", pos, DEBUG);
+        log( "error is fixed and Use production: subprogram_head -> procedure id formal_parameter", pos, ERROR);
         $$ = tools::reduce({$1, $2, $4}, pos,  tree::subprogram_head__T__t_procedure__id__formal_parameter
         , tree::T_SUBPROGRAM_HEAD);
         yyerrok;
@@ -654,7 +654,7 @@ formal_parameter : leftparen parameter_list rightparen {  // pid=38
     }
     | leftparen parameter_list error rightparen {
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };
-        log( "error is fixed and Use production: formal_parameter -> ( parameter_list )", pos, DEBUG);
+        log( "error is fixed and Use production: formal_parameter -> ( parameter_list )", pos, ERROR);
         $$ = tools::reduce({$1, $2, $4}, pos,  tree::formal_parameter__T__leftparen__parameter_list__rightparen
         , tree::T_FORMAL_PARAMETER);
         yyerrok;
@@ -944,7 +944,7 @@ statement : variable assignop expression {  // pid=52
     }
     | t_readln error variable_list rightparen {
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };
-        log( "error is fixed and Use production: statement -> readln ( idlist )", pos, DEBUG);
+        log( "error is fixed and Use production: statement -> readln ( idlist )", pos, ERROR);
         tree::Tree* tnode = new tree::Tree(new tree::TreeNode(tree::leaf_pid, tree::T_LEFTPAREN, "(", pos));
         $$ = tools::reduce({$1, tnode, $3, $4}, pos,  tree::statement__T__t_readln__leftparen__variable_list__rightparen
         , tree::T_STATEMENT);
@@ -978,14 +978,14 @@ variable_list : variable {  // pid=63
     }
     | variable_list error comma variable {
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };
-        log( "error is fixed and Use production: variable_list -> variable_list , variable", pos, DEBUG);
+        log( "error is fixed and Use production: variable_list -> variable_list , variable", pos, ERROR);
         $$ = tools::reduce({$1, $3, $4}, pos,  tree::variable_list__T__variable_list__comma__variable
         , tree::T_VARIABLE_LIST);
         yyerrok;
     }
     | variable_list error variable {
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
-        log( "error is fixed and Use production: variable_list -> variable_list , variable", pos, DEBUG);
+        log( "error is fixed and Use production: variable_list -> variable_list , variable", pos, ERROR);
         tree::Tree* tnode = new tree::Tree(new tree::TreeNode(tree::leaf_pid, tree::T_COMMA, ",", pos));
         $$ = tools::reduce({$1, tnode, $3}, pos,  tree::variable_list__T__variable_list__comma__variable
         , tree::T_VARIABLE_LIST);
@@ -1007,7 +1007,7 @@ variable : id {  // pid=65
     }
     | id error id_varpart {
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $3->get_root()->get_position().last_line, $3->get_root()->get_position().last_column };
-        log( "error is fixed and Use production: variable -> id id_varpart", pos, DEBUG);
+        log( "error is fixed and Use production: variable -> id id_varpart", pos, ERROR);
         $$ = tools::reduce({$1, $3}, pos,  tree::variable__T__id__id_varpart
         , tree::T_VARIABLE, $1->get_root()->get_text()+' '+$3->get_root()->get_text());
         yyerrok;
@@ -1022,7 +1022,7 @@ id_varpart : leftbracket expression_list rightbracket {  // pid=67
     }
     | leftbracket expression_list error rightbracket {
         tree::Position pos = {$1->get_root()->get_position().first_line, $1->get_root()->get_position().first_column, $4->get_root()->get_position().last_line, $4->get_root()->get_position().last_column };
-        log( "error is fixed and Use production: id_varpart -> [ expression ]", pos, DEBUG);
+        log( "error is fixed and Use production: id_varpart -> [ expression ]", pos, ERROR);
         $$ = tools::reduce({$1, $2, $4}, pos,  tree::id_varpart__T__leftbracket__expression_list__rightbracket
         , tree::T_ID_VARPART, $1->get_root()->get_text()+' '+$2->get_root()->get_text()+' '+$4->get_root()->get_text());
         yyerrok;
