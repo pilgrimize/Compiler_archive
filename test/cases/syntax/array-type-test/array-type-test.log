@@ -1,0 +1,3 @@
+ERROR syntax error, encountering unexpected word rogram: line 1
+FATAL Failed at lexical or syntactic analysis, abort.
+FATAL Compilation failed.

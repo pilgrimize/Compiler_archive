@@ -1,4 +1,4 @@
-program Hello;
+rogram Hello;
 const i =2;
 var a,gcd,b: integer;
 c:array test [1..10]  of integer;
