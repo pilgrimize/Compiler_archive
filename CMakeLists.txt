@@ -43,18 +43,13 @@ find_program(FINAL_TEST_SCRIPT NAMES final_test.sh HINTS ${CMAKE_CURRENT_SOURCE_
 
 set(CASE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/test/cases)
 
-add_test(
-        NAME debug_test
-        COMMAND ${DEBUG_SCRIPT} $<TARGET_FILE:pascals-to-c> ${CASE_DIR}/case-if-else.pas
-)
-
 FOREACH(test_type lexical syntax semantic codegen complex)
     SUBDIR_LIST(${test_type}_src ${CASE_DIR}/${test_type})
     FOREACH(subdir ${${test_type}_src})
         add_test(
                 NAME ${test_type}-${subdir}
                 COMMAND ${UNIT_TEST_SCRIPT} $<TARGET_FILE:pascals-to-c> ${subdir} ${CASE_DIR}/${test_type}/${subdir}
-                    ${CMAKE_CURRENT_BINARY_DIR}/test/${test_type}/${subdir} ${CASE_DIR}/${test_type}/${subdir}
+                    ${CASE_DIR}/${test_type}/${subdir} ${CMAKE_CURRENT_BINARY_DIR}/test/${test_type}/${subdir}
         )
     ENDFOREACH()
 ENDFOREACH()
