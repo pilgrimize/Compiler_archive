@@ -120,9 +120,9 @@ void id_process(tree::TreeNode* node,ID_TYPE type){
                 if(symbol_table_tree.get_scope_name() == node->get_text()){
                     logger::output( "_");
                 }
-                if(std::get<symbol::BasicInfo>(symbol_table_tree.get_entry(node->get_text())->extra_info).is_referred){
-                    logger::output( "*");
-                }
+if(std::get<symbol::BasicInfo>(symbol_table_tree.get_entry(node->get_text())->extra_info).is_referred){
+    logger::output( "*");
+}
                 logger::output( node->get_text());
             }
             else{
